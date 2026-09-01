@@ -1,0 +1,41 @@
+<h1 class="text-2xl font-semibold text-slate-900 mb-6">Dashboard</h1>
+
+@if (loading()) {
+  <p class="text-sm text-slate-500">Chargement...</p>
+} @else if (errorMessage()) {
+  <p class="text-sm text-red-600">{{ errorMessage() }}</p>
+} @else if (stats()) {
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <p class="text-sm text-slate-500">Restaurants</p>
+      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.totalRestaurants }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <p class="text-sm text-slate-500">QR codes</p>
+      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.totalQrCodes }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <p class="text-sm text-slate-500">QR actifs</p>
+      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.activeQrCodes }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <p class="text-sm text-slate-500">Scans aujourd'hui</p>
+      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.scansToday }}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <p class="text-sm text-slate-500">Scans cette semaine</p>
+      <p class="text-xl font-semibold text-slate-900 mt-1">{{ stats()!.scansThisWeek }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <p class="text-sm text-slate-500">Scans ce mois</p>
+      <p class="text-xl font-semibold text-slate-900 mt-1">{{ stats()!.scansThisMonth }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <p class="text-sm text-slate-500">Scans total</p>
+      <p class="text-xl font-semibold text-slate-900 mt-1">{{ stats()!.scansTotal }}</p>
+    </div>
+  </div>
+}
