@@ -1,41 +1,135 @@
-<h1 class="text-2xl font-semibold text-slate-900 mb-6">Dashboard</h1>
+<div class="mb-6">
+  <h1 class="page-title">Dashboard</h1>
+  <p class="page-subtitle">L'état de Karta en un coup d'œil : clients, QR et activité de scans.</p>
+  <div class="k-ticks mt-4 max-w-[220px]"></div>
+</div>
 
 @if (loading()) {
-  <p class="text-sm text-slate-500">Chargement...</p>
+  <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    @for (s of skeletons; track s) {
+      <div class="card kpi">
+        <div class="skeleton h-3.5 w-20"></div>
+        <div class="skeleton mt-3 h-7 w-16"></div>
+      </div>
+    }
+  </div>
+  <div class="mt-4 grid gap-4 lg:grid-cols-5">
+    <div class="card card-pad lg:col-span-2">
+      <div class="skeleton h-4 w-24"></div>
+      <div class="skeleton mt-5 h-24 w-full"></div>
+    </div>
+    <div class="card card-pad lg:col-span-3">
+      <div class="skeleton h-4 w-32"></div>
+      <div class="skeleton mt-5 h-32 w-full"></div>
+    </div>
+  </div>
 } @else if (errorMessage()) {
-  <p class="text-sm text-red-600">{{ errorMessage() }}</p>
+  <div class="card card-pad">
+    <p class="alert-error">{{ errorMessage() }}</p>
+    <button type="button" (click)="load()" class="btn btn-secondary btn-sm mt-3">Réessayer</button>
+  </div>
 } @else if (stats()) {
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <p class="text-sm text-slate-500">Restaurants</p>
-      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.totalRestaurants }}</p>
+  @let s = stats()!;
+  <!-- KPI principaux -->
+  <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <div class="card kpi card-accent">
+      <p class="kpi-label">Clients</p>
+      <p class="kpi-value">{{ s.totalRestaurants }}</p>
+      <p class="kpi-sub">{{ s.totalQrCodes }} QR au total</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <p class="text-sm text-slate-500">QR codes</p>
-      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.totalQrCodes }}</p>
+    <div class="card kpi">
+      <p class="kpi-label">QR actifs</p>
+      <p class="kpi-value">{{ s.activeQrCodes }}</p>
+      <p class="kpi-sub">sur {{ s.totalQrCodes }} générés</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <p class="text-sm text-slate-500">QR actifs</p>
-      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.activeQrCodes }}</p>
+    <div class="card kpi">
+      <p class="kpi-label">Scans aujourd'hui</p>
+      <p class="kpi-value">{{ s.scansToday }}</p>
+      <p class="kpi-sub">{{ s.scansThisWeek }} cette semaine</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <p class="text-sm text-slate-500">Scans aujourd'hui</p>
-      <p class="text-2xl font-semibold text-slate-900 mt-1">{{ stats()!.scansToday }}</p>
+    <div class="card kpi">
+      <p class="kpi-label">Scans au total</p>
+      <p class="kpi-value">{{ s.scansTotal }}</p>
+      <p class="kpi-sub">{{ s.scansThisMonth }} ce mois</p>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <p class="text-sm text-slate-500">Scans cette semaine</p>
-      <p class="text-xl font-semibold text-slate-900 mt-1">{{ stats()!.scansThisWeek }}</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <p class="text-sm text-slate-500">Scans ce mois</p>
-      <p class="text-xl font-semibold text-slate-900 mt-1">{{ stats()!.scansThisMonth }}</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <p class="text-sm text-slate-500">Scans total</p>
-      <p class="text-xl font-semibold text-slate-900 mt-1">{{ stats()!.scansTotal }}</p>
-    </div>
+  <div class="mt-4 grid gap-4 lg:grid-cols-5">
+    <!-- Activité -->
+    <section class="card lg:col-span-2">
+      <div class="card-head">
+        <h2 class="section-title">Activité des scans</h2>
+        <span class="k-coord">30 J</span>
+      </div>
+      <div class="card-pad space-y-3.5">
+        @for (bar of activity(); track bar.label) {
+          <div>
+            <div class="mb-1.5 flex items-baseline justify-between">
+              <span class="text-xs font-medium text-ink-600">{{ bar.label }}</span>
+              <span class="mono text-sm font-semibold text-ink-900">{{ bar.value }}</span>
+            </div>
+            <div class="stat-track">
+              <div
+                class="stat-fill"
+                [class.stat-fill-accent]="bar.accent"
+                [style.--k-fill]="bar.ratio"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Clients les plus actifs -->
+    <section class="card lg:col-span-3">
+      <div class="card-head">
+        <h2 class="section-title">Clients les plus actifs</h2>
+        <a routerLink="/admin/restaurants" class="text-xs font-semibold text-persimmon hover:underline">
+          Tous les clients
+        </a>
+      </div>
+
+      @if (topClients().length === 0) {
+        <div class="empty-state">
+          <span class="empty-state-icon">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 6.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM3 19.5a9 9 0 0118 0"
+              />
+            </svg>
+          </span>
+          <p class="mt-3 text-sm font-medium text-ink-900">Aucun client pour le moment</p>
+          <p class="mt-1 text-sm text-ink-500">Ajoutez un établissement pour suivre son activité.</p>
+          <a routerLink="/admin/restaurants" class="btn btn-primary btn-sm mt-4">Ajouter un client</a>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Offre</th>
+                <th class="text-right">Scans</th>
+                <th class="text-right">QR</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of topClients(); track r.id) {
+                <tr class="row-link" [routerLink]="['/admin/restaurants', r.id]">
+                  <td class="font-medium text-ink-900">{{ r.name }}</td>
+                  <td><span [class]="offerBadgeClass(r.offer)">{{ r.offer }}</span></td>
+                  <td class="mono text-right">{{ r.totalScans }}</td>
+                  <td class="mono text-right text-ink-500">
+                    {{ r.activeQrCodeCount }}/{{ r.qrCodeCount }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
   </div>
 }

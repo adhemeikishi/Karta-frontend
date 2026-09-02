@@ -1,44 +1,148 @@
-<div class="min-h-screen flex bg-slate-50">
+<div class="shell-canvas">
+  <a
+    href="#main"
+    class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-charcoal focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+  >
+    Aller au contenu
+  </a>
+
+  <!-- Backdrop mobile -->
+  @if (mobileNavOpen()) {
+    <div
+      class="fixed inset-0 z-30 bg-charcoal/50 backdrop-blur-[1px] lg:hidden"
+      (click)="closeMobileNav()"
+      aria-hidden="true"
+    ></div>
+  }
+
   <!-- Sidebar -->
-  <aside class="w-60 shrink-0 bg-white border-r border-slate-200 flex flex-col">
-    <div class="h-16 flex items-center px-6 border-b border-slate-200">
-      <span class="font-semibold text-slate-900">QR Menu Admin</span>
+  <aside
+    class="sidebar fixed inset-y-0 left-0 z-40 flex w-60 flex-col transition-transform duration-200 ease-karta lg:translate-x-0"
+    [class.-translate-x-full]="!mobileNavOpen()"
+  >
+    <div
+      class="flex h-14 items-center gap-2.5 px-4"
+      style="border-bottom: 1px solid var(--k-charcoal-line)"
+    >
+      <span class="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-persimmon">
+        <svg
+          class="h-[18px] w-[18px] text-white"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
+          <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+        </svg>
+      </span>
+      <span class="text-[0.95rem] font-extrabold tracking-[-0.01em] text-white">Karta</span>
+      <span class="k-coord ml-auto" style="color: var(--k-charcoal-muted)">v1</span>
     </div>
 
-    <nav class="flex-1 px-3 py-4 space-y-1">
+    <nav class="flex-1 overflow-y-auto px-3 pb-4">
+      <p class="sidebar-group-label">Pilotage</p>
       <a
         routerLink="/admin/dashboard"
-        routerLinkActive="bg-slate-900 text-white"
-        class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
+        (click)="closeMobileNav()"
+        routerLinkActive="sidebar-link-active"
+        class="sidebar-link"
       >
+        <svg
+          class="h-[18px] w-[18px] shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 8.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+          />
+        </svg>
         Dashboard
       </a>
+
+      <p class="sidebar-group-label">Gestion</p>
       <a
         routerLink="/admin/restaurants"
-        routerLinkActive="bg-slate-900 text-white"
-        class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
+        (click)="closeMobileNav()"
+        routerLinkActive="sidebar-link-active"
+        class="sidebar-link"
       >
-        Restaurants
+        <svg
+          class="h-[18px] w-[18px] shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M2.25 21h19.5M3.75 21V6.75A2.25 2.25 0 016 4.5h6a2.25 2.25 0 012.25 2.25V21M14.25 9.75h3A2.25 2.25 0 0119.5 12v9M6.75 8.25h.75m-.75 3h.75m-.75 3h.75m1.5-6h.75m-.75 3h.75m-.75 3h.75"
+          />
+        </svg>
+        Clients
       </a>
     </nav>
 
-    <div class="p-3 border-t border-slate-200">
-      <button
-        (click)="logout()"
-        class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100"
-      >
+    <div class="px-3 py-3" style="border-top: 1px solid var(--k-charcoal-line)">
+      <button (click)="logout()" class="sidebar-link w-full">
+        <svg
+          class="h-[18px] w-[18px] shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+          />
+        </svg>
         Se déconnecter
       </button>
     </div>
   </aside>
 
-  <!-- Content -->
-  <div class="flex-1 flex flex-col min-w-0">
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center px-8">
-      <span class="text-sm text-slate-500">Back-office interne — QR Menu</span>
+  <!-- Colonne contenu -->
+  <div class="lg:pl-60">
+    <header class="topbar sticky top-0 z-20 flex h-14 items-center gap-3 px-4 sm:px-6">
+      <button
+        type="button"
+        (click)="toggleMobileNav()"
+        class="btn-icon shrink-0 text-ink-300 hover:bg-white/10 hover:text-white lg:hidden"
+        [attr.aria-expanded]="mobileNavOpen()"
+        aria-label="Ouvrir la navigation"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+
+      <nav aria-label="Fil d'Ariane" class="flex min-w-0 items-center gap-1.5 text-sm">
+        @if (breadcrumbs().length === 0) {
+          <span class="topbar-crumb-current font-medium">Back-office</span>
+        }
+        @for (crumb of breadcrumbs(); track crumb.label; let last = $last) {
+          @if (crumb.link && !last) {
+            <a [routerLink]="crumb.link" class="topbar-crumb truncate">{{ crumb.label }}</a>
+            <span style="color: var(--k-charcoal-muted)" aria-hidden="true">/</span>
+          } @else {
+            <span
+              class="topbar-crumb-current truncate font-medium"
+              [attr.aria-current]="last ? 'page' : null"
+              >{{ crumb.label }}</span
+            >
+          }
+        }
+      </nav>
     </header>
 
-    <main class="flex-1 p-8">
+    <main id="main" class="mx-auto max-w-content p-4 sm:p-6 lg:px-8 lg:py-8">
       <router-outlet></router-outlet>
     </main>
   </div>

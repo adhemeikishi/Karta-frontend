@@ -47,4 +47,17 @@ export class QrCodeService {
   imageSvgUrl(id: string): string {
     return `${this.baseUrl}/qr-codes/${id}/image.svg`;
   }
+
+  /**
+   * Récupère l'image en blob via HttpClient (donc avec l'en-tête Basic Auth ajouté
+   * par l'intercepteur). Un simple <img src> ou <a download> ne fonctionnerait pas :
+   * les endpoints image sont sous /api/admin/** et exigent l'authentification.
+   */
+  imagePng(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/qr-codes/${id}/image.png`, { responseType: 'blob' });
+  }
+
+  imageSvg(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/qr-codes/${id}/image.svg`, { responseType: 'blob' });
+  }
 }

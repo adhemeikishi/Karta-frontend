@@ -1,0 +1,38 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "admin-frontend/src/app/restaurants/restaurant-detail/restaurant-detail.component.html"
+        ],
+        "createdAt": "2026-09-02T06:33:47.316Z",
+        "reason": "model: [src] is bound to a FileReader data: URL from qrImageDataUrl(), guarded by @if (qrImageDataUrl(); as src) — never empty when rendered"
+      },
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-09-02T06:42:04.826Z",
+        "reason": "user confirmed: Karta brand charter explicitly locks Plus Jakarta Sans + Geist Mono as mandatory typography"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist mono",
+        "createdAt": "2026-09-02T06:42:04.900Z",
+        "reason": "user confirmed: Karta brand charter explicitly locks Geist Mono for numerics/IDs/data"
+      },
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "admin-frontend/src/styles.css"
+        ],
+        "createdAt": "2026-09-02T06:42:09.039Z",
+        "reason": "model: .k-crosshair is the Karta (=carte/map) registration motif required by brief section 16; used behind the QR image (a measurement/registration surface) and faintly on the login panel"
+      }
+    ]
+  }
+}

@@ -1,6 +1,12 @@
+/** Offre commerciale Karta V1 (voir RestaurantOffer côté backend). 1 restaurant = 1 offre. */
+export type RestaurantOffer = 'BASIC' | 'PRO' | 'PREMIUM';
+
+export const RESTAURANT_OFFERS: readonly RestaurantOffer[] = ['BASIC', 'PRO', 'PREMIUM'];
+
 export interface Restaurant {
   id: string;
   name: string;
+  offer: RestaurantOffer;
   createdAt: string;
   updatedAt: string;
 }

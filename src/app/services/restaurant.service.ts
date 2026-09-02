@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Restaurant, RestaurantSummary } from '../models/restaurant.model';
+import { Restaurant, RestaurantOffer, RestaurantSummary } from '../models/restaurant.model';
 
 @Injectable({ providedIn: 'root' })
 export class RestaurantService {
@@ -17,11 +17,19 @@ export class RestaurantService {
     return this.http.get<Restaurant>(`${this.baseUrl}/${id}`);
   }
 
-  create(name: string): Observable<Restaurant> {
-    return this.http.post<Restaurant>(this.baseUrl, { name });
+  create(name: string, offer: RestaurantOffer): Observable<Restaurant> {
+    return this.http.post<Restaurant>(this.baseUrl, { name, offer });
   }
 
   rename(id: string, name: string): Observable<Restaurant> {
     return this.http.put<Restaurant>(`${this.baseUrl}/${id}`, { name });
+  }
+
+  changeOffer(id: string, offer: RestaurantOffer): Observable<Restaurant> {
+    return this.http.put<Restaurant>(`${this.baseUrl}/${id}/offer`, { offer });
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }

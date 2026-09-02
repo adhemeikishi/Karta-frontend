@@ -2,12 +2,546 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+/* ==========================================================================
+   Karta — Design tokens
+   Source de vérité du système visuel du back-office.
+   Identité : Charcoal #131312 + Persimmon #F05A00. Plus Jakarta Sans + Geist Mono.
+   ========================================================================== */
+:root {
+  /* Couleurs — cœur d'identité */
+  --k-charcoal: #131312;
+  --k-charcoal-soft: #1e1d1b;
+  --k-charcoal-line: #2a2926;
+  --k-charcoal-muted: #9a9a93;
+  --k-eclipse: #0c0c0c;
+  --k-persimmon: #f05a00;
+  --k-persimmon-hover: #d44f00;
+  --k-persimmon-soft: #fcede3;
+  --k-persimmon-ring: rgba(240, 90, 0, 0.28);
+  --k-white: #ffffff;
+  --k-ivory: #f6f6f6;
+  --k-canvas: #fafaf8;
+
+  /* Neutres (gris chauds, une seule famille) */
+  --k-ink-900: #131312;
+  --k-ink-700: #3b3a37;
+  --k-ink-600: #57564f;
+  --k-ink-500: #6b6a64;
+  --k-ink-400: #8c8b84;
+  --k-ink-300: #b6b5ae;
+  --k-ink-200: #dbdad5;
+  --k-ink-100: #eeeee9;
+
+  /* Bordures / séparateurs — neutres et discrets */
+  --k-hairline: #e6e6e4;
+
+  /* Accents secondaires — usage ponctuel uniquement */
+  --k-slate: #4a6d7c;
+  --k-teal: #6b8e8e;
+
+  /* Sémantique */
+  --k-success: #2e7d57;
+  --k-success-soft: #e7f2ec;
+  --k-danger: #c0403b;
+  --k-danger-soft: #fbeceb;
+  --k-danger-line: #edc9c7;
+  --k-warning: #a66207;
+  --k-warning-soft: #f8efe0;
+
+  /* Rayons */
+  --k-r-xs: 4px;
+  --k-r-sm: 6px;
+  --k-r-md: 8px;
+  --k-r-lg: 12px;
+  --k-r-full: 9999px;
+
+  /* Ombres — tintées charcoal, minimales */
+  --k-shadow-xs: 0 1px 2px rgba(19, 19, 18, 0.04);
+  --k-shadow-sm: 0 1px 3px rgba(19, 19, 18, 0.06), 0 1px 2px rgba(19, 19, 18, 0.04);
+  --k-shadow-md: 0 8px 24px -6px rgba(19, 19, 18, 0.12);
+  --k-shadow-pop: 0 16px 48px -12px rgba(12, 12, 12, 0.28);
+
+  /* Transitions */
+  --k-ease: cubic-bezier(0.2, 0, 0, 1);
+  --k-t-fast: 140ms;
+  --k-t-base: 180ms;
+
+  /* Châssis */
+  --k-sidebar-w: 15rem;
+  --k-topbar-h: 3.5rem;
+  --k-content-max: 76rem;
+
+  /* Typographie */
+  --k-font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  --k-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html,
+body {
   height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f8fafc; /* slate-50 */
+  font-family: var(--k-font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  color: var(--k-ink-700);
+  background-color: var(--k-canvas);
+}
+
+/* ==========================================================================
+   Couche composants
+   ========================================================================== */
+@layer components {
+  /* --- Châssis ---------------------------------------------------------- */
+  .shell-canvas {
+    @apply min-h-[100dvh] bg-canvas;
+  }
+
+  .sidebar {
+    background-color: var(--k-charcoal);
+    color: var(--k-ivory);
+  }
+  .sidebar-group-label {
+    @apply px-3 pb-1.5 pt-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em];
+    color: var(--k-charcoal-muted);
+    font-family: var(--k-font-mono);
+  }
+  .sidebar-link {
+    @apply relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium
+           text-ink-300 transition-colors duration-150 ease-karta;
+  }
+  .sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--k-white);
+  }
+  .sidebar-link-active,
+  .sidebar-link.sidebar-link-active:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--k-white);
+  }
+  .sidebar-link-active::before {
+    content: "";
+    @apply absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-sm;
+    background-color: var(--k-persimmon);
+  }
+
+  .topbar {
+    background-color: var(--k-charcoal);
+    color: var(--k-ivory);
+    border-bottom: 1px solid var(--k-charcoal-line);
+  }
+  .topbar-crumb {
+    @apply text-ink-300 transition-colors hover:text-white;
+  }
+  .topbar-crumb-current {
+    @apply text-white;
+  }
+
+  /* --- Surfaces ------------------------------------------------------------ */
+  .card {
+    background-color: var(--k-white);
+    border: 1px solid var(--k-hairline);
+    border-radius: var(--k-r-lg);
+    box-shadow: var(--k-shadow-xs);
+  }
+  .card-pad {
+    @apply p-4 sm:p-5;
+  }
+  .card-head {
+    @apply flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-5;
+    border-color: var(--k-hairline);
+  }
+  /* Repère d'accent discret : court trait persimmon en tête de carte (détail Karta, §16) */
+  .card-accent {
+    position: relative;
+  }
+  .card-accent::before {
+    content: "";
+    @apply absolute left-0 top-4 h-4 w-[3px] rounded-r-sm;
+    background-color: var(--k-persimmon);
+  }
+
+  /* --- Typographie ------------------------------------------------------- */
+  .page-title {
+    @apply text-[1.35rem] font-bold leading-tight tracking-[-0.01em] text-ink-900 sm:text-2xl;
+  }
+  .page-subtitle {
+    @apply mt-1 text-sm text-ink-500;
+    text-wrap: pretty;
+  }
+  .section-title {
+    @apply text-[0.95rem] font-semibold tracking-[-0.005em] text-ink-900;
+  }
+  .eyebrow {
+    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink-700;
+  }
+  .field-hint {
+    @apply mt-1.5 text-xs text-ink-500;
+  }
+  .mono {
+    font-family: var(--k-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Boutons --------------------------------------------------------- */
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap
+           rounded-md px-3.5 py-2 text-sm font-semibold transition duration-150 ease-karta
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+    --tw-ring-color: var(--k-persimmon-ring);
+    --tw-ring-offset-color: var(--k-canvas);
+  }
+  .btn:active {
+    transform: translateY(0.5px);
+  }
+  .btn-sm {
+    @apply gap-1.5 rounded-sm px-2.5 py-1.5 text-[0.8125rem];
+  }
+  .btn-primary {
+    background-color: var(--k-persimmon);
+    color: var(--k-white);
+  }
+  .btn-primary:hover {
+    background-color: var(--k-persimmon-hover);
+  }
+  .btn-secondary {
+    background-color: var(--k-charcoal);
+    color: var(--k-white);
+  }
+  .btn-secondary:hover {
+    background-color: var(--k-charcoal-soft);
+  }
+  .btn-outline {
+    background-color: var(--k-white);
+    color: var(--k-ink-700);
+    border: 1px solid var(--k-ink-200);
+  }
+  .btn-outline:hover {
+    background-color: var(--k-ivory);
+    border-color: var(--k-ink-300);
+  }
+  .btn-ghost {
+    color: var(--k-ink-500);
+  }
+  .btn-ghost:hover {
+    background-color: var(--k-ink-100);
+    color: var(--k-ink-900);
+  }
+  .btn-danger {
+    background-color: var(--k-danger);
+    color: var(--k-white);
+    --tw-ring-color: rgba(192, 64, 59, 0.3);
+  }
+  .btn-danger:hover {
+    filter: brightness(0.94);
+  }
+  .btn-danger-soft {
+    background-color: var(--k-white);
+    color: var(--k-danger);
+    border: 1px solid var(--k-danger-line);
+    --tw-ring-color: rgba(192, 64, 59, 0.3);
+  }
+  .btn-danger-soft:hover {
+    background-color: var(--k-danger-soft);
+  }
+  .btn-icon {
+    @apply inline-grid h-8 w-8 place-items-center rounded-sm text-ink-500 transition-colors
+           hover:bg-ink-100 hover:text-ink-900 focus-visible:outline-none
+           focus-visible:ring-2 focus-visible:ring-offset-1;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+
+  /* --- Formulaires --------------------------------------------------------- */
+  .input,
+  .select {
+    @apply w-full rounded-md border bg-white px-3 py-2 text-sm text-ink-900
+           transition placeholder:text-ink-400 focus:outline-none focus:ring-2;
+    border-color: var(--k-ink-200);
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .input:focus,
+  .select:focus {
+    border-color: var(--k-persimmon);
+  }
+  .search-input {
+    @apply w-full rounded-md border bg-white py-2 pl-9 pr-3 text-sm text-ink-900
+           transition placeholder:text-ink-400 focus:outline-none focus:ring-2;
+    border-color: var(--k-ink-200);
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .search-input:focus {
+    border-color: var(--k-persimmon);
+  }
+
+  /* --- Badges --------------------------------------------------------- */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-[0.6875rem]
+           font-semibold uppercase tracking-[0.06em];
+    font-family: var(--k-font-mono);
+  }
+  .badge-dot::before {
+    content: "";
+    @apply h-1.5 w-1.5 rounded-full bg-current;
+  }
+  /* Offres — hiérarchie cohérente (neutre → contour → charcoal+orange) */
+  .badge-basic {
+    background-color: var(--k-ink-100);
+    color: var(--k-ink-600);
+  }
+  .badge-pro {
+    background-color: var(--k-white);
+    color: var(--k-ink-900);
+    box-shadow: inset 0 0 0 1px var(--k-ink-300);
+  }
+  .badge-premium {
+    background-color: var(--k-charcoal);
+    color: var(--k-persimmon);
+  }
+  /* Statuts */
+  .badge-active {
+    background-color: var(--k-success-soft);
+    color: var(--k-success);
+  }
+  .badge-inactive {
+    background-color: var(--k-ink-100);
+    color: var(--k-ink-500);
+  }
+  /* Prêt à publier : figé mais pas encore diffusé — contour, pas de vert */
+  .badge-ready {
+    background-color: var(--k-white);
+    color: var(--k-ink-900);
+    box-shadow: inset 0 0 0 1px var(--k-ink-300);
+  }
+  .badge-published {
+    background-color: var(--k-success-soft);
+    color: var(--k-success);
+  }
+  .badge-draft {
+    background-color: var(--k-warning-soft);
+    color: var(--k-warning);
+  }
+
+  /* --- Feedback --------------------------------------------------------- */
+  .alert-error {
+    @apply flex items-start gap-2 rounded-md border px-3 py-2 text-sm;
+    border-color: var(--k-danger-line);
+    background-color: var(--k-danger-soft);
+    color: #8f2f2b;
+  }
+  .alert-warning {
+    @apply flex items-start gap-2 rounded-md border px-3 py-2 text-sm;
+    border-color: #e8d6b4;
+    background-color: var(--k-warning-soft);
+    color: #7a4a08;
+  }
+  .alert-info {
+    @apply flex items-start gap-2 rounded-md border px-3 py-2 text-sm;
+    border-color: var(--k-hairline);
+    background-color: var(--k-ivory);
+    color: var(--k-ink-700);
+  }
+  .save-hint {
+    @apply inline-flex items-center gap-1.5 text-xs font-medium;
+    color: var(--k-success);
+  }
+
+  /* --- Onglets --------------------------------------------------------- */
+  .tablist {
+    @apply flex gap-1 overflow-x-auto border-b;
+    border-color: var(--k-hairline);
+  }
+  .tab {
+    @apply relative whitespace-nowrap px-3 py-2.5 text-sm font-medium text-ink-500
+           transition-colors duration-150 ease-karta hover:text-ink-900
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .tab-active {
+    @apply text-ink-900;
+  }
+  .tab-active::after {
+    content: "";
+    @apply absolute inset-x-2 -bottom-px h-0.5 rounded-t-sm;
+    background-color: var(--k-persimmon);
+  }
+
+  /* --- Données --------------------------------------------------------- */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead th {
+    @apply px-4 py-2.5 text-left text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+  .data-table tbody td {
+    @apply px-4 py-3 text-ink-700;
+    border-top: 1px solid var(--k-hairline);
+  }
+  .data-table tbody tr {
+    @apply transition-colors duration-150;
+  }
+  .data-table tbody tr.row-link {
+    @apply cursor-pointer;
+  }
+  .data-table tbody tr.row-link:hover {
+    background-color: var(--k-canvas);
+  }
+
+  .kpi {
+    @apply relative overflow-hidden p-4 sm:p-5;
+  }
+  .kpi-label {
+    @apply text-xs font-medium text-ink-500;
+  }
+  .kpi-value {
+    @apply mt-2 text-[1.6rem] font-semibold leading-none tracking-[-0.01em] text-ink-900;
+    font-family: var(--k-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-sub {
+    @apply mt-1.5 text-xs text-ink-400;
+  }
+
+  .stat-row {
+    @apply flex items-center gap-3;
+  }
+  .stat-track {
+    @apply h-2 flex-1 overflow-hidden rounded-full;
+    background-color: var(--k-ink-100);
+  }
+  .stat-fill {
+    @apply h-full w-full origin-left rounded-full;
+    background-color: var(--k-charcoal);
+    transform: scaleX(var(--k-fill, 0));
+    transition: transform var(--k-t-base) var(--k-ease);
+  }
+  .stat-fill-accent {
+    background-color: var(--k-persimmon);
+  }
+
+  /* --- Chargement / vide --------------------------------------------- */
+  .skeleton {
+    @apply animate-pulse rounded;
+    background-color: var(--k-ink-100);
+  }
+  .spinner {
+    @apply inline-block h-4 w-4 animate-spin rounded-full border-2;
+    border-color: var(--k-ink-200);
+    border-top-color: var(--k-ink-500);
+  }
+  .empty-state {
+    @apply flex flex-col items-center px-6 py-12 text-center;
+  }
+  .empty-state-icon {
+    @apply grid h-11 w-11 place-items-center rounded-lg;
+    background-color: var(--k-ivory);
+    color: var(--k-ink-400);
+  }
+
+  /* --- Modale --------------------------------------------------------- */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4;
+    background-color: rgba(12, 12, 12, 0.5);
+    backdrop-filter: blur(2px);
+    animation: k-fade var(--k-t-fast) var(--k-ease);
+  }
+  .modal-panel {
+    @apply relative w-full max-w-md rounded-t-lg sm:rounded-lg;
+    max-height: 92vh;
+    overflow-y: auto;
+    background-color: var(--k-white);
+    border: 1px solid var(--k-hairline);
+    box-shadow: var(--k-shadow-pop);
+    animation: k-pop var(--k-t-base) var(--k-ease);
+  }
+  .modal-pad {
+    @apply p-5 sm:p-6;
+  }
+  .modal-title {
+    @apply text-base font-bold tracking-[-0.005em] text-ink-900;
+  }
+  .modal-desc {
+    @apply mt-1 text-sm text-ink-500;
+    text-wrap: pretty;
+  }
+  .modal-close {
+    @apply absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-sm text-ink-400
+           transition-colors hover:bg-ink-100 hover:text-ink-900 focus-visible:outline-none
+           focus-visible:ring-2;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+
+  /* --- Détails Karta (secondaires) --------------------------------------- */
+  /* Repère cartographique : fine règle graduée */
+  .k-ticks {
+    height: 8px;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--k-ink-200) 0,
+      var(--k-ink-200) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 55%, transparent 100%);
+  }
+  .k-coord {
+    @apply text-[0.6875rem] tracking-[0.04em] text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+  .k-crosshair {
+    background-image: linear-gradient(var(--k-ink-200) 1px, transparent 1px),
+      linear-gradient(90deg, var(--k-ink-200) 1px, transparent 1px);
+    background-size: 16px 16px;
+    background-position: center;
+  }
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+@keyframes k-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes k-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
