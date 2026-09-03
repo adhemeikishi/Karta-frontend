@@ -162,6 +162,31 @@ export class MenuDesignStudioComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Relance l'aperçu avec le brouillon de style actuel, sans y toucher.
+   *
+   * L'aperçu ne se rafraîchit automatiquement qu'aux changements de `draft` (le style) :
+   * un changement de contenu ailleurs sur la page (l'éditeur de menu) ne le déclenche pas
+   * tout seul. Appelé par le parent juste après un enregistrement de contenu.
+   *
+   * Appelle directement {@link fetchPreview} plutôt que de rejouer le brouillon dans le
+   * signal `draft` : la pipeline réactive du constructeur filtre les valeurs égales par
+   * `draftKey` (`distinctUntilChanged`), donc renvoyer la même valeur n'y déclencherait
+   * rien. Toujours le même appel HTTP, le même rendu — jamais un second mécanisme d'aperçu.
+   */
+  refreshPreview(): void {
+    const draft = this.draft();
+    if (!draft) {
+      return;
+    }
+    this.fetchPreview(draft).subscribe((html) => {
+      if (html !== null) {
+        this.showPreview(html);
+      }
+      this.previewBusy.set(false);
+    });
+  }
+
   // ------------------------------------------------------------------ édition
 
   selectPreset(preset: MenuPresetId): void {

@@ -1,0 +1,101 @@
+<header class="sticky top-0 z-30">
+  <div
+    class="nav-shell mx-auto flex h-16 items-center justify-between px-4 sm:px-6"
+    [style.max-width]="shellMaxWidth()"
+    [style.transform]="'translateY(' + shellTranslateY() + 'px) scale(' + shellScale() + ')'"
+    [style.background-color]="shellBackground()"
+    [style.border-color]="shellBorderColor()"
+    [style.box-shadow]="'0 1px 3px rgba(19, 19, 18, ' + shellShadowOpacity() + ')'"
+    [style.backdrop-filter]="shellBlur()"
+    [style.-webkit-backdrop-filter]="shellBlur()"
+  >
+    <!-- Logo Karta — identique à celui de la page de connexion, ne pas redessiner. -->
+    <a routerLink="/login" class="flex shrink-0 items-center gap-2.5" aria-label="Karta">
+      <span class="grid h-8 w-8 place-items-center rounded-md bg-persimmon">
+        <svg class="h-[18px] w-[18px] text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
+          <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+        </svg>
+      </span>
+      <span class="text-[0.95rem] font-extrabold tracking-[-0.01em] text-ink-900">Karta</span>
+    </a>
+
+    <nav class="hidden items-center gap-6 md:flex" aria-label="Navigation principale">
+      <a
+        href="#fonctionnalites"
+        (click)="scrollToAnchor('fonctionnalites', $event)"
+        class="text-sm font-medium text-ink-600 transition-colors duration-150 ease-karta hover:text-ink-900"
+      >
+        Fonctionnalités
+      </a>
+      <a
+        href="#comment-ca-marche"
+        (click)="scrollToAnchor('comment-ca-marche', $event)"
+        class="text-sm font-medium text-ink-600 transition-colors duration-150 ease-karta hover:text-ink-900"
+      >
+        Comment ça marche
+      </a>
+      <a
+        href="#offres"
+        (click)="scrollToAnchor('offres', $event)"
+        class="text-sm font-medium text-ink-600 transition-colors duration-150 ease-karta hover:text-ink-900"
+      >
+        Tarifs
+      </a>
+    </nav>
+
+    <div class="hidden shrink-0 items-center gap-2 sm:flex">
+      <a routerLink="/login" class="btn btn-ghost btn-sm">Se connecter</a>
+      <a routerLink="/login" class="btn btn-primary btn-sm">Créer mon menu</a>
+    </div>
+
+    <!-- Bouton mobile : hamburger / croix, même motif que le menu mobile du back-office. -->
+    <button
+      type="button"
+      (click)="toggleMobileMenu()"
+      class="btn-icon shrink-0 text-ink-500 hover:bg-ink-100 hover:text-ink-900 sm:hidden"
+      [attr.aria-expanded]="mobileOpen()"
+      aria-label="Ouvrir le menu"
+      aria-controls="landing-mobile-menu"
+    >
+      @if (mobileOpen()) {
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      } @else {
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      }
+    </button>
+  </div>
+
+  <!-- Panneau mobile : toujours dans le DOM, transform+opacity uniquement (anti-jank
+       §7) — jamais une hauteur animée. Ferme au clic sur une ancre. -->
+  <div
+    id="landing-mobile-menu"
+    class="landing-mobile-menu sm:hidden"
+    [class.landing-mobile-menu-open]="mobileOpen()"
+    [attr.aria-hidden]="!mobileOpen()"
+  >
+    <nav class="flex flex-col gap-1 p-3" aria-label="Navigation principale (mobile)">
+      <a href="#fonctionnalites" (click)="navigateAndClose('fonctionnalites', $event)" class="landing-mobile-menu-link">
+        Fonctionnalités
+      </a>
+      <a href="#comment-ca-marche" (click)="navigateAndClose('comment-ca-marche', $event)" class="landing-mobile-menu-link">
+        Comment ça marche
+      </a>
+      <a href="#offres" (click)="navigateAndClose('offres', $event)" class="landing-mobile-menu-link">
+        Tarifs
+      </a>
+      <div class="mt-2 flex flex-col gap-2 border-t pt-3" style="border-color: var(--k-hairline)">
+        <a routerLink="/login" (click)="closeMobileMenu()" class="btn btn-ghost w-full">Se connecter</a>
+        <a routerLink="/login" (click)="closeMobileMenu()" class="btn btn-primary w-full">Créer mon menu</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+@if (mobileOpen()) {
+  <div class="landing-mobile-backdrop sm:hidden" (click)="closeMobileMenu()" aria-hidden="true"></div>
+}

@@ -97,15 +97,45 @@
       } @else {
         <!-- ============ Offres PRO / PREMIUM — studio de création du menu HTML ============ -->
 
-        @if (canTransformPdf()) {
+        @if (showEditor()) {
           <!--
-            Le client possède une carte PDF mais aucune catégorie (typiquement un client
-            BASIC passé à PRO). Sa carte doit rester visible et transformable : il ne doit
-            jamais avoir à la ressaisir à la main.
+            Le menu structuré existe réellement (KartaAI validé, ou création manuelle déjà
+            entamée) : on affiche l'éditeur. Ne dépend jamais du nombre de catégories — un
+            menu tout juste créé, encore vide, doit continuer à afficher l'éditeur plutôt
+            que de revenir à l'état initial.
+          -->
+          <div class="mb-4 flex flex-wrap items-center gap-2.5">
+            <h3 class="section-title">Votre menu</h3>
+            <span [class]="statusBadgeClass(m.status)">{{ statusLabel(m.status) }}</span>
+            @if (m.publishedAt) {
+              <span class="k-coord">le {{ m.publishedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+            }
+          </div>
+
+          <app-menu-editor
+            [restaurantId]="restaurantId()"
+            [menu]="m"
+            (menuChange)="onEditorSaved($event)"
+          />
+
+          <!-- Style, aperçu permanent, enregistrement et publication. -->
+          <app-menu-design-studio
+            #studio
+            [restaurantId]="restaurantId()"
+            [offer]="offer()"
+            [menu]="m"
+            (menuChange)="onMenuChange($event)"
+          />
+        } @else if (canTransformPdf()) {
+          <!--
+            CAS 1 — une carte PDF existe mais aucun menu structuré n'a encore été créé
+            (typiquement un client BASIC passé à PRO). KartaAI est proposé comme
+            accélérateur, jamais comme préalable : la création manuelle reste un choix
+            explicite juste en dessous.
           -->
           @let src = sourcePdf()!;
           <div class="mb-6 rounded-md p-5" style="border: 1px solid var(--k-hairline); background-color: var(--k-ivory)">
-            <p class="text-sm font-semibold text-ink-900">Votre menu actuel</p>
+            <p class="text-sm font-semibold text-ink-900">Votre carte actuelle</p>
 
             <div
               class="mt-3 flex items-center gap-3 rounded-md p-3"
@@ -139,152 +169,70 @@
             </p>
 
             <div class="mt-4 flex flex-wrap items-center gap-2">
-              <button type="button" (click)="startKartaAiTransform()" class="btn btn-primary">
-                Transformer avec KartaAI →
+              <button
+                type="button"
+                (click)="startKartaAiTransform()"
+                [disabled]="transforming()"
+                class="btn btn-primary"
+              >
+                @if (transforming()) {
+                  <span class="spinner"></span> Analyse en cours…
+                } @else {
+                  Transformer avec KartaAI →
+                }
               </button>
-              <button type="button" (click)="fileInput.click()" [disabled]="busy()" class="btn btn-outline btn-sm">
+              <button type="button" (click)="fileInput.click()" [disabled]="busy() || transforming()" class="btn btn-outline btn-sm">
                 Remplacer le PDF
               </button>
             </div>
 
-            @if (transformNotice()) {
-              <div class="alert-warning mt-4">
+            @if (transforming()) {
+              <p class="mt-3 text-sm text-ink-500">
+                L'analyse peut prendre jusqu'à une minute ou deux selon la taille du PDF.
+              </p>
+            }
+
+            @if (transformError()) {
+              <div class="alert-error mt-4">
                 <div>
-                  <p class="font-medium">KartaAI n'est pas encore disponible.</p>
-                  <p class="mt-1">
-                    Votre carte est enregistrée et prête à être transformée : rien à
-                    ressaisir. La transformation sera lancée depuis ce bouton dès
-                    l'activation de KartaAI.
-                  </p>
-                  <button type="button" (click)="dismissTransformNotice()" class="btn btn-outline btn-sm mt-3">
+                  <p class="font-medium">{{ transformError() }}</p>
+                  <button type="button" (click)="dismissTransformError()" class="btn btn-outline btn-sm mt-3">
                     Fermer
                   </button>
                 </div>
               </div>
             }
-          </div>
-        } @else if (categoryCount() === 0) {
-          <!-- Ni carte structurée, ni PDF source : il faut d'abord une source. -->
-          <div class="mb-6 empty-state rounded-md" style="border: 1px dashed var(--k-ink-300)">
-            <span class="empty-state-icon">
-              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-              </svg>
-            </span>
-            <p class="mt-3 text-sm font-medium text-ink-900">Aucun menu PDF disponible</p>
-            <p class="mt-1 text-sm text-ink-500">
-              Importez votre carte PDF pour créer votre menu digital.
-            </p>
-            <button type="button" (click)="fileInput.click()" [disabled]="busy()" class="btn btn-primary mt-4">
-              Importer un PDF
-            </button>
-          </div>
-        }
 
-        <!-- Votre menu : ce que contient la carte, en une ligne. Le détail se déplie. -->
-        <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
-          <div class="min-w-0">
-            <div class="flex flex-wrap items-center gap-2.5">
-              <h3 class="section-title">Votre menu</h3>
-              <span [class]="statusBadgeClass(m.status)">{{ statusLabel(m.status) }}</span>
-              @if (m.publishedAt) {
-                <span class="k-coord">le {{ m.publishedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-              }
+            <div class="mt-4 pt-4" style="border-top: 1px solid var(--k-hairline)">
+              <p class="text-sm text-ink-500">
+                Vous préférez ne pas utiliser KartaAI ?
+                <button type="button" (click)="startManualCreation()" class="btn btn-ghost btn-sm">
+                  Créer mon menu manuellement
+                </button>
+              </p>
             </div>
-            <p class="mt-1 text-sm text-ink-500">
-              @if (categoryCount() === 0) {
-                Votre carte est encore vide — vous pouvez déjà choisir son style.
-              } @else {
-                {{ categoryCount() }} catégorie(s) · {{ itemCount() }} plat(s)
-              }
+          </div>
+        } @else {
+          <!--
+            CAS 3 — ni carte PDF, ni menu structuré : choix explicite entre importer une
+            carte (pour KartaAI) et créer le menu directement à la main.
+          -->
+          <div class="mb-6 rounded-md p-5" style="border: 1px solid var(--k-hairline); background-color: var(--k-ivory)">
+            <p class="text-sm font-semibold text-ink-900">Votre menu n'est pas encore créé</p>
+            <p class="mt-2 text-sm text-ink-600">
+              Créez votre carte directement, catégorie par catégorie, ou importez une carte
+              PDF pour la transformer automatiquement avec KartaAI.
             </p>
-          </div>
-
-          <div class="flex shrink-0 flex-wrap gap-2">
-            @if (categoryCount() > 0) {
-              <button type="button" (click)="toggleCard()" class="btn btn-ghost btn-sm">
-                {{ cardOpen() ? '▲ Masquer la carte' : '▼ Voir la carte' }}
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <button type="button" (click)="startManualCreation()" class="btn btn-primary">
+                Créer mon menu manuellement
               </button>
-            }
-            <!--
-              Masqué quand une carte PDF attend d'être transformée : le client possède
-              déjà une ligne menu, « Créer le menu » renverrait un 409 sans recours.
-            -->
-            @if (!hasStructuredMenu() && !canTransformPdf()) {
-              <button
-                type="button"
-                (click)="createStructuredMenu()"
-                [disabled]="busy()"
-                class="btn btn-outline btn-sm"
-              >
-                Créer le menu
+              <button type="button" (click)="fileInput.click()" [disabled]="busy()" class="btn btn-outline btn-sm">
+                Importer un PDF
               </button>
-            }
-          </div>
-        </div>
-
-        @if (cardOpen() && categoryCount() > 0) {
-          <div class="mb-6 space-y-3">
-            @for (category of m.structure!.categories; track category.id) {
-              <div class="rounded-md" style="border: 1px solid var(--k-hairline)">
-                <div
-                  class="flex items-center justify-between gap-3 px-4 py-2.5"
-                  style="border-bottom: 1px solid var(--k-hairline); background-color: var(--k-ivory)"
-                >
-                  <p class="text-sm font-medium text-ink-900">{{ category.name }}</p>
-                  @if (!category.visible) {
-                    <span class="badge badge-inactive">Masquée</span>
-                  }
-                </div>
-
-                @if (category.items.length === 0) {
-                  <p class="px-4 py-3 text-sm text-ink-400">Aucun produit.</p>
-                } @else {
-                  <ul>
-                    @for (item of category.items; track item.id) {
-                      <li
-                        class="flex items-center justify-between gap-4 px-4 py-2.5"
-                        style="border-top: 1px solid var(--k-ink-100)"
-                      >
-                        <div class="min-w-0">
-                          <p class="truncate text-sm text-ink-900">{{ item.name }}</p>
-                          @if (item.description) {
-                            <p class="truncate text-sm text-ink-500">{{ item.description }}</p>
-                          }
-                        </div>
-                        <div class="flex shrink-0 items-center gap-3">
-                          @if (!item.available) {
-                            <span class="badge badge-inactive">Indisponible</span>
-                          }
-                          <span class="tnum text-sm font-medium text-ink-900">
-                            {{ formatPrice(item.price, item.currency) }}
-                          </span>
-                        </div>
-                      </li>
-                    }
-                  </ul>
-                }
-              </div>
-            }
+            </div>
           </div>
         }
-
-        @if (busy()) {
-          <p class="mb-4 flex items-center gap-2 text-sm text-ink-500">
-            <span class="spinner"></span> Traitement en cours…
-          </p>
-        }
-        @if (actionError()) {
-          <p class="alert-error mb-4">{{ actionError() }}</p>
-        }
-
-        <!-- Style, aperçu permanent, enregistrement et publication. -->
-        <app-menu-design-studio
-          [restaurantId]="restaurantId()"
-          [offer]="offer()"
-          [menu]="m"
-          (menuChange)="onMenuChange($event)"
-        />
       }
     }
   </div>

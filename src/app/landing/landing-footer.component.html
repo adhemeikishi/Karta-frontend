@@ -1,0 +1,55 @@
+<!-- Même fond que le CTA final (bg-charcoal, pas de bordure entre les deux) : la
+     page se referme sur une seule bande sombre, pas un bloc supplémentaire. -->
+<footer class="bg-charcoal">
+  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+    <div class="grid grid-cols-1 gap-10 sm:grid-cols-[1.3fr_1fr_1fr]">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="grid h-7 w-7 place-items-center rounded-sm bg-persimmon">
+            <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
+              <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
+          <span class="text-sm font-extrabold tracking-[-0.01em] text-white">Karta</span>
+        </div>
+        <p class="mt-4 max-w-[22rem] text-sm" style="color: var(--k-charcoal-muted)">
+          Le back-office qui remplace la carte papier : un QR permanent, un menu à
+          jour, une identité qui vous appartient.
+        </p>
+        <p class="k-coord mt-6" style="color: var(--k-charcoal-muted)">Back-office · v1</p>
+      </div>
+
+      <div>
+        <p class="eyebrow" style="color: var(--k-charcoal-muted)">Produit</p>
+        <nav class="mt-4 flex flex-col gap-3 text-sm" aria-label="Produit">
+          <a href="#fonctionnalites" (click)="scrollToAnchor('fonctionnalites', $event)" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+            Fonctionnalités
+          </a>
+          <a href="#comment-ca-marche" (click)="scrollToAnchor('comment-ca-marche', $event)" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+            Comment ça marche
+          </a>
+          <a href="#offres" (click)="scrollToAnchor('offres', $event)" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+            Tarifs
+          </a>
+        </nav>
+      </div>
+
+      <div>
+        <p class="eyebrow" style="color: var(--k-charcoal-muted)">Compte</p>
+        <nav class="mt-4 flex flex-col gap-3 text-sm" aria-label="Compte">
+          <a routerLink="/login" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+            Se connecter
+          </a>
+          <a routerLink="/login" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+            Créer mon menu
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <p class="k-coord mt-10 border-t pt-6" style="border-color: var(--k-charcoal-line); color: var(--k-charcoal-muted)">
+      © {{ year }} Karta — Moins de files. Plus de commandes.
+    </p>
+  </div>
+</footer>

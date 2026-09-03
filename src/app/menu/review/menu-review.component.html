@@ -1,0 +1,273 @@
+<div class="mb-6">
+  <a [routerLink]="detailLink()" class="btn btn-ghost btn-sm -ml-2 mb-2">← Retour au client</a>
+  <h1 class="page-title">Vérifiez votre menu</h1>
+  <p class="page-subtitle">
+    Voici ce que KartaAI a compris de votre carte. Corrigez ce qui doit l'être, puis validez.
+    Rien n'est enregistré ni mis en ligne avant votre validation.
+  </p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad space-y-4">
+    <div class="skeleton h-5 w-48"></div>
+    <div class="skeleton h-32 w-full"></div>
+    <div class="skeleton h-32 w-full"></div>
+  </div>
+} @else if (loadError()) {
+  <div class="card card-pad">
+    <p class="alert-error">{{ loadError() }}</p>
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button type="button" (click)="load()" class="btn btn-outline btn-sm">Réessayer</button>
+      <a [routerLink]="detailLink()" class="btn btn-primary btn-sm">Retour au client</a>
+    </div>
+  </div>
+} @else {
+  @if (draft(); as d) {
+    <!-- Provenance et reste à faire -->
+    <section class="card card-pad mb-4">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-ink-900">
+            {{ restaurant()?.name || 'Client' }}
+          </p>
+          <p class="k-coord mt-1">
+            depuis {{ d.sourceFilename || 'le PDF importé' }} ·
+            analysé le {{ d.extractedAt | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="badge badge-neutral">
+            {{ categories().length }} catégorie(s) · {{ itemCount }} plat(s)
+          </span>
+          @if (flaggedCount > 0) {
+            <span class="badge badge-ready">{{ flaggedCount }} à vérifier</span>
+          }
+          @if (missingPriceCount > 0) {
+            <span class="badge badge-inactive">{{ missingPriceCount }} sans prix</span>
+          }
+        </div>
+      </div>
+
+      @if (flaggedCount > 0 || missingPriceCount > 0) {
+        <p class="alert-warning mt-4">
+          KartaAI n'a pas su lire certains éléments avec certitude. Ils sont signalés
+          ci-dessous — aucun prix n'a été inventé.
+        </p>
+      }
+    </section>
+
+    <!-- Catégories -->
+    <div class="space-y-4">
+      @for (category of categories(); track category.uid; let ci = $index) {
+        <section class="card">
+          <div class="card-head gap-3">
+            <input
+              type="text"
+              class="input max-w-sm font-medium"
+              placeholder="Nom de la catégorie"
+              maxlength="120"
+              [(ngModel)]="category.name"
+              [attr.aria-label]="'Nom de la catégorie ' + (ci + 1)"
+            />
+            <div class="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                [disabled]="ci === 0"
+                (click)="moveCategory(ci, -1)"
+                aria-label="Monter la catégorie"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                [disabled]="ci === categories().length - 1"
+                (click)="moveCategory(ci, 1)"
+                aria-label="Descendre la catégorie"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger-soft btn-sm"
+                (click)="removeCategory(ci)"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+
+          <div class="card-pad space-y-3">
+            @if (category.items.length === 0) {
+              <p class="text-sm text-ink-400">Aucun plat dans cette catégorie.</p>
+            }
+
+            @for (item of category.items; track item.uid; let ii = $index) {
+              <div
+                class="rounded-md p-3"
+                [style.border]="
+                  item.needsReview || item.priceEuros === null
+                    ? '1px solid var(--k-warning)'
+                    : '1px solid var(--k-hairline)'
+                "
+              >
+                <div class="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)_9rem_auto]">
+                  <div>
+                    <label class="field-label" [attr.for]="'name-' + item.uid">Plat</label>
+                    <input
+                      [id]="'name-' + item.uid"
+                      type="text"
+                      class="input"
+                      maxlength="160"
+                      placeholder="Nom du plat"
+                      [(ngModel)]="item.name"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="field-label" [attr.for]="'desc-' + item.uid">Description</label>
+                    <input
+                      [id]="'desc-' + item.uid"
+                      type="text"
+                      class="input"
+                      maxlength="2000"
+                      placeholder="Facultative"
+                      [(ngModel)]="item.description"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="field-label" [attr.for]="'price-' + item.uid">Prix (€)</label>
+                    <input
+                      [id]="'price-' + item.uid"
+                      type="text"
+                      inputmode="decimal"
+                      class="input tnum"
+                      placeholder="—"
+                      [ngModel]="priceInputValue(item)"
+                      (ngModelChange)="onPriceInput(item, $event)"
+                      (blur)="onPriceBlur(item)"
+                    />
+                  </div>
+
+                  <div class="flex items-end">
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      (click)="removeItem(category, ii)"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                </div>
+
+                @if (item.priceEuros === null) {
+                  <p class="field-hint" style="color: var(--k-warning)">
+                    Prix introuvable dans le PDF — saisissez-le pour pouvoir valider.
+                  </p>
+                } @else if (item.needsReview) {
+                  <div class="mt-2 flex flex-wrap items-center gap-3">
+                    <p class="text-xs" style="color: var(--k-warning)">
+                      À vérifier{{ item.note ? ' — ' + item.note : '' }}
+                    </p>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="acknowledge(item)">
+                      C'est correct
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <button type="button" class="btn btn-outline btn-sm" (click)="addItem(category)">
+              + Ajouter un plat
+            </button>
+          </div>
+        </section>
+      }
+    </div>
+
+    <button type="button" class="btn btn-outline mt-4" (click)="addCategory()">
+      + Ajouter une catégorie
+    </button>
+
+    <!-- Validation -->
+    <section class="card card-pad mt-6">
+      @if (blockers.length > 0) {
+        <div class="alert-warning">
+          <div>
+            <p class="font-medium">Encore à compléter avant de valider :</p>
+            <ul class="mt-1 list-inside list-disc">
+              @for (blocker of blockers; track blocker) {
+                <li>{{ blocker }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      } @else {
+        <p class="studio-state">
+          <span class="studio-dot studio-dot-pending"></span>
+          Prêt à enregistrer — {{ categories().length }} catégorie(s), {{ itemCount }} plat(s).
+        </p>
+      }
+
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <button type="button" class="btn btn-primary" [disabled]="!canSave" (click)="save()">
+          @if (saving()) {
+            <span class="spinner"></span>
+          }
+          Valider le menu
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline"
+          [disabled]="discarding()"
+          (click)="confirmingDiscard.set(true)"
+        >
+          Abandonner l'analyse
+        </button>
+      </div>
+
+      <p class="field-hint">
+        Valider enregistre le menu sans le mettre en ligne. La publication reste une action
+        séparée, depuis la fiche du client.
+      </p>
+
+      @if (saveError()) {
+        <p class="alert-error mt-3">{{ saveError() }}</p>
+      }
+    </section>
+  }
+}
+
+@if (confirmingDiscard()) {
+  <div class="modal-backdrop" (click)="confirmingDiscard.set(false)">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+      <div class="modal-pad">
+        <h3 class="modal-title">Abandonner cette analyse ?</h3>
+        <p class="modal-desc">
+          Le résultat de KartaAI sera supprimé et vous devrez relancer une analyse. Votre PDF
+          et votre menu actuel ne sont pas touchés.
+        </p>
+        <div class="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [disabled]="discarding()"
+            (click)="confirmingDiscard.set(false)"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger btn-sm"
+            [disabled]="discarding()"
+            (click)="discard()"
+          >
+            Abandonner
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

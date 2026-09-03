@@ -61,10 +61,17 @@
   --k-shadow-md: 0 8px 24px -6px rgba(19, 19, 18, 0.12);
   --k-shadow-pop: 0 16px 48px -12px rgba(12, 12, 12, 0.28);
 
-  /* Transitions */
+  /* Transitions — un seul easing pour tout le produit (--k-ease), jamais une
+     deuxième courbe concurrente. Durées supplémentaires, scopées à la landing :
+     --k-t-swap (changement d'état contenu, ex. preset/pricing), --k-t-reveal
+     (entrée au scroll d'un petit élément — texte, ligne) et --k-t-reveal-lg (entrée
+     d'un gros élément/carte — plus lente, avec la légère mise à l'échelle). */
   --k-ease: cubic-bezier(0.2, 0, 0, 1);
   --k-t-fast: 140ms;
   --k-t-base: 180ms;
+  --k-t-swap: 320ms;
+  --k-t-reveal: 700ms;
+  --k-t-reveal-lg: 950ms;
 
   /* Châssis */
   --k-sidebar-w: 15rem;
@@ -298,19 +305,29 @@ body {
     content: "";
     @apply h-1.5 w-1.5 rounded-full bg-current;
   }
-  /* Offres — hiérarchie cohérente (neutre → contour → charcoal+orange) */
+  /* Offres — libellés inchangés (BASIC/PRO/PREMIUM), traitement visuel métallique
+     sobre : léger dégradé bronze/argent/or + liseré interne discret. Pas de reflet
+     ni de motif "médaille" — une matière, pas une décoration. */
   .badge-basic {
-    background-color: var(--k-ink-100);
-    color: var(--k-ink-600);
+    background: linear-gradient(160deg, #d9a568 0%, #a06a35 100%);
+    color: #3a2210;
+    box-shadow:
+      inset 0 0 0 1px rgba(58, 34, 16, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   .badge-pro {
-    background-color: var(--k-white);
-    color: var(--k-ink-900);
-    box-shadow: inset 0 0 0 1px var(--k-ink-300);
+    background: linear-gradient(160deg, #eaeaea 0%, #b5b5b5 100%);
+    color: #2b2b2b;
+    box-shadow:
+      inset 0 0 0 1px rgba(43, 43, 43, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
   .badge-premium {
-    background-color: var(--k-charcoal);
-    color: var(--k-persimmon);
+    background: linear-gradient(160deg, #e0b458 0%, #a4791a 100%);
+    color: #3a2705;
+    box-shadow:
+      inset 0 0 0 1px rgba(58, 39, 5, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
   /* Statuts */
   .badge-active {
@@ -463,18 +480,24 @@ body {
     min-width: 0;
   }
   .chart-bar {
-    @apply w-full rounded-t-[2px];
-    /* Plancher visuel de 2px pour les jours à 0 : la trame reste lisible sans
-       jamais suggérer un scan qui n'a pas eu lieu (la barre est alors grise). */
-    height: max(2px, calc(var(--k-h, 0) * 100%));
+    @apply w-full origin-bottom rounded-t-[2px];
+    /* Hauteur de boîte fixe, jamais animée : la valeur se dessine par un scaleY(),
+       comme .stat-fill plus haut. Animer height/width provoque un reflow à chaque
+       frame ; transform reste sur le compositeur (GPU), sans recalcul de mise en page. */
+    height: 100%;
+    transform: scaleY(var(--k-h, 0));
     background-color: var(--k-persimmon);
-    transition: height var(--k-t-base) var(--k-ease);
+    transition: transform var(--k-t-base) var(--k-ease);
   }
   .chart-col:hover .chart-bar {
     background-color: var(--k-persimmon-hover);
   }
-  /* Jour sans scan : trait neutre, jamais la couleur d'accent. */
-  .chart-bar-empty,
+  /* Jour sans scan : trait neutre, jamais la couleur d'accent. Plancher visuel figé
+     (indépendant de --k-h, qui vaut déjà 0 pour ces jours) : la trame reste lisible
+     sans jamais suggérer un scan qui n'a pas eu lieu. */
+  .chart-bar-empty {
+    transform: scaleY(0.0125);
+  }
   .chart-col:hover .chart-bar-empty {
     background-color: var(--k-ink-200);
   }
@@ -746,6 +769,419 @@ body {
     .phone {
       --k-phone-max: 19.5rem;
     }
+  }
+
+  /* --- Navbar (landing) -----------------------------------------------------
+     "Resizable navbar" : pleine largeur/transparente en haut, barre compacte
+     flottante en descendant. Le morphing est un interpolateur continu sur scrollY
+     (voir LandingNavComponent.progress) — `max-width`/`transform` sont posés en
+     inline style, recalculés à chaque frame de scroll (déjà un point de reflow
+     naturel, on n'en ajoute pas un deuxième via une transition CSS qui se
+     battrait avec les mises à jour par frame). Seules background-color/
+     border-color/box-shadow gardent une micro-transition pour lisser les
+     éventuels à-coups entre deux frames. */
+  .nav-shell {
+    border: 1px solid transparent;
+    border-radius: var(--k-r-full);
+    transition:
+      background-color 80ms linear,
+      border-color 80ms linear,
+      box-shadow 80ms linear;
+    will-change: transform;
+  }
+
+  /* Menu mobile : toujours dans le DOM, transform + opacity uniquement (jamais une
+     hauteur animée). Même easing/durée que le reste du produit. */
+  .landing-mobile-menu {
+    @apply absolute inset-x-3 top-[calc(100%+0.5rem)] z-20 origin-top overflow-hidden rounded-lg;
+    background-color: var(--k-white);
+    box-shadow: var(--k-shadow-pop);
+    border: 1px solid var(--k-hairline);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
+    transition:
+      opacity var(--k-t-swap) var(--k-ease),
+      transform var(--k-t-swap) var(--k-ease);
+  }
+  .landing-mobile-menu-open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .landing-mobile-menu-link {
+    @apply rounded-md px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-100
+           hover:text-ink-900;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity 220ms var(--k-ease),
+      transform 220ms var(--k-ease),
+      background-color 150ms var(--k-ease),
+      color 150ms var(--k-ease);
+  }
+  /* Stagger léger à l'ouverture — les liens arrivent l'un après l'autre, pas d'un bloc. */
+  .landing-mobile-menu-open .landing-mobile-menu-link {
+    opacity: 1;
+    transform: none;
+  }
+  .landing-mobile-menu-open .landing-mobile-menu-link:nth-child(1) {
+    transition-delay: 40ms;
+  }
+  .landing-mobile-menu-open .landing-mobile-menu-link:nth-child(2) {
+    transition-delay: 80ms;
+  }
+  .landing-mobile-menu-open .landing-mobile-menu-link:nth-child(3) {
+    transition-delay: 120ms;
+  }
+  .landing-mobile-backdrop {
+    @apply fixed inset-0 z-10;
+    background-color: rgba(19, 19, 18, 0.32);
+  }
+
+  /* --- Aperçu de menu (landing) --------------------------------------------
+     Mirroir visuel des 4 densités réelles de MenuPreset.Density (backend) : une
+     seule structure HTML, la classe change le rythme — même principe que le vrai
+     rendu (« une seule feuille de style, cinq densités »). Transition sur les
+     propriétés de peinture uniquement (background/color), jamais un layout, pour
+     que le changement de preset reste fluide (§7 anti-jank). */
+  /* Cause réelle du vide en bas du téléphone : `<landing-menu-mock>` (l'élément hôte
+     projeté par <ng-content> dans .phone-screen, lui-même flex-col) n'avait aucun
+     `flex`/hauteur — comme `.phone-iframe` un peu plus haut pour le vrai aperçu de
+     studio, c'est LUI qui doit s'étirer sur la hauteur restante ; sans ça, le
+     `h-full` posé sur `.menu-mock` (l'enfant) se calcule contre un parent à hauteur
+     "auto" et ne fait rien — le fond du preset s'arrête à la hauteur du contenu au
+     lieu de couvrir tout l'écran (mesuré : jusqu'à 69px de vide visible à 1440px). */
+  landing-menu-mock {
+    @apply flex flex-1 flex-col;
+    min-height: 0;
+  }
+  .menu-mock {
+    transition:
+      background-color var(--k-t-swap) var(--k-ease),
+      color var(--k-t-swap) var(--k-ease);
+    /* Filet de sécurité : jamais de scrollbar visible dans le téléphone (§4/§7 du
+       brief) — le contenu est dimensionné pour tenir, ceci n'est qu'un garde-fou. */
+    overflow: hidden;
+  }
+  /* Fondu bref au changement de preset (§5 du brief) : le téléphone ne bouge pas,
+     seul son contenu change — translateY minime, jamais de saut. */
+  .menu-mock-swap-out {
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 240ms var(--k-ease),
+      transform 240ms var(--k-ease),
+      background-color var(--k-t-swap) var(--k-ease),
+      color var(--k-t-swap) var(--k-ease);
+  }
+  /* Mobile-first (§8 du brief : 390px = priorité) : dimensionné pour la PLUS PETITE
+     taille de téléphone (<1280px de viewport global, --k-phone-max: 17.5rem — voir
+     .phone). `@media (min-width: 1280px)` plus bas reprend les mêmes plats avec un
+     rythme plus généreux : le grand téléphone (19.5rem) a ~87px de haut en plus,
+     autant les donner au contenu plutôt que les laisser vides. */
+  .menu-mock-banner {
+    @apply h-12 w-full;
+    transition: background-color var(--k-t-swap) var(--k-ease);
+  }
+  /* Badge logo — illustration PREMIUM uniquement (menu-mock[logoInitial]).
+     Chevauche le bas du bandeau, comme un vrai logo posé sur une image d'en-tête. */
+  .menu-mock-logo {
+    @apply absolute -bottom-3.5 left-4 flex h-7 w-7 items-center justify-center rounded-full bg-white text-[0.65rem] font-semibold;
+    box-shadow: var(--k-shadow-sm);
+  }
+  .menu-mock-body {
+    @apply pt-2;
+  }
+  .menu-mock-eyebrow {
+    @apply text-[0.6875rem] font-bold uppercase tracking-[0.08em];
+  }
+  .menu-mock-title {
+    @apply mt-0.5 text-lg font-bold tracking-[-0.01em];
+  }
+  .menu-mock-category {
+    @apply mt-2.5 text-[0.75rem] font-bold uppercase tracking-[0.06em];
+  }
+  .menu-mock-items {
+    @apply mt-1 space-y-1;
+  }
+  .menu-mock-item {
+    @apply border-b pb-1;
+  }
+  .menu-mock-item-row {
+    @apply flex items-baseline justify-between gap-2;
+  }
+  .menu-mock-item-name {
+    @apply text-[0.85rem] font-medium leading-snug;
+  }
+  .menu-mock-item-price {
+    @apply mono shrink-0 text-[0.76rem] font-semibold;
+  }
+  .menu-mock-item-desc {
+    @apply mt-0.5 text-[0.7rem] leading-snug;
+  }
+  .menu-mock-footer {
+    @apply mt-2 flex items-center justify-center gap-1.5 pb-2;
+  }
+  .menu-mock-dot {
+    @apply h-1.5 w-1.5 rounded-full;
+  }
+
+  /* Compact (Street Food) : lecture rapide, resserré — mais reste net et lisible,
+     pas miniature. */
+  .menu-mock-compact .menu-mock-banner {
+    @apply h-9;
+  }
+  .menu-mock-compact .menu-mock-category {
+    @apply mt-2.5;
+  }
+  .menu-mock-compact .menu-mock-items {
+    @apply mt-1 space-y-1;
+  }
+  .menu-mock-compact .menu-mock-item {
+    @apply pb-1;
+  }
+
+  /* Airy (Minimal) : beaucoup d'air, la typographie porte tout — reste dans la
+     hauteur du téléphone (§7 du brief), l'air vient de l'absence de bordures/prix
+     serrés, pas d'un vide en bas d'écran. */
+  .menu-mock-airy .menu-mock-banner {
+    @apply h-14;
+  }
+  .menu-mock-airy .menu-mock-category {
+    @apply mt-3;
+  }
+  .menu-mock-airy .menu-mock-items {
+    @apply mt-2 space-y-2;
+  }
+  .menu-mock-airy .menu-mock-item {
+    @apply border-b-0 pb-0;
+  }
+
+  /* Elegant (Luxe) : centré, espacé, serif — registre haut de gamme. Nom + prix
+     empilés (deux lignes) coûtent nettement plus de hauteur par plat qu'ailleurs :
+     c'est la vraie cause d'un débordement à densité de contenu égale (§1 du brief,
+     pas un `overflow:hidden` qui masquerait le dernier plat). Interligne resserré +
+     espacements réduits en conséquence — la taille de police et le style restent
+     inchangés, seul le rythme vertical est repensé pour ce format à deux lignes. */
+  .menu-mock-elegant .menu-mock-banner {
+    @apply h-9;
+  }
+  .menu-mock-elegant .menu-mock-body {
+    @apply text-center;
+  }
+  .menu-mock-elegant .menu-mock-category {
+    @apply mt-1.5 tracking-[0.12em];
+  }
+  .menu-mock-elegant .menu-mock-item-row {
+    @apply flex-col items-center gap-0 leading-tight;
+  }
+  .menu-mock-elegant .menu-mock-item {
+    @apply border-b-0 pb-0;
+  }
+  .menu-mock-elegant .menu-mock-items {
+    @apply mt-1 space-y-1;
+  }
+  .menu-mock-elegant .menu-mock-item-name {
+    @apply text-[0.74rem];
+  }
+  .menu-mock-elegant .menu-mock-item-price {
+    @apply text-[0.68rem];
+  }
+  .menu-mock-elegant .menu-mock-item-desc {
+    @apply mt-0 text-[0.62rem] leading-tight;
+  }
+
+  /* Écran plus grand (--k-phone-max: 19.5rem, voir .phone) : ~87px de haut en plus
+     par rapport au petit téléphone — donnés au rythme vertical plutôt que laissés
+     vides. Mêmes plats, mêmes styles, juste plus respirés (§1/§6 du brief). */
+  @media (min-width: 1280px) {
+    .menu-mock-banner {
+      @apply h-14;
+    }
+    .menu-mock-category {
+      @apply mt-3;
+    }
+    .menu-mock-items {
+      @apply mt-1.5 space-y-1.5;
+    }
+    .menu-mock-item {
+      @apply pb-1.5;
+    }
+    .menu-mock-footer {
+      @apply mt-3;
+    }
+    .menu-mock-compact .menu-mock-banner {
+      @apply h-10;
+    }
+    .menu-mock-compact .menu-mock-category {
+      @apply mt-3;
+    }
+    .menu-mock-compact .menu-mock-items {
+      @apply mt-1.5 space-y-1.5;
+    }
+    .menu-mock-compact .menu-mock-item {
+      @apply pb-1.5;
+    }
+    .menu-mock-airy .menu-mock-banner {
+      @apply h-16;
+    }
+    .menu-mock-airy .menu-mock-category {
+      @apply mt-4;
+    }
+    .menu-mock-airy .menu-mock-items {
+      @apply mt-2.5 space-y-2.5;
+    }
+    .menu-mock-elegant .menu-mock-banner {
+      @apply h-10;
+    }
+    .menu-mock-elegant .menu-mock-category {
+      @apply mt-2;
+    }
+    .menu-mock-elegant .menu-mock-items {
+      @apply mt-1.5 space-y-1.5;
+    }
+    .menu-mock-elegant .menu-mock-item-name {
+      @apply text-[0.8rem];
+    }
+    .menu-mock-elegant .menu-mock-item-price {
+      @apply text-[0.72rem];
+    }
+    .menu-mock-elegant .menu-mock-item-desc {
+      @apply text-[0.68rem];
+    }
+  }
+
+  /* --- Reveal au scroll (landing) -----------------------------------------
+     Une seule classe, pilotée par RevealOnScrollDirective (IntersectionObserver,
+     une seule fois par élément). Même vocabulaire que .k-pop : fondu + léger
+     translateY, jamais un rebond ni un zoom. `prefers-reduced-motion` est déjà
+     neutralisé par le bloc global (transition-duration → quasi 0). */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity var(--k-t-reveal) var(--k-ease),
+      transform var(--k-t-reveal) var(--k-ease);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  /* Variante « gros élément » (mockup téléphone, titre du hero, cartes) : même
+     entrée, plus lente, plus une très légère mise à l'échelle — jamais un zoom
+     marqué. */
+  .reveal-scale {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+    transition:
+      opacity var(--k-t-reveal-lg) var(--k-ease),
+      transform var(--k-t-reveal-lg) var(--k-ease);
+  }
+  .reveal-scale.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  /* Cartes fonctionnalités (landing) : même principe que .btn:active plus haut —
+     un déplacement minime, jamais un zoom. */
+  .feature-card {
+    transition:
+      transform var(--k-t-base) var(--k-ease),
+      box-shadow var(--k-t-base) var(--k-ease),
+      border-color var(--k-t-base) var(--k-ease);
+  }
+  .feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--k-shadow-sm);
+    border-color: var(--k-ink-200);
+  }
+  /* Aperçu produit (landing) : très léger effet de profondeur au survol desktop. */
+  .phone-hover-lift {
+    transition: transform var(--k-t-base) var(--k-ease);
+  }
+  @media (hover: hover) {
+    .phone-hover-lift:hover {
+      transform: translateY(-4px);
+    }
+  }
+  /* Cartes d'offre (landing) : l'offre recommandée se détache par la matière
+     (liseré persimmon + ombre un cran au-dessus), jamais par la taille ou un badge
+     tape-à-l'œil — cohérent avec §6 (la bordure porte la structure). */
+  .pricing-card {
+    transition:
+      transform var(--k-t-base) var(--k-ease),
+      box-shadow var(--k-t-base) var(--k-ease);
+  }
+  .pricing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--k-shadow-sm);
+  }
+  /* Recommandée (PRO) : se détache par la matière (liseré + ombre un cran
+     au-dessus), jamais par la position — les 3 cartes commencent et finissent
+     exactement au même niveau (grid items-stretch, voir template). */
+  .pricing-card-highlighted {
+    border-color: var(--k-persimmon);
+    box-shadow: var(--k-shadow-md);
+  }
+  .pricing-card-highlighted:hover {
+    box-shadow: var(--k-shadow-pop);
+  }
+
+  /* Switch mensuel/annuel : segmented control, un seul état pour les 3 cartes.
+     `.billing-switch-wrap` ne fait qu'envelopper le toggle à sa taille réelle
+     (inline-block + relative) pour ancrer le badge -10% sans jamais agrandir ni
+     déplacer le toggle lui-même (position absolue, hors du flux). */
+  .billing-switch-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .billing-switch {
+    @apply inline-flex gap-1 rounded-full p-1;
+    background-color: var(--k-ink-100);
+  }
+  .billing-switch-option {
+    @apply rounded-full px-4 py-1.5 text-sm font-medium text-ink-500 transition-colors
+           duration-150 ease-karta focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-inset;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .billing-switch-option-active {
+    background-color: var(--k-white);
+    color: var(--k-ink-900);
+    box-shadow: var(--k-shadow-xs);
+  }
+  /* Hauteur réservée pour le bloc prix : évite tout saut de mise en page quand on
+     bascule mensuel ↔ annuel ou « Sur devis » ↔ un montant. */
+  .billing-price {
+    min-height: 4.5rem;
+  }
+  /* Ligne du prix barré : hauteur TOUJOURS réservée (visible ou non) — c'est ce qui
+     garantit qu'aucun changement de hauteur ne se produit en basculant mensuel ↔
+     annuel, sans avoir besoin d'animer une hauteur (§7/§9, anti-jank). */
+  .billing-price-original-slot {
+    @apply h-[1.125rem];
+  }
+  .billing-price-original {
+    @apply mono text-sm;
+    color: var(--k-ink-400);
+    text-decoration: line-through;
+    opacity: 0;
+    transition: opacity var(--k-t-swap) var(--k-ease);
+  }
+  .billing-price-original-visible {
+    opacity: 1;
+  }
+  /* Badge -10% : toujours visible, rattaché au toggle (au-dessus de « Annuel »).
+     Position absolue — hors du flux, ne modifie jamais la taille/position du
+     toggle (§3/§5 du brief). Liseré blanc pour le détacher visuellement du toggle
+     juste en dessous, comme un petit badge flottant. */
+  .billing-discount-badge {
+    @apply absolute rounded-full px-2 py-0.5 text-[0.6875rem] font-bold;
+    top: -0.55rem;
+    right: 0.35rem;
+    background-color: var(--k-success-soft);
+    color: var(--k-success);
+    box-shadow: 0 0 0 2px var(--k-white);
   }
 }
 

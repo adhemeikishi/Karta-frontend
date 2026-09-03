@@ -1,0 +1,268 @@
+<div class="mb-6">
+  @if (categories().length === 0) {
+    <div class="empty-state rounded-md" style="border: 1px dashed var(--k-ink-300)">
+      <span class="empty-state-icon">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </span>
+      <p class="mt-3 text-sm font-medium text-ink-900">Votre carte est vide</p>
+      <p class="mt-1 text-sm text-ink-500">Ajoutez une première catégorie pour commencer à la remplir.</p>
+      <button type="button" (click)="addCategory()" class="btn btn-primary mt-4">+ Ajouter une catégorie</button>
+    </div>
+  } @else {
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+      <p class="k-coord">{{ categoryCount() }} catégorie(s) · {{ itemCount() }} plat(s)</p>
+      <button type="button" (click)="addCategory()" class="btn btn-outline btn-sm">+ Ajouter une catégorie</button>
+    </div>
+
+    <div class="space-y-4">
+      @for (category of categories(); track category.uid; let ci = $index) {
+        <div class="rounded-md" style="border: 1px solid var(--k-hairline)">
+          <!-- En-tête de catégorie -->
+          <div
+            class="flex flex-wrap items-center gap-2.5 px-4 py-3"
+            style="border-bottom: 1px solid var(--k-hairline); background-color: var(--k-ivory)"
+          >
+            <div class="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                [disabled]="ci === 0 || saving()"
+                (click)="moveCategory(ci, -1)"
+                aria-label="Monter la catégorie"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                [disabled]="ci === categories().length - 1 || saving()"
+                (click)="moveCategory(ci, 1)"
+                aria-label="Descendre la catégorie"
+              >
+                ↓
+              </button>
+            </div>
+
+            <input
+              type="text"
+              class="input min-w-0 flex-1 font-medium"
+              maxlength="120"
+              placeholder="Nom de la catégorie"
+              [(ngModel)]="category.name"
+              (ngModelChange)="onFieldChange()"
+              [attr.aria-label]="'Nom de la catégorie ' + (ci + 1)"
+            />
+
+            <button
+              type="button"
+              class="btn btn-danger-soft btn-sm shrink-0"
+              [disabled]="saving()"
+              (click)="requestRemoveCategory(ci)"
+            >
+              Supprimer
+            </button>
+          </div>
+
+          <!-- Plats -->
+          <div class="p-4">
+            @if (category.items.length === 0) {
+              <p class="text-sm text-ink-400">Aucun plat dans cette catégorie.</p>
+            }
+
+            <div class="space-y-3">
+              @for (item of category.items; track item.uid; let ii = $index) {
+                <div class="rounded-md p-3" style="border: 1px solid var(--k-hairline)">
+                  <div class="flex items-start gap-2">
+                    <div class="mt-1 flex shrink-0 flex-col items-center gap-0.5">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm"
+                        [disabled]="ii === 0 || saving()"
+                        (click)="moveItem(ci, ii, -1)"
+                        aria-label="Monter le plat"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm"
+                        [disabled]="ii === category.items.length - 1 || saving()"
+                        (click)="moveItem(ci, ii, 1)"
+                        aria-label="Descendre le plat"
+                      >
+                        ↓
+                      </button>
+                    </div>
+
+                    <div class="min-w-0 flex-1">
+                      <div class="grid gap-3 sm:grid-cols-[minmax(0,2fr)_7rem]">
+                        <div>
+                          <label class="field-label" [attr.for]="'name-' + item.uid">Plat</label>
+                          <input
+                            [id]="'name-' + item.uid"
+                            type="text"
+                            class="input"
+                            maxlength="160"
+                            placeholder="Nom du plat"
+                            [(ngModel)]="item.name"
+                            (ngModelChange)="onFieldChange()"
+                          />
+                        </div>
+                        <div>
+                          <label class="field-label" [attr.for]="'price-' + item.uid">Prix (€)</label>
+                          <input
+                            [id]="'price-' + item.uid"
+                            type="text"
+                            inputmode="decimal"
+                            class="input tnum"
+                            placeholder="—"
+                            [ngModel]="priceInputValue(item)"
+                            (ngModelChange)="onPriceInput(item, $event)"
+                            (blur)="onPriceBlur(item)"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="mt-3">
+                        <label class="field-label" [attr.for]="'desc-' + item.uid">Description</label>
+                        <textarea
+                          [id]="'desc-' + item.uid"
+                          class="input resize-y"
+                          rows="2"
+                          maxlength="2000"
+                          placeholder="Facultative"
+                          [(ngModel)]="item.description"
+                          (ngModelChange)="onFieldChange()"
+                        ></textarea>
+                      </div>
+
+                      @if (item.priceEuros === null || item.priceEuros < 0) {
+                        <p class="field-hint" style="color: var(--k-warning)">
+                          Saisissez un prix valide pour pouvoir enregistrer.
+                        </p>
+                      }
+
+                      <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm"
+                          [disabled]="saving()"
+                          (click)="toggleAvailable(ci, ii)"
+                        >
+                          @if (item.available) {
+                            <span style="color: var(--k-success)">●</span> Disponible
+                          } @else {
+                            <span class="text-ink-400">○</span> Indisponible
+                          }
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm"
+                          [disabled]="saving()"
+                          (click)="requestRemoveItem(ci, ii)"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-outline btn-sm mt-3"
+              [disabled]="saving()"
+              (click)="addItem(ci)"
+            >
+              + Ajouter un plat
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Enregistrement -->
+  <div class="mt-5 rounded-md p-4" style="border: 1px solid var(--k-hairline)">
+    <p class="studio-state">
+      @if (blockers.length > 0) {
+        <span class="studio-dot studio-dot-pending"></span>
+        @for (blocker of blockers; track blocker) {
+          {{ blocker }}
+        }
+      } @else if (dirty()) {
+        <span class="studio-dot studio-dot-pending"></span> Modifications non enregistrées
+      } @else {
+        <span class="studio-dot"></span> Aucune modification
+      }
+    </p>
+
+    @if (menu().published && dirty()) {
+      <p class="alert-warning mt-3">
+        Cette carte est en ligne : enregistrer met à jour ce que vos clients voient,
+        immédiatement.
+      </p>
+    }
+
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        class="btn"
+        [class.btn-primary]="canSave()"
+        [class.btn-outline]="!canSave()"
+        [disabled]="!canSave()"
+        (click)="save()"
+      >
+        @if (saving()) {
+          <span class="spinner"></span>
+        }
+        Enregistrer les modifications
+      </button>
+      @if (justSaved() && !dirty()) {
+        <span class="save-hint">Menu enregistré.</span>
+      }
+    </div>
+
+    @if (saveError()) {
+      <p class="alert-error mt-3">
+        Impossible d'enregistrer le menu. Vos modifications locales n'ont pas été perdues.
+        <span class="block text-xs opacity-80">{{ saveError() }}</span>
+      </p>
+    }
+  </div>
+</div>
+
+<!-- Confirmation : supprimer une catégorie non vide -->
+@if (pendingDeleteCategory(); as pending) {
+  <div class="modal-backdrop" (click)="cancelRemoveCategory()">
+    <div class="modal-panel modal-pad" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h3 class="modal-title">Supprimer cette catégorie ?</h3>
+      <p class="modal-desc">
+        « {{ pending.name }} » contient {{ pending.itemCount }} plat{{ pending.itemCount > 1 ? 's' : '' }}.
+        Ils seront également supprimés lors de l'enregistrement.
+      </p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" class="btn btn-outline btn-sm" (click)="cancelRemoveCategory()">Annuler</button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="confirmRemoveCategory()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirmation : supprimer un plat -->
+@if (pendingDeleteItem(); as pending) {
+  <div class="modal-backdrop" (click)="cancelRemoveItem()">
+    <div class="modal-panel modal-pad" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h3 class="modal-title">Supprimer « {{ pending.name }} » ?</h3>
+      <p class="modal-desc">Cette action sera appliquée lors de l'enregistrement.</p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" class="btn btn-outline btn-sm" (click)="cancelRemoveItem()">Annuler</button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="confirmRemoveItem()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}

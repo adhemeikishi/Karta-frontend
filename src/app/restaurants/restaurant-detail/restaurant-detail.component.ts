@@ -125,22 +125,9 @@ export class RestaurantDetailComponent implements OnInit {
   readonly deleteError = signal<string | null>(null);
   deleteConfirmText = '';
 
-  // Modification de la destination du QR
-  readonly editingDestination = signal(false);
-  readonly destinationLoading = signal(false);
-  readonly destinationError = signal<string | null>(null);
-  destinationValue = '';
-
   // Activation / désactivation du QR
   readonly togglingActive = signal(false);
   readonly toggleError = signal<string | null>(null);
-
-  // Création du QR unique (client sans QR)
-  readonly creatingQr = signal(false);
-  readonly createQrLoading = signal(false);
-  readonly createQrError = signal<string | null>(null);
-  newQrName = '';
-  newQrDestination = '';
 
   ngOnInit(): void {
     this.shell.setBreadcrumbs([
@@ -355,54 +342,6 @@ export class RestaurantDetailComponent implements OnInit {
     });
   }
 
-  // --- Destination du QR ---
-
-  openEditDestination(): void {
-    const qr = this.qr();
-    if (!qr) {
-      return;
-    }
-    this.destinationValue = qr.destinationUrl;
-    this.destinationError.set(null);
-    this.editingDestination.set(true);
-  }
-
-  closeEditDestination(): void {
-    if (this.destinationLoading()) {
-      return;
-    }
-    this.editingDestination.set(false);
-  }
-
-  submitDestination(): void {
-    const qr = this.qr();
-    if (!qr) {
-      return;
-    }
-    const url = this.destinationValue.trim();
-    if (!url) {
-      this.destinationError.set('La destination est requise.');
-      return;
-    }
-    this.destinationLoading.set(true);
-    this.destinationError.set(null);
-    this.qrCodeService.updateDestination(qr.id, url).subscribe({
-      next: (updated) => {
-        this.qr.set(updated);
-        this.destinationLoading.set(false);
-        this.editingDestination.set(false);
-      },
-      error: (err) => {
-        this.destinationLoading.set(false);
-        this.destinationError.set(
-          err?.status === 400
-            ? 'URL invalide (http:// ou https:// uniquement).'
-            : 'La mise à jour a échoué.',
-        );
-      },
-    });
-  }
-
   // --- Activation / désactivation ---
 
   toggleActive(): void {
@@ -503,48 +442,5 @@ export class RestaurantDetailComponent implements OnInit {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }
-
-  // --- Création du QR unique ---
-
-  openCreateQr(): void {
-    this.newQrName = this.restaurant()?.name ?? '';
-    this.newQrDestination = '';
-    this.createQrError.set(null);
-    this.creatingQr.set(true);
-  }
-
-  closeCreateQr(): void {
-    if (this.createQrLoading()) {
-      return;
-    }
-    this.creatingQr.set(false);
-  }
-
-  submitCreateQr(): void {
-    const name = this.newQrName.trim();
-    const destination = this.newQrDestination.trim();
-    if (!name || !destination) {
-      this.createQrError.set('Nom et destination sont requis.');
-      return;
-    }
-    this.createQrLoading.set(true);
-    this.createQrError.set(null);
-    this.qrCodeService.create(this.restaurantId, name, destination).subscribe({
-      next: (qr) => {
-        this.qr.set(qr);
-        this.createQrLoading.set(false);
-        this.creatingQr.set(false);
-        this.loadQrImage(qr.id);
-      },
-      error: (err) => {
-        this.createQrLoading.set(false);
-        this.createQrError.set(
-          err?.status === 400
-            ? 'Données invalides (destination en http:// ou https://).'
-            : 'La création du QR a échoué.',
-        );
-      },
-    });
   }
 }

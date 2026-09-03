@@ -1,11 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal, viewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { RestaurantOffer } from '../models/restaurant.model';
 import { offerBadgeClass } from '../restaurants/offer-badge';
 import { MenuDesignStudioComponent } from './design/menu-design-studio.component';
+import { MenuEditorComponent } from './editor/menu-editor.component';
 import { MAX_PDF_BYTES, Menu, MenuStatus, formatPrice } from './menu.model';
 import { MenuService } from './menu.service';
+import { MenuDraftService } from './review/menu-draft.service';
 
 /**
  * Section « Menu » de la page détail client.
@@ -21,14 +24,19 @@ import { MenuService } from './menu.service';
 @Component({
   selector: 'app-menu-section',
   standalone: true,
-  imports: [CommonModule, MenuDesignStudioComponent],
+  imports: [CommonModule, MenuDesignStudioComponent, MenuEditorComponent],
   templateUrl: './menu-section.component.html',
 })
 export class MenuSectionComponent implements OnInit {
   private readonly menuService = inject(MenuService);
+  private readonly draftService = inject(MenuDraftService);
+  private readonly router = inject(Router);
 
   readonly restaurantId = input.required<string>();
   readonly offer = input.required<RestaurantOffer>();
+
+  /** Pour rafraîchir l'aperçu du studio après un enregistrement de contenu depuis l'éditeur. */
+  private readonly studio = viewChild<MenuDesignStudioComponent>('studio');
 
   readonly menu = signal<Menu | null>(null);
   readonly loading = signal(true);
@@ -39,12 +47,6 @@ export class MenuSectionComponent implements OnInit {
 
   readonly isBasic = computed(() => this.offer() === 'BASIC');
 
-  /** Un menu structuré existe réellement en base (version 0 = aucune ligne menus). */
-  readonly hasStructuredMenu = computed(() => {
-    const menu = this.menu();
-    return menu !== null && menu.type === 'STRUCTURED' && menu.version > 0;
-  });
-
   /**
    * Carte PDF du client, quelle que soit l'offre.
    *
@@ -54,24 +56,84 @@ export class MenuSectionComponent implements OnInit {
    */
   readonly sourcePdf = computed(() => this.menu()?.pdf ?? null);
 
-  /** Une carte PDF existe, mais aucune catégorie n'a encore été produite. */
+  /**
+   * Un contenu structuré a réellement été enregistré au moins une fois pour ce client
+   * (édition manuelle ou validation KartaAI) — qu'il soit aujourd'hui vide ou non.
+   *
+   * Le seuil est `version > 1`, PAS `version > 0` : une ligne `menus` peut exister sans
+   * qu'aucun contenu n'ait jamais été écrit — le studio de style (`PUT .../menu/design`)
+   * crée la ligne dès le premier choix de preset, à `version = 1`, sans jamais
+   * l'incrémenter (vérifié : `Menu.bumpVersion()` n'a qu'un seul appelant dans tout le
+   * backend, `MenuService.saveStructure()`). Le tout premier enregistrement de contenu
+   * réel — via l'éditeur ou via la Review KartaAI validée, les deux passant par le même
+   * `PUT .../menu` — crée la ligne à `version = 1` PUIS l'incrémente dans le même appel,
+   * donc `version = 2` dès ce premier enregistrement. `version = 1` seul ne prouve donc
+   * qu'une chose : quelqu'un a choisi un style, jamais qu'un menu a été créé.
+   *
+   * Volontairement PAS déduit du nombre de catégories/plats non plus : un menu structuré
+   * peut exister et être vide après une édition qui a tout supprimé — il doit alors
+   * continuer à afficher l'éditeur, pas repasser par l'état initial.
+   */
+  readonly hasStructuredMenu = computed(() => {
+    const menu = this.menu();
+    return menu !== null && menu.type === 'STRUCTURED' && menu.version > 1;
+  });
+
+  /**
+   * Le client a explicitement choisi de créer son menu à la main, sans passer par
+   * KartaAI. Purement local : dès le premier enregistrement, `hasStructuredMenu`
+   * devient vrai et prend le relais — ce signal n'a alors plus d'effet.
+   */
+  readonly manualCreationStarted = signal(false);
+
+  startManualCreation(): void {
+    this.manualCreationStarted.set(true);
+  }
+
+  /** Éditeur affiché : menu déjà créé (KartaAI ou manuel), ou création manuelle en cours. */
+  readonly showEditor = computed(() => this.hasStructuredMenu() || this.manualCreationStarted());
+
+  /** Une carte PDF existe, mais le menu structuré n'a pas encore été créé. */
   readonly canTransformPdf = computed(
-    () => this.categoryCount() === 0 && this.sourcePdf() !== null,
+    () => !this.hasStructuredMenu() && this.sourcePdf() !== null,
   );
 
   /**
-   * Point d'entrée du futur workflow KartaAI (PDF source → extraction → Review).
-   * KartaAI n'est pas codé : on n'invente aucun résultat et on ne simule aucune
-   * extraction — le bouton annonce seulement que l'étape n'est pas encore active.
+   * Point d'entrée du parcours KartaAI (PDF source → extraction → Review).
+   *
+   * L'analyse n'écrit rien dans le menu : elle produit un brouillon que le restaurateur
+   * relit sur un écran dédié. La carte publiée, s'il y en a une, reste intacte.
+   *
+   * L'analyse peut prendre plusieurs dizaines de secondes (voir DEPLOYMENT.md) : le
+   * bouton doit rester désactivé pendant l'appel, et un échec (PDF illisible, service
+   * indisponible) doit rester visible plutôt que silencieux.
    */
-  readonly transformNotice = signal(false);
+  readonly transforming = signal(false);
+  readonly transformError = signal<string | null>(null);
 
   startKartaAiTransform(): void {
-    this.transformNotice.set(true);
+    if (this.transforming()) {
+      return;
+    }
+    this.transforming.set(true);
+    this.transformError.set(null);
+
+    this.draftService.importFromPdf(this.restaurantId()).subscribe({
+      next: () => {
+        this.transforming.set(false);
+        this.router.navigate(['/admin/restaurants', this.restaurantId(), 'menu', 'review']);
+      },
+      error: (err) => {
+        this.transforming.set(false);
+        this.transformError.set(
+          err?.error?.message ?? "L'analyse n'a pas pu aboutir. Réessayez.",
+        );
+      },
+    });
   }
 
-  dismissTransformNotice(): void {
-    this.transformNotice.set(false);
+  dismissTransformError(): void {
+    this.transformError.set(null);
   }
 
   previewSourcePdf(): void {
@@ -80,15 +142,6 @@ export class MenuSectionComponent implements OnInit {
       window.open(url, '_blank', 'noopener');
     }
   }
-
-  readonly categoryCount = computed(() => this.menu()?.structure?.categories.length ?? 0);
-
-  readonly itemCount = computed(() =>
-    (this.menu()?.structure?.categories ?? []).reduce((total, c) => total + c.items.length, 0),
-  );
-
-  /** Détail de la carte : replié par défaut, le studio est le sujet de la page. */
-  readonly cardOpen = signal(false);
 
   readonly formatPrice = formatPrice;
   readonly offerBadgeClass = offerBadgeClass;
@@ -112,13 +165,20 @@ export class MenuSectionComponent implements OnInit {
     });
   }
 
-  toggleCard(): void {
-    this.cardOpen.set(!this.cardOpen());
-  }
-
   /** Le studio publie et dépublie : il renvoie le menu à jour pour garder le statut juste. */
   onMenuChange(menu: Menu): void {
     this.menu.set(menu);
+  }
+
+  /**
+   * L'éditeur de contenu vient d'enregistrer. Même mise à jour que `onMenuChange`, plus
+   * un rafraîchissement de l'aperçu du studio : celui-ci ne réagit qu'aux changements de
+   * style, jamais aux changements de contenu — sans ce coup de pouce, l'aperçu resterait
+   * sur la version d'avant l'enregistrement tant qu'aucun style n'est retouché.
+   */
+  onEditorSaved(menu: Menu): void {
+    this.menu.set(menu);
+    this.studio()?.refreshPreview();
   }
 
   statusLabel(status: MenuStatus): string {
@@ -142,12 +202,6 @@ export class MenuSectionComponent implements OnInit {
       default:
         return 'badge badge-draft badge-dot';
     }
-  }
-
-  // ------------------------------------------------------------ menu structuré
-
-  createStructuredMenu(): void {
-    this.runAction(this.menuService.createMenu(this.restaurantId()));
   }
 
   // ------------------------------------------------------------ menu PDF (BASIC)

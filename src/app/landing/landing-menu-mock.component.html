@@ -1,0 +1,51 @@
+<div
+  class="menu-mock flex h-full flex-col"
+  [class.menu-mock-compact]="preset().density === 'compact'"
+  [class.menu-mock-airy]="preset().density === 'airy'"
+  [class.menu-mock-elegant]="preset().density === 'elegant'"
+  [class.font-serif]="preset().typeface === 'serif'"
+  [class.menu-mock-swap-out]="switching()"
+  [style.background-color]="preset().background"
+  [style.color]="preset().text"
+  aria-hidden="true"
+>
+  <!-- Bandeau d'identité : accent du preset, jamais une photo de stock — sauf en
+       illustration PREMIUM (heroImage), où le bandeau représente l'image d'en-tête
+       réelle du client (dégradé, pas d'asset externe sur la landing). -->
+  <div
+    class="menu-mock-banner shrink-0 relative"
+    [style.background-color]="preset().accent"
+    [style.background-image]="heroImage() ? 'linear-gradient(135deg, ' + preset().accent + ', ' + preset().text + ')' : null"
+  >
+    @if (logoInitial()) {
+      <span class="menu-mock-logo" [style.color]="preset().accent">{{ logoInitial() }}</span>
+    }
+  </div>
+
+  <div class="menu-mock-body flex-1 px-4 pb-4" [class.pt-4]="logoInitial()">
+    <p class="menu-mock-eyebrow" [style.color]="preset().accent">{{ content.tagline }}</p>
+    <p class="menu-mock-title">{{ brandName() || content.restaurant }}</p>
+
+    @for (category of content.categories; track category.name) {
+      <p class="menu-mock-category" [style.color]="preset().accent">{{ category.name }}</p>
+      <div class="menu-mock-items">
+        @for (item of category.items; track item.name) {
+          <div class="menu-mock-item" [style.border-color]="preset().divider">
+            <div class="menu-mock-item-row">
+              <span class="menu-mock-item-name">{{ item.name }}</span>
+              <span class="menu-mock-item-price" [style.color]="preset().accent">{{ item.price }}</span>
+            </div>
+            @if (item.description) {
+              <p class="menu-mock-item-desc" [style.color]="preset().divider">{{ item.description }}</p>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <div class="menu-mock-footer">
+      <span class="menu-mock-dot" [style.background-color]="preset().accent"></span>
+      <span class="k-coord">Menu à jour</span>
+    </div>
+  </div>
+</div>

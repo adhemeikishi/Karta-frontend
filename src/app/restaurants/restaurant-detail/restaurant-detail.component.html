@@ -196,7 +196,7 @@
 
                 <div>
                   <p class="eyebrow">Destination actuelle</p>
-                  <div class="mt-1.5 flex items-start justify-between gap-3">
+                  <div class="mt-1.5">
                     <a
                       [href]="q.destinationUrl"
                       target="_blank"
@@ -205,15 +205,13 @@
                     >
                       {{ q.destinationUrl }}
                     </a>
-                    <button
-                      type="button"
-                      (click)="openEditDestination()"
-                      class="btn btn-primary btn-sm shrink-0"
-                    >
-                      Modifier
-                    </button>
                   </div>
-                  <p class="field-hint">Le QR imprimé n'est pas régénéré : seule la redirection change.</p>
+                  <p class="field-hint mt-1.5 flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    Destination permanente — se met à jour automatiquement selon le menu publié, jamais modifiable manuellement.
+                  </p>
                 </div>
               </div>
             </div>
@@ -227,9 +225,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h6v6h-6v-6zM14.25 4.5h6v6h-6v-6zM3.75 15h6v6h-6v-6zM14.25 15h3m3 0h.008M14.25 18v.008M17.25 21h.008M20.25 18v3" />
                 </svg>
               </span>
-              <p class="mt-3 text-sm font-medium text-ink-900">Ce client n'a pas encore de QR Karta</p>
-              <p class="mt-1 text-sm text-ink-500">Créez son QR unique pour commencer à suivre ses scans.</p>
-              <button type="button" (click)="openCreateQr()" class="btn btn-primary mt-4">Créer le QR</button>
+              <p class="mt-3 text-sm font-medium text-ink-900">QR en cours de génération</p>
+              <p class="mt-1 text-sm text-ink-500">Le QR unique de ce client est créé automatiquement. Rechargez la page dans un instant.</p>
             </div>
           }
         </div>
@@ -458,95 +455,4 @@
     </div>
   }
 
-  @if (editingDestination()) {
-    <div class="modal-backdrop" (click)="closeEditDestination()">
-      <div class="modal-panel modal-pad" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="dest-title">
-        <button type="button" (click)="closeEditDestination()" class="modal-close" aria-label="Fermer">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
-        <h3 id="dest-title" class="modal-title">Modifier la destination</h3>
-        <p class="modal-desc">
-          Le QR imprimé ne change pas : seule la page vers laquelle il redirige est mise à jour.
-        </p>
-        <form (ngSubmit)="submitDestination()" class="mt-5 space-y-4">
-          <div>
-            <label class="field-label" for="dest-value">URL de destination</label>
-            <input
-              id="dest-value"
-              type="url"
-              name="destinationValue"
-              [(ngModel)]="destinationValue"
-              placeholder="https://…"
-              autocomplete="off"
-              class="input"
-            />
-          </div>
-          @if (destinationError()) {
-            <p class="alert-error">{{ destinationError() }}</p>
-          }
-          <div class="flex justify-end gap-2 pt-1">
-            <button type="button" (click)="closeEditDestination()" [disabled]="destinationLoading()" class="btn btn-ghost">
-              Annuler
-            </button>
-            <button type="submit" [disabled]="destinationLoading()" class="btn btn-primary">
-              {{ destinationLoading() ? 'Enregistrement…' : 'Enregistrer' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
-
-  @if (creatingQr()) {
-    <div class="modal-backdrop" (click)="closeCreateQr()">
-      <div class="modal-panel modal-pad" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="createqr-title">
-        <button type="button" (click)="closeCreateQr()" class="modal-close" aria-label="Fermer">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
-        <h3 id="createqr-title" class="modal-title">Créer le QR du client</h3>
-        <p class="modal-desc">Un QR unique et permanent pour cet établissement.</p>
-        <form (ngSubmit)="submitCreateQr()" class="mt-5 space-y-4">
-          <div>
-            <label class="field-label" for="new-qr-name">Nom</label>
-            <input
-              id="new-qr-name"
-              type="text"
-              name="newQrName"
-              [(ngModel)]="newQrName"
-              maxlength="100"
-              autocomplete="off"
-              class="input"
-            />
-          </div>
-          <div>
-            <label class="field-label" for="new-qr-dest">Destination</label>
-            <input
-              id="new-qr-dest"
-              type="url"
-              name="newQrDestination"
-              [(ngModel)]="newQrDestination"
-              placeholder="https://…"
-              autocomplete="off"
-              class="input"
-            />
-          </div>
-          @if (createQrError()) {
-            <p class="alert-error">{{ createQrError() }}</p>
-          }
-          <div class="flex justify-end gap-2 pt-1">
-            <button type="button" (click)="closeCreateQr()" [disabled]="createQrLoading()" class="btn btn-ghost">
-              Annuler
-            </button>
-            <button type="submit" [disabled]="createQrLoading()" class="btn btn-primary">
-              {{ createQrLoading() ? 'Création…' : 'Créer le QR' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
 }

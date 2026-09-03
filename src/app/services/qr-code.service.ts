@@ -17,16 +17,9 @@ export class QrCodeService {
     return this.http.get<QrCode>(`${this.baseUrl}/qr-codes/${id}`);
   }
 
-  create(restaurantId: string, name: string, destinationUrl: string): Observable<QrCode> {
-    return this.http.post<QrCode>(`${this.baseUrl}/restaurants/${restaurantId}/qr-codes`, {
-      name,
-      destinationUrl,
-    });
-  }
-
-  updateDestination(id: string, destinationUrl: string): Observable<QrCode> {
-    return this.http.put<QrCode>(`${this.baseUrl}/qr-codes/${id}`, { destinationUrl });
-  }
+  // Pas de create()/updateDestination() ici : le QR est unique et permanent, créé
+  // automatiquement à la création du restaurant (règle produit) — jamais une action du
+  // restaurateur. La destination n'est plus modifiable (voir QrCodeAdminController).
 
   activate(id: string): Observable<QrCode> {
     return this.http.post<QrCode>(`${this.baseUrl}/qr-codes/${id}/activate`, {});

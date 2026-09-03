@@ -1,0 +1,134 @@
+@if (layout() === 'cards') {
+  <!-- Switch mensuel/annuel : un seul état, commun aux 3 offres. Badge -10% toujours
+       visible, rattaché à « Annuel », position absolue (ne pousse jamais le toggle,
+       aucun layout shift). -->
+  <div revealOnScroll class="flex justify-center lg:justify-start">
+    <div class="billing-switch-wrap">
+      <div class="billing-switch" role="tablist" aria-label="Fréquence de facturation">
+        <button
+          type="button"
+          role="tab"
+          class="billing-switch-option"
+          [class.billing-switch-option-active]="billingCycle() === 'monthly'"
+          [attr.aria-selected]="billingCycle() === 'monthly'"
+          (click)="setBillingCycle('monthly')"
+        >
+          Mensuel
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="billing-switch-option"
+          [class.billing-switch-option-active]="billingCycle() === 'yearly'"
+          [attr.aria-selected]="billingCycle() === 'yearly'"
+          (click)="setBillingCycle('yearly')"
+        >
+          Annuel
+        </button>
+      </div>
+      <span class="billing-discount-badge">{{ discountLabel }}</span>
+    </div>
+  </div>
+
+  <div class="mt-6 grid grid-cols-1 items-stretch gap-5 sm:grid-cols-3">
+    @for (offer of offers; track offer.id; let i = $index) {
+      <div
+        [revealOnScroll]="i * 100"
+        [revealScale]="true"
+        class="pricing-card card relative flex h-full flex-col p-6"
+        [class.pricing-card-highlighted]="offer.highlighted"
+      >
+        @if (offer.highlighted) {
+          <p class="eyebrow absolute -top-3 left-6 rounded-full bg-white px-2" style="color: var(--k-persimmon)">
+            Recommandée
+          </p>
+        }
+        <span [class]="offerBadgeClass(offer.id)" class="w-fit">{{ offer.id }}</span>
+        <p class="mt-4 text-base font-semibold text-ink-900">{{ offer.tagline }}</p>
+        <p class="mt-1.5 text-sm text-ink-500">{{ offer.audience }}</p>
+
+        <!-- Prix : la ligne du prix barré garde toujours sa hauteur (visible ou non)
+             et le compteur anime le MÊME élément entre mensuel et annuel — jamais de
+             saut de hauteur ni de recréation du compteur (voir landing-offers.ts pour
+             les tarifs définitifs). Le badge de réduction est en position absolue :
+             il ne décale jamais le reste de la carte. -->
+        <div class="billing-price relative mt-5 border-t pt-5" style="border-color: var(--k-hairline)">
+          <div class="billing-price-original-slot">
+            <span class="billing-price-original" [class.billing-price-original-visible]="billingCycle() === 'yearly'">
+              {{ formatEuro(offer.pricing.yearlyOriginal) }} €
+            </span>
+          </div>
+          <p class="flex items-baseline gap-1">
+            <span class="text-2xl font-bold text-ink-900">
+              <landing-price-counter [value]="currentAmount(offer)" /> €
+            </span>
+            <span class="text-sm text-ink-500">{{ billingCycle() === 'monthly' ? '/ mois' : '/ an' }}</span>
+          </p>
+        </div>
+
+        <ul class="mt-5 flex-1 space-y-2.5 border-t pt-5 text-sm text-ink-600" style="border-color: var(--k-hairline)">
+          @for (capability of capabilities; track capability; let i = $index) {
+            @if (offer.included[i]) {
+              <li class="flex items-start gap-2">
+                <svg class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                {{ capability }}
+              </li>
+            }
+          }
+        </ul>
+        <a
+          routerLink="/login"
+          class="btn mt-6 w-full"
+          [class.btn-primary]="offer.highlighted"
+          [class.btn-outline]="!offer.highlighted"
+        >
+          Choisir {{ offer.id }}
+        </a>
+      </div>
+    }
+  </div>
+} @else {
+  <!-- Tableau comparatif dense : capacités en ligne, offres en colonne. -->
+  <div class="overflow-x-auto">
+    <table class="data-table w-full">
+      <thead>
+        <tr>
+          <th class="text-left">Fonctionnalité</th>
+          @for (offer of offers; track offer.id) {
+            <th class="text-center">
+              <span [class]="offerBadgeClass(offer.id)">{{ offer.id }}</span>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (capability of capabilities; track capability; let i = $index) {
+          <tr>
+            <td class="text-ink-700">{{ capability }}</td>
+            @for (offer of offers; track offer.id) {
+              <td class="text-center">
+                @if (offer.included[i]) {
+                  <svg class="mx-auto h-4 w-4" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                } @else {
+                  <span class="text-ink-300" aria-hidden="true">—</span>
+                }
+              </td>
+            }
+          </tr>
+        }
+        <tr>
+          <td></td>
+          @for (offer of offers; track offer.id) {
+            <td class="text-center">
+              <a routerLink="/login" class="btn btn-outline btn-sm">Choisir</a>
+            </td>
+          }
+        </tr>
+      </tbody>
+    </table>
+  </div>
+}
