@@ -2,7 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Restaurant, RestaurantOffer, RestaurantSummary } from '../models/restaurant.model';
+import {
+  Restaurant,
+  RestaurantOffer,
+  RestaurantScanStats,
+  RestaurantSummary,
+} from '../models/restaurant.model';
 
 @Injectable({ providedIn: 'root' })
 export class RestaurantService {
@@ -27,6 +32,14 @@ export class RestaurantService {
 
   changeOffer(id: string, offer: RestaurantOffer): Observable<Restaurant> {
     return this.http.put<Restaurant>(`${this.baseUrl}/${id}/offer`, { offer });
+  }
+
+  /**
+   * Statistiques de scans du client : 4 compteurs + série quotidienne sur 30 jours.
+   * Strictement filtrées par client côté backend.
+   */
+  stats(id: string): Observable<RestaurantScanStats> {
+    return this.http.get<RestaurantScanStats>(`${this.baseUrl}/${id}/stats`);
   }
 
   delete(id: string): Observable<void> {

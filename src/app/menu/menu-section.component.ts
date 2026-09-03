@@ -1,28 +1,31 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, input, signal } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { RestaurantOffer } from '../models/restaurant.model';
 import { offerBadgeClass } from '../restaurants/offer-badge';
+import { MenuDesignStudioComponent } from './design/menu-design-studio.component';
 import { MAX_PDF_BYTES, Menu, MenuStatus, formatPrice } from './menu.model';
 import { MenuService } from './menu.service';
 
 /**
  * Section « Menu » de la page détail client.
  *
- * - Offre BASIC : upload / aperçu / publication d'un PDF (flux complet).
- * - Offres PRO / PREMIUM : lecture du menu structuré (fondation). L'éditeur visuel
- *   et le rendu HTML arrivent à l'étape suivante.
+ * - Offre BASIC : upload / aperçu / publication d'un PDF.
+ * - Offres PRO / PREMIUM : studio de création du menu HTML — style, aperçu permanent,
+ *   enregistrement et publication ({@link MenuDesignStudioComponent}).
+ *
+ * Ce composant ne garde que ce qui est commun aux deux formes : le chargement du menu,
+ * son statut, et le résumé de la carte. Tout ce qui touche à l'apparence vit dans le
+ * studio.
  */
 @Component({
   selector: 'app-menu-section',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MenuDesignStudioComponent],
   templateUrl: './menu-section.component.html',
 })
-export class MenuSectionComponent implements OnInit, OnDestroy {
+export class MenuSectionComponent implements OnInit {
   private readonly menuService = inject(MenuService);
-  private readonly sanitizer = inject(DomSanitizer);
 
   readonly restaurantId = input.required<string>();
   readonly offer = input.required<RestaurantOffer>();
@@ -42,29 +45,56 @@ export class MenuSectionComponent implements OnInit, OnDestroy {
     return menu !== null && menu.type === 'STRUCTURED' && menu.version > 0;
   });
 
+  /**
+   * Carte PDF du client, quelle que soit l'offre.
+   *
+   * Pour PRO / PREMIUM, `menu.type` peut rester `PDF` : c'est le cas d'un client BASIC
+   * passé à PRO. Se fier au type masquait alors sa carte et l'obligeait à tout
+   * ressaisir. On se fonde donc sur le CONTENU réellement présent.
+   */
+  readonly sourcePdf = computed(() => this.menu()?.pdf ?? null);
+
+  /** Une carte PDF existe, mais aucune catégorie n'a encore été produite. */
+  readonly canTransformPdf = computed(
+    () => this.categoryCount() === 0 && this.sourcePdf() !== null,
+  );
+
+  /**
+   * Point d'entrée du futur workflow KartaAI (PDF source → extraction → Review).
+   * KartaAI n'est pas codé : on n'invente aucun résultat et on ne simule aucune
+   * extraction — le bouton annonce seulement que l'étape n'est pas encore active.
+   */
+  readonly transformNotice = signal(false);
+
+  startKartaAiTransform(): void {
+    this.transformNotice.set(true);
+  }
+
+  dismissTransformNotice(): void {
+    this.transformNotice.set(false);
+  }
+
+  previewSourcePdf(): void {
+    const url = this.sourcePdf()?.url;
+    if (url) {
+      window.open(url, '_blank', 'noopener');
+    }
+  }
+
   readonly categoryCount = computed(() => this.menu()?.structure?.categories.length ?? 0);
 
   readonly itemCount = computed(() =>
     (this.menu()?.structure?.categories ?? []).reduce((total, c) => total + c.items.length, 0),
   );
 
+  /** Détail de la carte : replié par défaut, le studio est le sujet de la page. */
+  readonly cardOpen = signal(false);
+
   readonly formatPrice = formatPrice;
   readonly offerBadgeClass = offerBadgeClass;
 
-  // Aperçu : le HTML est rendu par le backend, jamais reconstruit ici — une seule
-  // source de rendu partagée avec la page publique.
-  readonly previewOpen = signal(false);
-  readonly previewLoading = signal(false);
-  readonly previewError = signal<string | null>(null);
-  readonly previewUrl = signal<SafeResourceUrl | null>(null);
-  private previewObjectUrl: string | null = null;
-
   ngOnInit(): void {
     this.load();
-  }
-
-  ngOnDestroy(): void {
-    this.releasePreview();
   }
 
   load(): void {
@@ -80,6 +110,15 @@ export class MenuSectionComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
     });
+  }
+
+  toggleCard(): void {
+    this.cardOpen.set(!this.cardOpen());
+  }
+
+  /** Le studio publie et dépublie : il renvoie le menu à jour pour garder le statut juste. */
+  onMenuChange(menu: Menu): void {
+    this.menu.set(menu);
   }
 
   statusLabel(status: MenuStatus): string {
@@ -109,40 +148,6 @@ export class MenuSectionComponent implements OnInit, OnDestroy {
 
   createStructuredMenu(): void {
     this.runAction(this.menuService.createMenu(this.restaurantId()));
-  }
-
-  // ------------------------------------------------------------ aperçu
-
-  openPreview(): void {
-    this.previewOpen.set(true);
-    this.previewLoading.set(true);
-    this.previewError.set(null);
-
-    this.menuService.previewHtml(this.restaurantId()).subscribe({
-      next: (html) => {
-        this.releasePreview();
-        this.previewObjectUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-        this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.previewObjectUrl));
-        this.previewLoading.set(false);
-      },
-      error: () => {
-        this.previewError.set("L'aperçu n'a pas pu être chargé.");
-        this.previewLoading.set(false);
-      },
-    });
-  }
-
-  closePreview(): void {
-    this.previewOpen.set(false);
-    this.releasePreview();
-  }
-
-  private releasePreview(): void {
-    if (this.previewObjectUrl) {
-      URL.revokeObjectURL(this.previewObjectUrl);
-      this.previewObjectUrl = null;
-    }
-    this.previewUrl.set(null);
   }
 
   // ------------------------------------------------------------ menu PDF (BASIC)

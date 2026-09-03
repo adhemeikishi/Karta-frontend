@@ -26,17 +26,6 @@ export class MenuService {
     return this.http.put<Menu>(`${this.baseUrl}/${restaurantId}/menu`, { categories });
   }
 
-  /**
-   * HTML d'aperçu du menu, quel que soit son statut.
-   *
-   * Passe par HttpClient (et donc par l'intercepteur d'authentification) plutôt que
-   * par une ouverture d'onglet : sans en-tête Authorization, le navigateur afficherait
-   * une invite Basic Auth. Le HTML récupéré est ensuite affiché dans une iframe.
-   */
-  previewHtml(restaurantId: string): Observable<string> {
-    return this.http.get(`${this.baseUrl}/${restaurantId}/menu/preview`, { responseType: 'text' });
-  }
-
   /** Supprime le menu et tout son contenu. */
   deleteMenu(restaurantId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${restaurantId}/menu`);

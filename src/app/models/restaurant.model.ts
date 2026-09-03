@@ -17,3 +17,25 @@ export interface RestaurantSummary extends Restaurant {
   activeQrCodeCount: number;
   totalScans: number;
 }
+
+/** Un jour de la série de scans. `date` est une date locale ISO (`2026-09-02`). */
+export interface DailyScans {
+  date: string;
+  scans: number;
+}
+
+/**
+ * Correspond à QrScanService.RestaurantScanStats
+ * (`GET /api/admin/restaurants/{id}/stats`).
+ *
+ * Les compteurs de période et `daily` sont calculés côté backend à partir des mêmes
+ * données : le graphique ne peut pas contredire les chiffres affichés au-dessus.
+ * `total` couvre tout l'historique, au-delà de la fenêtre de 30 jours.
+ */
+export interface RestaurantScanStats {
+  today: number;
+  last7Days: number;
+  last30Days: number;
+  total: number;
+  daily: DailyScans[];
+}

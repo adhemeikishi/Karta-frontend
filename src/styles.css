@@ -434,6 +434,56 @@ body {
     background-color: var(--k-persimmon);
   }
 
+  /* --- Tuiles de compteurs ------------------------------------------- */
+  .kpi-tile {
+    @apply rounded-md p-4;
+    border: 1px solid var(--k-hairline);
+    background-color: var(--k-white);
+  }
+  /* Un seul accent par groupe : la période « chaude » (aujourd'hui). */
+  .kpi-tile-accent {
+    border-color: var(--k-persimmon);
+    background-color: var(--k-persimmon-soft);
+  }
+
+  /* --- Graphique de scans (30 jours) ---------------------------------
+     Barres CSS : 30 entiers ne justifient pas une librairie de graphes.
+     ------------------------------------------------------------------- */
+  .chart {
+    @apply rounded-md p-4;
+    border: 1px solid var(--k-hairline);
+    background-color: var(--k-white);
+  }
+  .chart-bars {
+    @apply flex h-40 items-end gap-[2px] sm:h-48 sm:gap-1;
+  }
+  .chart-col {
+    /* Colonne pleine hauteur : toute la bande est survolable, même un jour à 0. */
+    @apply flex h-full flex-1 items-end;
+    min-width: 0;
+  }
+  .chart-bar {
+    @apply w-full rounded-t-[2px];
+    /* Plancher visuel de 2px pour les jours à 0 : la trame reste lisible sans
+       jamais suggérer un scan qui n'a pas eu lieu (la barre est alors grise). */
+    height: max(2px, calc(var(--k-h, 0) * 100%));
+    background-color: var(--k-persimmon);
+    transition: height var(--k-t-base) var(--k-ease);
+  }
+  .chart-col:hover .chart-bar {
+    background-color: var(--k-persimmon-hover);
+  }
+  /* Jour sans scan : trait neutre, jamais la couleur d'accent. */
+  .chart-bar-empty,
+  .chart-col:hover .chart-bar-empty {
+    background-color: var(--k-ink-200);
+  }
+  .chart-axis {
+    @apply mt-2 flex items-center justify-between;
+    border-top: 1px solid var(--k-hairline);
+    padding-top: 0.5rem;
+  }
+
   /* --- Chargement / vide --------------------------------------------- */
   .skeleton {
     @apply animate-pulse rounded;
@@ -510,6 +560,193 @@ body {
     background-size: 16px 16px;
     background-position: center;
   }
+
+  /* --- Studio de menu --------------------------------------------------- */
+  /* Contrôles à gauche, aperçu permanent à droite. L'aperçu reste visible pendant
+     toute la configuration : c'est la raison d'être de l'écran. */
+  /* La colonne d'aperçu est au gabarit du téléphone : pas d'espace mort autour,
+     et la colonne de contrôles récupère toute la largeur restante. */
+  .studio {
+    @apply grid gap-6 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_20.5rem];
+  }
+  .studio-controls {
+    @apply min-w-0 space-y-6;
+  }
+  .studio-preview {
+    @apply lg:sticky lg:top-6 lg:self-start;
+  }
+  .studio-block {
+    @apply pt-6;
+    border-top: 1px solid var(--k-hairline);
+  }
+  .studio-actions {
+    @apply space-y-3 pt-6;
+    border-top: 1px solid var(--k-hairline);
+  }
+  .studio-state {
+    @apply flex items-center gap-2 text-sm font-medium text-ink-700;
+  }
+  .studio-dot {
+    @apply inline-block h-1.5 w-1.5 shrink-0 rounded-full;
+    background-color: var(--k-ink-300);
+  }
+  .studio-dot-pending {
+    background-color: var(--k-persimmon);
+  }
+  .studio-dot-live {
+    background-color: var(--k-success);
+  }
+
+  /* --- Sélecteur de style ----------------------------------------------- */
+  /* Piloté par la largeur réelle de la colonne, pas par celle de la fenêtre : le
+     studio partage l'écran avec l'aperçu, donc un point de rupture de viewport
+     donnerait trois colonnes dans un espace qui n'en tient que deux. */
+  .preset-grid {
+    @apply grid gap-2.5;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  }
+  .preset-card {
+    @apply flex flex-col items-start gap-2 rounded-md p-2.5 text-left transition-colors duration-150 ease-karta;
+    border: 1px solid var(--k-hairline);
+    background-color: var(--k-white);
+  }
+  .preset-card:hover {
+    border-color: var(--k-ink-300);
+  }
+  .preset-card:focus-visible {
+    outline: none;
+    border-color: var(--k-persimmon);
+    box-shadow: 0 0 0 3px var(--k-persimmon-ring);
+  }
+  .preset-card-active {
+    border-color: var(--k-charcoal);
+    box-shadow: inset 0 0 0 1px var(--k-charcoal);
+  }
+  /* Miniature du rendu : fond, texte et accent réels du preset, jamais des couleurs
+     décoratives — la pastille ne doit pas mentir sur ce que produira le renderer. */
+  .preset-swatch {
+    @apply relative flex h-14 w-full flex-col justify-end gap-1 overflow-hidden rounded-sm p-2;
+    border: 1px solid;
+    border-color: color-mix(in srgb, currentColor 12%, transparent);
+  }
+  .preset-swatch-line {
+    @apply h-1 w-3/4 rounded-full;
+    opacity: 0.85;
+  }
+  .preset-swatch-line-short {
+    @apply w-1/2;
+    opacity: 0.4;
+  }
+  .preset-swatch-dot {
+    @apply absolute right-2 top-2 h-3 w-3 rounded-full;
+  }
+  .preset-label {
+    @apply text-xs font-semibold text-ink-900;
+  }
+
+  /* --- Champs du studio -------------------------------------------------- */
+  .color-field {
+    @apply flex items-center gap-2.5 rounded-md px-2.5 py-2;
+    border: 1px solid var(--k-ink-200);
+    background-color: var(--k-white);
+  }
+  .color-input {
+    @apply h-7 w-7 shrink-0 cursor-pointer rounded-sm border-0 bg-transparent p-0;
+  }
+  .color-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  .color-input::-webkit-color-swatch {
+    border: 1px solid var(--k-ink-200);
+    border-radius: var(--k-r-xs);
+  }
+  .color-input::-moz-color-swatch {
+    border: 1px solid var(--k-ink-200);
+    border-radius: var(--k-r-xs);
+  }
+
+  .media-slot {
+    @apply flex items-center gap-3 rounded-md p-2.5;
+    border: 1px solid var(--k-hairline);
+  }
+  .media-thumb {
+    @apply h-12 w-16 shrink-0 rounded-sm object-cover;
+    background-color: var(--k-ivory);
+  }
+  .media-thumb-contain {
+    @apply object-contain p-1;
+  }
+  .media-placeholder {
+    @apply grid h-12 w-16 shrink-0 place-items-center rounded-sm text-[0.6875rem] text-ink-400;
+    background-color: var(--k-ivory);
+  }
+
+  /* --- Châssis de téléphone ---------------------------------------------- */
+  /* Un menu se lit sur un téléphone, à table : l'aperçu est présenté à sa taille
+     réelle, sinon on juge une carte qu'on ne verra jamais ainsi. */
+  .phone {
+    /* Le téléphone ne dépasse jamais la hauteur utile : sur un portable 13 pouces,
+       l'aperçu doit rester entièrement visible sans avoir à faire défiler. */
+    --k-phone-max: 17.5rem;
+    --k-phone-w: min(var(--k-phone-max), (100dvh - 9rem) * 9 / 19.5);
+    @apply relative mx-auto;
+    width: var(--k-phone-w);
+  }
+  .phone-body {
+    @apply relative rounded-[2.5rem] p-[0.4375rem];
+    background: linear-gradient(160deg, #3a3936 0%, #171614 38%, #2b2a27 100%);
+    box-shadow:
+      0 24px 48px -20px rgba(12, 12, 12, 0.45),
+      0 2px 6px rgba(12, 12, 12, 0.2);
+  }
+  .phone-screen {
+    @apply relative flex flex-col overflow-hidden rounded-[2.125rem];
+    aspect-ratio: 9 / 19.5;
+    background-color: var(--k-white);
+    /* Filet interne : sur un menu sombre, l'écran se distingue encore du bezel. */
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  .phone-status {
+    @apply relative z-10 h-[1.9rem] w-full;
+  }
+  .phone-island {
+    @apply pointer-events-none absolute left-1/2 top-[0.4rem] h-[1.15rem] w-[32%] -translate-x-1/2 rounded-full;
+    background-color: #0c0c0c;
+    /* Reste perceptible sur un menu sombre (presets Dark, Street Food, Luxe). */
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  }
+  .phone-iframe {
+    @apply block w-full flex-1 border-0;
+  }
+  /* Rafraîchissement en cours : un filet qui progresse en haut de l'écran, sans jamais
+     masquer le rendu déjà affiché — l'aperçu ne doit pas clignoter. */
+  .phone-busy {
+    @apply pointer-events-none absolute inset-x-0 top-0 z-20 h-[3px];
+    background: linear-gradient(90deg, transparent, var(--k-persimmon), transparent);
+    animation: k-sweep 900ms linear infinite;
+  }
+  .phone-btn {
+    @apply absolute rounded-[2px];
+    background-color: #2a2926;
+  }
+  .phone-btn-silence {
+    @apply left-[-2px] h-6 w-[3px] top-[5.5rem];
+  }
+  .phone-btn-vol-up {
+    @apply left-[-2px] h-10 w-[3px] top-[7.5rem];
+  }
+  .phone-btn-vol-down {
+    @apply left-[-2px] h-10 w-[3px] top-[10.5rem];
+  }
+  .phone-btn-power {
+    @apply right-[-2px] h-14 w-[3px] top-[8.5rem];
+  }
+
+  @media (min-width: 1280px) {
+    .phone {
+      --k-phone-max: 19.5rem;
+    }
+  }
 }
 
 /* ==========================================================================
@@ -521,6 +758,15 @@ body {
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes k-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
   }
 }
 

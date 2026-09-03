@@ -6,8 +6,9 @@ import {
   RESTAURANT_OFFERS,
   Restaurant,
   RestaurantOffer,
+  RestaurantScanStats,
 } from '../../models/restaurant.model';
-import { QrCode, QrCodeStats } from '../../models/qr-code.model';
+import { QrCode } from '../../models/qr-code.model';
 import { RestaurantService } from '../../services/restaurant.service';
 import { QrCodeService } from '../../services/qr-code.service';
 import { ShellService } from '../../layout/shell.service';
@@ -60,7 +61,7 @@ export class RestaurantDetailComponent implements OnInit {
 
   readonly restaurant = signal<Restaurant | null>(null);
   readonly qr = signal<QrCode | null>(null);
-  readonly stats = signal<QrCodeStats | null>(null);
+  readonly stats = signal<RestaurantScanStats | null>(null);
 
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
@@ -71,20 +72,40 @@ export class RestaurantDetailComponent implements OnInit {
   readonly statsLoading = signal(false);
   readonly statsError = signal(false);
 
-  /** Barres normalisées pour l'onglet Statistiques (aujourd'hui / semaine / mois). */
-  readonly statBars = computed(() => {
-    const s = this.stats();
-    if (!s) {
-      return [];
-    }
-    const rows = [
-      { label: "Aujourd'hui", value: s.today, accent: true },
-      { label: 'Cette semaine', value: s.thisWeek, accent: false },
-      { label: 'Ce mois', value: s.thisMonth, accent: false },
-    ];
-    const max = Math.max(1, ...rows.map((r) => r.value));
-    return rows.map((r) => ({ ...r, ratio: r.value / max }));
+  /**
+   * Série quotidienne prête à dessiner : une barre par jour de la fenêtre renvoyée par
+   * le backend (30 jours, jours vides inclus).
+   *
+   * `ratio` est normalisé sur le maximum de la période — jamais sur un maximum inventé —
+   * et un jour à 0 garde une hauteur nulle : aucune barre fantôme ne doit laisser croire
+   * à un scan qui n'a pas eu lieu.
+   */
+  readonly chartBars = computed(() => {
+    const daily = this.stats()?.daily ?? [];
+    const max = Math.max(1, ...daily.map((d) => d.scans));
+    return daily.map((d) => ({
+      date: d.date,
+      scans: d.scans,
+      ratio: d.scans === 0 ? 0 : d.scans / max,
+      label: `${this.formatDayLabel(d.date)} · ${d.scans} scan${d.scans > 1 ? 's' : ''}`,
+    }));
   });
+
+  /** Valeur haute de l'axe, affichée telle quelle (pas d'arrondi trompeur). */
+  readonly chartMax = computed(() =>
+    Math.max(...(this.stats()?.daily ?? []).map((d) => d.scans), 0),
+  );
+
+  readonly chartHasScans = computed(() => this.chartMax() > 0);
+
+  /** `2026-09-02` -> `2 sept.` (libellé court, lisible sur 390 px). */
+  formatDayLabel(isoDate: string): string {
+    const [year, month, day] = isoDate.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+    });
+  }
 
   // Renommage du client
   readonly renaming = signal(false);
@@ -140,6 +161,10 @@ export class RestaurantDetailComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
+    // Les statistiques sont celles du CLIENT : elles ne dépendent pas de l'existence
+    // d'un QR et sont donc chargées indépendamment du reste.
+    this.loadStats();
+
     this.restaurantService.getById(this.restaurantId).subscribe({
       next: (restaurant) => {
         this.restaurant.set(restaurant);
@@ -163,7 +188,6 @@ export class RestaurantDetailComponent implements OnInit {
         this.loading.set(false);
         if (qr) {
           this.loadQrImage(qr.id);
-          this.loadStats(qr.id);
         }
       },
       error: () => {
@@ -187,10 +211,14 @@ export class RestaurantDetailComponent implements OnInit {
     });
   }
 
-  loadStats(qrId: string): void {
+  /**
+   * Statistiques du CLIENT (et non d'un QR isolé) : c'est le périmètre attendu par
+   * l'onglet, et il reste juste même si le QR est recréé un jour.
+   */
+  loadStats(): void {
     this.statsLoading.set(true);
     this.statsError.set(false);
-    this.qrCodeService.getStats(qrId).subscribe({
+    this.restaurantService.stats(this.restaurantId).subscribe({
       next: (stats) => {
         this.stats.set(stats);
         this.statsLoading.set(false);
@@ -300,8 +328,14 @@ export class RestaurantDetailComponent implements OnInit {
     this.deleting.set(false);
   }
 
+  /**
+   * Vrai seulement si le nom saisi correspond exactement au client chargé.
+   * Test explicite plutôt qu'une sentinelle : tant que le client n'est pas chargé,
+   * aucune saisie ne peut valider la suppression.
+   */
   get deleteConfirmed(): boolean {
-    return this.deleteConfirmText.trim() === (this.restaurant()?.name ?? ' ');
+    const expected = this.restaurant()?.name;
+    return expected !== undefined && this.deleteConfirmText.trim() === expected;
   }
 
   submitDelete(): void {
@@ -502,7 +536,6 @@ export class RestaurantDetailComponent implements OnInit {
         this.createQrLoading.set(false);
         this.creatingQr.set(false);
         this.loadQrImage(qr.id);
-        this.loadStats(qr.id);
       },
       error: (err) => {
         this.createQrLoading.set(false);

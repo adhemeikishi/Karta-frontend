@@ -1,0 +1,325 @@
+<input
+  #logoInput
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  class="hidden"
+  (change)="onImageSelected($event, 'logo')"
+/>
+<input
+  #heroInput
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  class="hidden"
+  (change)="onImageSelected($event, 'hero')"
+/>
+
+@if (loading()) {
+  <div class="studio">
+    <div class="space-y-4">
+      <div class="skeleton h-5 w-32"></div>
+      <div class="skeleton h-40 w-full"></div>
+      <div class="skeleton h-24 w-full"></div>
+    </div>
+    <div class="skeleton mx-auto h-[560px] w-[288px] rounded-[2.75rem]"></div>
+  </div>
+} @else if (loadError()) {
+  <div>
+    <p class="alert-error">Le studio n'a pas pu être chargé.</p>
+    <button type="button" (click)="load()" class="btn btn-outline btn-sm mt-3">Réessayer</button>
+  </div>
+} @else {
+  @if (draft(); as d) {
+    <div class="studio">
+      <!-- ==================== Colonne gauche : les contrôles ==================== -->
+      <div class="studio-controls">
+        <!-- Votre style -->
+        <div>
+          <h3 class="section-title">Votre style</h3>
+          <p class="mt-1 text-sm text-ink-500">
+            Choisissez un habillage. Votre carte, ses prix et vos photos ne changent pas.
+          </p>
+
+          <div class="preset-grid mt-4">
+            @for (preset of presets(); track preset.id) {
+              <button
+                type="button"
+                class="preset-card"
+                [class.preset-card-active]="d.preset === preset.id"
+                [attr.aria-pressed]="d.preset === preset.id"
+                (click)="selectPreset(preset.id)"
+              >
+                <span
+                  class="preset-swatch"
+                  [style.background-color]="preset.background"
+                  [style.border-color]="preset.text"
+                >
+                  <span class="preset-swatch-line" [style.background-color]="preset.text"></span>
+                  <span class="preset-swatch-line preset-swatch-line-short" [style.background-color]="preset.text"></span>
+                  <span class="preset-swatch-dot" [style.background-color]="preset.accent"></span>
+                </span>
+                <span class="preset-label">{{ preset.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Personnalisation -->
+        <div class="studio-block">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="section-title">Personnalisation</h3>
+            @if (customizable()) {
+              <span class="badge badge-premium">Premium</span>
+            } @else {
+              <span class="badge badge-inactive">Réservée à Premium</span>
+            }
+          </div>
+
+          @if (!customizable()) {
+            <p class="mt-1 text-sm text-ink-500">
+              L'offre {{ offer() }} donne accès aux cinq styles. Passez ce client en Premium pour
+              poser son nom, son logo, ses couleurs et sa photo d'en-tête.
+            </p>
+          } @else {
+            <p class="mt-1 text-sm text-ink-500">
+              L'identité du restaurant. Chaque changement apparaît immédiatement dans l'aperçu.
+            </p>
+
+            <div class="mt-4 space-y-4">
+              <!-- Nom affiché -->
+              <div>
+                <label class="field-label" for="brand-name">Nom affiché</label>
+                <input
+                  id="brand-name"
+                  type="text"
+                  class="input"
+                  maxlength="120"
+                  placeholder="Le nom du client par défaut"
+                  [ngModel]="d.brandName"
+                  (ngModelChange)="setBrandName($event)"
+                />
+              </div>
+
+              <!-- Couleurs -->
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label class="field-label" for="primary-color">Couleur principale</label>
+                  <div class="color-field">
+                    <input
+                      id="primary-color"
+                      type="color"
+                      class="color-input"
+                      [value]="colorFor('primaryColor')"
+                      (input)="setPrimaryColor($any($event.target).value)"
+                    />
+                    <span class="mono text-sm text-ink-600">{{ colorFor('primaryColor') }}</span>
+                    @if (d.primaryColor) {
+                      <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="clearPrimaryColor()">
+                        Réinitialiser
+                      </button>
+                    }
+                  </div>
+                  <p class="field-hint">Prix, filets et détails.</p>
+                </div>
+
+                <div>
+                  <label class="field-label" for="secondary-color">Couleur secondaire</label>
+                  <div class="color-field">
+                    <input
+                      id="secondary-color"
+                      type="color"
+                      class="color-input"
+                      [value]="colorFor('secondaryColor')"
+                      (input)="setSecondaryColor($any($event.target).value)"
+                    />
+                    <span class="mono text-sm text-ink-600">{{ colorFor('secondaryColor') }}</span>
+                    @if (d.secondaryColor) {
+                      <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="clearSecondaryColor()">
+                        Réinitialiser
+                      </button>
+                    }
+                  </div>
+                  <p class="field-hint">Fond de la page. Le texte s'adapte pour rester lisible.</p>
+                </div>
+              </div>
+
+              <!-- Logo + image d'en-tête -->
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <span class="field-label">Logo</span>
+                  <div class="media-slot">
+                    @if (d.logoUrl) {
+                      <img [src]="d.logoUrl" alt="Logo du client" class="media-thumb media-thumb-contain" />
+                    } @else {
+                      <span class="media-placeholder">Aucun</span>
+                    }
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="btn btn-outline btn-sm"
+                        [disabled]="uploading() !== null"
+                        (click)="logoInput.click()"
+                      >
+                        {{ d.logoUrl ? 'Remplacer' : 'Ajouter' }}
+                      </button>
+                      @if (d.logoUrl) {
+                        <button type="button" class="btn btn-ghost btn-sm" (click)="clearLogo()">Retirer</button>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="field-label">Image d'en-tête</span>
+                  <div class="media-slot">
+                    @if (d.heroUrl) {
+                      <img [src]="d.heroUrl" alt="Image d'en-tête" class="media-thumb" />
+                    } @else {
+                      <span class="media-placeholder">Aucune</span>
+                    }
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="btn btn-outline btn-sm"
+                        [disabled]="uploading() !== null"
+                        (click)="heroInput.click()"
+                      >
+                        {{ d.heroUrl ? 'Remplacer' : 'Ajouter' }}
+                      </button>
+                      @if (d.heroUrl) {
+                        <button type="button" class="btn btn-ghost btn-sm" (click)="clearHero()">Retirer</button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              @if (uploading()) {
+                <p class="flex items-center gap-2 text-sm text-ink-500">
+                  <span class="spinner"></span> Envoi de l'image…
+                </p>
+              }
+              @if (uploadError()) {
+                <p class="alert-error">{{ uploadError() }}</p>
+              }
+              <p class="field-hint">JPEG, PNG ou WebP — 5 Mo maximum.</p>
+            </div>
+          }
+        </div>
+
+        <!-- Enregistrer / Publier -->
+        <div class="studio-actions">
+          <p class="studio-state">
+            @switch (nextAction()) {
+              @case ('save') {
+                <span class="studio-dot studio-dot-pending"></span> Modifications non enregistrées
+              }
+              @case ('add-content') {
+                <span class="studio-dot"></span> Style enregistré. Ajoutez des plats pour pouvoir publier.
+              }
+              @case ('publish') {
+                <span class="studio-dot"></span> Style enregistré. Prêt à publier.
+              }
+              @case ('live') {
+                <span class="studio-dot studio-dot-live"></span> En ligne — vos clients voient ce menu.
+              }
+            }
+          </p>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="dirty()"
+              [class.btn-outline]="!dirty()"
+              [disabled]="!dirty() || saving()"
+              (click)="save()"
+            >
+              @if (saving()) {
+                <span class="spinner"></span>
+              }
+              Enregistrer
+            </button>
+
+            @if (menu().published) {
+              <button
+                type="button"
+                class="btn btn-outline"
+                [disabled]="publishing()"
+                (click)="unpublish()"
+              >
+                Dépublier
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="!dirty() && categoryCount() > 0"
+                [class.btn-outline]="dirty() || categoryCount() === 0"
+                [disabled]="publishing() || categoryCount() === 0"
+                (click)="publish()"
+              >
+                @if (publishing()) {
+                  <span class="spinner"></span>
+                }
+                Publier
+              </button>
+            }
+
+            @if (justSaved() && !dirty()) {
+              <span class="save-hint">Modifications enregistrées</span>
+            }
+          </div>
+
+          @if (saveError()) {
+            <p class="alert-error">{{ saveError() }}</p>
+          }
+          @if (publishError()) {
+            <p class="alert-error">{{ publishError() }}</p>
+          }
+          @if (menu().published && dirty()) {
+            <!-- La carte est déjà servie aux clients : enregistrer change ce qu'ils
+                 voient, tout de suite. Le dire évite une mise en ligne par surprise. -->
+            <p class="alert-warning">
+              Cette carte est en ligne : enregistrer met le nouveau style à la vue de vos
+              clients immédiatement.
+            </p>
+          } @else if (!menu().published && categoryCount() > 0) {
+            <p class="field-hint">
+              Publier met le menu en ligne derrière le QR. Le QR imprimé ne change jamais.
+            </p>
+          }
+        </div>
+      </div>
+
+      <!-- ==================== Colonne droite : l'aperçu permanent ==================== -->
+      <aside class="studio-preview">
+        <div class="mb-3 flex items-baseline justify-between gap-3">
+          <h3 class="section-title">Aperçu</h3>
+          <span class="k-coord">{{ categoryCount() }} cat. · {{ itemCount() }} prod.</span>
+        </div>
+
+        <app-phone-frame [busy]="previewBusy()" [screenColor]="screenBackground()">
+          @if (previewUrl()) {
+            <iframe
+              [src]="previewUrl()"
+              title="Aperçu du menu"
+              class="phone-iframe"
+              referrerpolicy="no-referrer"
+            ></iframe>
+          }
+        </app-phone-frame>
+
+        @if (previewError()) {
+          <p class="alert-error mt-3">L'aperçu n'a pas pu être rafraîchi.</p>
+        }
+        <p class="mt-3 text-center text-sm text-ink-500">
+          @if (menu().published) {
+            Rendu réel du menu, tel que vos clients le voient après un scan.
+          } @else {
+            Rendu réel du menu. Tant qu'il n'est pas publié, personne d'autre ne le voit.
+          }
+        </p>
+      </aside>
+    </div>
+  }
+}

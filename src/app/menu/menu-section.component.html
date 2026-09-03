@@ -22,15 +22,16 @@
       </div>
     } @else if (menu()) {
       @let m = menu()!;
-      <div class="mb-4 flex flex-wrap items-center gap-2.5">
-        <span [class]="statusBadgeClass(m.status)">{{ statusLabel(m.status) }}</span>
-        @if (m.publishedAt) {
-          <span class="k-coord">le {{ m.publishedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-        }
-      </div>
 
       @if (isBasic()) {
         <!-- ============================ Offre BASIC — menu PDF ============================ -->
+        <div class="mb-4 flex flex-wrap items-center gap-2.5">
+          <span [class]="statusBadgeClass(m.status)">{{ statusLabel(m.status) }}</span>
+          @if (m.publishedAt) {
+            <span class="k-coord">le {{ m.publishedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          }
+        </div>
+
         @if (m.pdf; as pdf) {
           <div class="mb-4 flex items-center gap-3 rounded-md p-4" style="border: 1px solid var(--k-hairline)">
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-md" style="background-color: var(--k-ivory); color: var(--k-ink-500)">
@@ -84,155 +85,207 @@
             </button>
           </div>
         }
-      } @else {
-        <!-- ==================== Offres PRO / PREMIUM — menu structuré ==================== -->
-        @if (!hasStructuredMenu()) {
-          <div class="empty-state rounded-md" style="border: 1px dashed var(--k-ink-300)">
-            <span class="empty-state-icon">
-              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 12h16.5M3.75 18.75h10.5" />
-              </svg>
-            </span>
-            <p class="mt-3 text-sm font-medium text-ink-900">Aucun menu structuré</p>
-            <p class="mt-1 text-sm text-ink-500">
-              Créez le menu Karta de ce client : catégories, plats, prix et photos.
-            </p>
-            <button
-              type="button"
-              (click)="createStructuredMenu()"
-              [disabled]="busy()"
-              class="btn btn-primary mt-4"
-            >
-              Créer le menu structuré
-            </button>
-          </div>
-        } @else {
-          <div class="k-coord mb-4 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span class="tnum">{{ categoryCount() }} catégorie(s)</span>
-            <span class="tnum">{{ itemCount() }} produit(s)</span>
-            <span class="tnum">version {{ m.version }}</span>
-          </div>
 
-          @if (categoryCount() === 0) {
-            <div class="empty-state rounded-md" style="border: 1px dashed var(--k-ink-300)">
-              <p class="text-sm font-medium text-ink-900">Le menu est vide</p>
-              <p class="mt-1 text-sm text-ink-500">Aucune catégorie n'a encore été enregistrée.</p>
-            </div>
-          } @else {
-            <div class="space-y-3">
-              @for (category of m.structure!.categories; track category.id) {
-                <div class="rounded-md" style="border: 1px solid var(--k-hairline)">
-                  <div
-                    class="flex items-center justify-between gap-3 px-4 py-2.5"
-                    style="border-bottom: 1px solid var(--k-hairline); background-color: var(--k-ivory)"
-                  >
-                    <p class="text-sm font-medium text-ink-900">{{ category.name }}</p>
-                    @if (!category.visible) {
-                      <span class="badge badge-inactive">Masquée</span>
-                    }
-                  </div>
-
-                  @if (category.items.length === 0) {
-                    <p class="px-4 py-3 text-sm text-ink-400">Aucun produit.</p>
-                  } @else {
-                    <ul>
-                      @for (item of category.items; track item.id) {
-                        <li
-                          class="flex items-center justify-between gap-4 px-4 py-2.5"
-                          style="border-top: 1px solid var(--k-ink-100)"
-                        >
-                          <div class="min-w-0">
-                            <p class="truncate text-sm text-ink-900">{{ item.name }}</p>
-                            @if (item.description) {
-                              <p class="truncate text-sm text-ink-500">{{ item.description }}</p>
-                            }
-                          </div>
-                          <div class="flex shrink-0 items-center gap-3">
-                            @if (!item.available) {
-                              <span class="badge badge-inactive">Indisponible</span>
-                            }
-                            <span class="tnum text-sm font-medium text-ink-900">
-                              {{ formatPrice(item.price, item.currency) }}
-                            </span>
-                          </div>
-                        </li>
-                      }
-                    </ul>
-                  }
-                </div>
-              }
-            </div>
-          }
-
-          <div class="mt-5 flex flex-wrap gap-2">
-            @if (m.published) {
-              <button type="button" (click)="unpublish()" [disabled]="busy()" class="btn btn-outline btn-sm">
-                Dépublier
-              </button>
-            } @else {
-              <button
-                type="button"
-                (click)="publish()"
-                [disabled]="busy() || categoryCount() === 0"
-                class="btn btn-primary btn-sm"
-              >
-                Publier
-              </button>
-            }
-            <button type="button" (click)="openPreview()" [disabled]="busy()" class="btn btn-outline btn-sm">
-              Prévisualiser le menu
-            </button>
-          </div>
-
-          <p class="mt-4 text-sm text-ink-500">
-            L'éditeur de menu arrive à l'étape suivante. Le contenu ci-dessus est la source de
-            vérité servie au public.
+        @if (busy()) {
+          <p class="mt-3 flex items-center gap-2 text-sm text-ink-500">
+            <span class="spinner"></span> Traitement en cours…
           </p>
         }
-      }
+        @if (actionError()) {
+          <p class="alert-error mt-3">{{ actionError() }}</p>
+        }
+      } @else {
+        <!-- ============ Offres PRO / PREMIUM — studio de création du menu HTML ============ -->
 
-      @if (busy()) {
-        <p class="mt-3 flex items-center gap-2 text-sm text-ink-500">
-          <span class="spinner"></span> Traitement en cours…
-        </p>
-      }
-      @if (actionError()) {
-        <p class="alert-error mt-3">{{ actionError() }}</p>
+        @if (canTransformPdf()) {
+          <!--
+            Le client possède une carte PDF mais aucune catégorie (typiquement un client
+            BASIC passé à PRO). Sa carte doit rester visible et transformable : il ne doit
+            jamais avoir à la ressaisir à la main.
+          -->
+          @let src = sourcePdf()!;
+          <div class="mb-6 rounded-md p-5" style="border: 1px solid var(--k-hairline); background-color: var(--k-ivory)">
+            <p class="text-sm font-semibold text-ink-900">Votre menu actuel</p>
+
+            <div
+              class="mt-3 flex items-center gap-3 rounded-md p-3"
+              style="border: 1px solid var(--k-hairline); background-color: var(--k-white)"
+            >
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-md" style="background-color: var(--k-ivory); color: var(--k-ink-500)">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  />
+                </svg>
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium text-ink-900">
+                  {{ src.originalFilename || 'menu.pdf' }}
+                </p>
+                <p class="k-coord mt-0.5">
+                  {{ formatSize(src.sizeBytes) }} · ajouté le {{ src.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}
+                </p>
+              </div>
+              <button type="button" (click)="previewSourcePdf()" class="btn btn-outline btn-sm shrink-0">
+                Consulter
+              </button>
+            </div>
+
+            <p class="mt-4 text-sm text-ink-600">
+              Votre carte PDF peut être transformée automatiquement en menu digital.
+              KartaAI détectera les catégories, plats, descriptions et prix.
+            </p>
+
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <button type="button" (click)="startKartaAiTransform()" class="btn btn-primary">
+                Transformer avec KartaAI →
+              </button>
+              <button type="button" (click)="fileInput.click()" [disabled]="busy()" class="btn btn-outline btn-sm">
+                Remplacer le PDF
+              </button>
+            </div>
+
+            @if (transformNotice()) {
+              <div class="alert-warning mt-4">
+                <div>
+                  <p class="font-medium">KartaAI n'est pas encore disponible.</p>
+                  <p class="mt-1">
+                    Votre carte est enregistrée et prête à être transformée : rien à
+                    ressaisir. La transformation sera lancée depuis ce bouton dès
+                    l'activation de KartaAI.
+                  </p>
+                  <button type="button" (click)="dismissTransformNotice()" class="btn btn-outline btn-sm mt-3">
+                    Fermer
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else if (categoryCount() === 0) {
+          <!-- Ni carte structurée, ni PDF source : il faut d'abord une source. -->
+          <div class="mb-6 empty-state rounded-md" style="border: 1px dashed var(--k-ink-300)">
+            <span class="empty-state-icon">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+              </svg>
+            </span>
+            <p class="mt-3 text-sm font-medium text-ink-900">Aucun menu PDF disponible</p>
+            <p class="mt-1 text-sm text-ink-500">
+              Importez votre carte PDF pour créer votre menu digital.
+            </p>
+            <button type="button" (click)="fileInput.click()" [disabled]="busy()" class="btn btn-primary mt-4">
+              Importer un PDF
+            </button>
+          </div>
+        }
+
+        <!-- Votre menu : ce que contient la carte, en une ligne. Le détail se déplie. -->
+        <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2.5">
+              <h3 class="section-title">Votre menu</h3>
+              <span [class]="statusBadgeClass(m.status)">{{ statusLabel(m.status) }}</span>
+              @if (m.publishedAt) {
+                <span class="k-coord">le {{ m.publishedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              }
+            </div>
+            <p class="mt-1 text-sm text-ink-500">
+              @if (categoryCount() === 0) {
+                Votre carte est encore vide — vous pouvez déjà choisir son style.
+              } @else {
+                {{ categoryCount() }} catégorie(s) · {{ itemCount() }} plat(s)
+              }
+            </p>
+          </div>
+
+          <div class="flex shrink-0 flex-wrap gap-2">
+            @if (categoryCount() > 0) {
+              <button type="button" (click)="toggleCard()" class="btn btn-ghost btn-sm">
+                {{ cardOpen() ? '▲ Masquer la carte' : '▼ Voir la carte' }}
+              </button>
+            }
+            <!--
+              Masqué quand une carte PDF attend d'être transformée : le client possède
+              déjà une ligne menu, « Créer le menu » renverrait un 409 sans recours.
+            -->
+            @if (!hasStructuredMenu() && !canTransformPdf()) {
+              <button
+                type="button"
+                (click)="createStructuredMenu()"
+                [disabled]="busy()"
+                class="btn btn-outline btn-sm"
+              >
+                Créer le menu
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (cardOpen() && categoryCount() > 0) {
+          <div class="mb-6 space-y-3">
+            @for (category of m.structure!.categories; track category.id) {
+              <div class="rounded-md" style="border: 1px solid var(--k-hairline)">
+                <div
+                  class="flex items-center justify-between gap-3 px-4 py-2.5"
+                  style="border-bottom: 1px solid var(--k-hairline); background-color: var(--k-ivory)"
+                >
+                  <p class="text-sm font-medium text-ink-900">{{ category.name }}</p>
+                  @if (!category.visible) {
+                    <span class="badge badge-inactive">Masquée</span>
+                  }
+                </div>
+
+                @if (category.items.length === 0) {
+                  <p class="px-4 py-3 text-sm text-ink-400">Aucun produit.</p>
+                } @else {
+                  <ul>
+                    @for (item of category.items; track item.id) {
+                      <li
+                        class="flex items-center justify-between gap-4 px-4 py-2.5"
+                        style="border-top: 1px solid var(--k-ink-100)"
+                      >
+                        <div class="min-w-0">
+                          <p class="truncate text-sm text-ink-900">{{ item.name }}</p>
+                          @if (item.description) {
+                            <p class="truncate text-sm text-ink-500">{{ item.description }}</p>
+                          }
+                        </div>
+                        <div class="flex shrink-0 items-center gap-3">
+                          @if (!item.available) {
+                            <span class="badge badge-inactive">Indisponible</span>
+                          }
+                          <span class="tnum text-sm font-medium text-ink-900">
+                            {{ formatPrice(item.price, item.currency) }}
+                          </span>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (busy()) {
+          <p class="mb-4 flex items-center gap-2 text-sm text-ink-500">
+            <span class="spinner"></span> Traitement en cours…
+          </p>
+        }
+        @if (actionError()) {
+          <p class="alert-error mb-4">{{ actionError() }}</p>
+        }
+
+        <!-- Style, aperçu permanent, enregistrement et publication. -->
+        <app-menu-design-studio
+          [restaurantId]="restaurantId()"
+          [offer]="offer()"
+          [menu]="m"
+          (menuChange)="onMenuChange($event)"
+        />
       }
     }
   </div>
 </section>
-
-<!--
-  Aperçu : le HTML vient du renderer backend (même source que la page publique),
-  affiché dans une iframe au gabarit d'un téléphone — c'est là que le menu est lu.
--->
-@if (previewOpen()) {
-  <div class="modal-backdrop" (click)="closePreview()">
-    <div class="modal-panel" (click)="$event.stopPropagation()">
-      <div class="modal-pad">
-        <h3 class="modal-title">Aperçu du menu</h3>
-        <p class="modal-desc">
-          Rendu public du menu. Un menu non publié reste invisible pour vos clients.
-        </p>
-
-        @if (previewLoading()) {
-          <div class="skeleton mt-4 h-80 w-full"></div>
-        } @else if (previewError()) {
-          <p class="alert-error mt-4">{{ previewError() }}</p>
-        } @else if (previewUrl()) {
-          <iframe
-            [src]="previewUrl()"
-            title="Aperçu du menu"
-            class="mt-4 block w-full rounded-md"
-            style="max-width: 390px; height: 60vh; border: 1px solid var(--k-hairline)"
-          ></iframe>
-        }
-
-        <div class="mt-5 flex justify-end">
-          <button type="button" (click)="closePreview()" class="btn btn-outline btn-sm">Fermer</button>
-        </div>
-      </div>
-    </div>
-  </div>
-}

@@ -121,7 +121,7 @@
           <h2 class="text-sm font-bold" style="color: #8f2f2b">Zone de danger</h2>
           <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
             <p class="text-sm" style="color: #8f2f2b">
-              Supprimer ce client efface son QR, son menu et l'historique de ses scans.
+              Supprimer ce client efface son QR, son menu et tout son l'historique.
             </p>
             <button type="button" (click)="openDelete()" class="btn btn-danger-soft btn-sm shrink-0">
               Supprimer le client
@@ -250,9 +250,7 @@
           <h2 class="section-title">Statistiques de scans</h2>
         </div>
         <div class="card-pad">
-          @if (!qr()) {
-            <p class="text-sm text-ink-500">Aucun QR : pas encore de scans à afficher.</p>
-          } @else if (statsLoading()) {
+          @if (statsLoading()) {
             <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
               @for (k of [0, 1, 2, 3]; track k) {
                 <div class="rounded-md p-4" style="border: 1px solid var(--k-hairline)">
@@ -263,43 +261,69 @@
             </div>
           } @else if (statsError()) {
             <p class="alert-error">Impossible de charger les statistiques.</p>
-            <button type="button" (click)="loadStats(qr()!.id)" class="btn btn-secondary btn-sm mt-3">
+            <button type="button" (click)="loadStats()" class="btn btn-outline btn-sm mt-3">
               Réessayer
             </button>
           } @else if (stats()) {
             @let s = stats()!;
+
+            <!-- 4 compteurs. Total couvre tout l'historique, au-delà des 30 jours. -->
             <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div class="rounded-md p-4" style="border: 1px solid var(--k-hairline)">
+              <div class="kpi-tile kpi-tile-accent">
                 <p class="kpi-label">Aujourd'hui</p>
-                <p class="mono mt-1.5 text-xl font-semibold text-ink-900">{{ s.today }}</p>
+                <p class="mono mt-1.5 text-2xl font-semibold text-ink-900">{{ s.today }}</p>
               </div>
-              <div class="rounded-md p-4" style="border: 1px solid var(--k-hairline)">
-                <p class="kpi-label">Cette semaine</p>
-                <p class="mono mt-1.5 text-xl font-semibold text-ink-900">{{ s.thisWeek }}</p>
+              <div class="kpi-tile">
+                <p class="kpi-label">7 derniers jours</p>
+                <p class="mono mt-1.5 text-2xl font-semibold text-ink-900">{{ s.last7Days }}</p>
               </div>
-              <div class="rounded-md p-4" style="border: 1px solid var(--k-hairline)">
-                <p class="kpi-label">Ce mois</p>
-                <p class="mono mt-1.5 text-xl font-semibold text-ink-900">{{ s.thisMonth }}</p>
+              <div class="kpi-tile">
+                <p class="kpi-label">30 derniers jours</p>
+                <p class="mono mt-1.5 text-2xl font-semibold text-ink-900">{{ s.last30Days }}</p>
               </div>
-              <div class="rounded-md p-4" style="border: 1px solid var(--k-hairline)">
+              <div class="kpi-tile">
                 <p class="kpi-label">Total</p>
-                <p class="mono mt-1.5 text-xl font-semibold text-ink-900">{{ s.total }}</p>
+                <p class="mono mt-1.5 text-2xl font-semibold text-ink-900">{{ s.total }}</p>
               </div>
             </div>
 
-            <div class="mt-5 space-y-3.5">
-              @for (bar of statBars(); track bar.label) {
-                <div>
-                  <div class="mb-1.5 flex items-baseline justify-between">
-                    <span class="text-xs font-medium text-ink-600">{{ bar.label }}</span>
-                    <span class="mono text-sm font-semibold text-ink-900">{{ bar.value }}</span>
+            <!--
+              Évolution quotidienne. Barres CSS, aucune librairie de graphes :
+              30 valeurs entières ne justifient pas une dépendance.
+            -->
+            <div class="mt-6">
+              <div class="mb-3 flex items-baseline justify-between gap-3">
+                <h3 class="text-sm font-semibold text-ink-900">Évolution sur 30 jours</h3>
+                @if (chartHasScans()) {
+                  <span class="k-coord">max {{ chartMax() }}/jour</span>
+                }
+              </div>
+
+              @if (!chartHasScans()) {
+                <div class="empty-state rounded-md" style="border: 1px dashed var(--k-ink-300)">
+                  <p class="text-sm font-medium text-ink-900">Aucun scan sur les 30 derniers jours</p>
+                  <p class="mt-1 text-sm text-ink-500">
+                    Les scans du QR de ce client apparaîtront ici.
+                  </p>
+                </div>
+              } @else {
+                <div class="chart">
+                  <div class="chart-bars">
+                    @for (bar of chartBars(); track bar.date) {
+                      <div class="chart-col" [title]="bar.label">
+                        <div
+                          class="chart-bar"
+                          [class.chart-bar-empty]="bar.scans === 0"
+                          [style.--k-h]="bar.ratio"
+                        ></div>
+                      </div>
+                    }
                   </div>
-                  <div class="stat-track">
-                    <div
-                      class="stat-fill"
-                      [class.stat-fill-accent]="bar.accent"
-                      [style.--k-fill]="bar.ratio"
-                    ></div>
+                  <div class="chart-axis">
+                    <span class="k-coord">{{ formatDayLabel(chartBars()[0].date) }}</span>
+                    <span class="k-coord">
+                      {{ formatDayLabel(chartBars()[chartBars().length - 1].date) }}
+                    </span>
                   </div>
                 </div>
               }
