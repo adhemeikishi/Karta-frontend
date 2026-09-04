@@ -1,15 +1,15 @@
-# QRMenu V1
+# Karta — Frontend (V1)
 
 ## Périmètre
 
 La V1 doit rester volontairement minimale :
 
-- QR dynamique
-- redirection vers une destination
-- gestion des restaurants
-- gestion des QR
-- statistiques de scans
-- back-office interne
+- landing page publique (Karta est le produit)
+- login
+- back-office privé (restaurants, QR, statistiques, menu, design)
+
+Le menu public et la redirection QR sont rendus par le backend
+(repository séparé `Karta-backend`), pas par ce projet.
 
 Ne pas ajouter sans demande explicite :
 
@@ -28,20 +28,12 @@ Ne pas ajouter sans demande explicite :
 
 ## Commandes
 
-Backend :
+Depuis la racine de ce repository :
 
-- `cd backend && mvn test`
-- `cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=dev`
-
-Frontend :
-
-- `cd frontend && npm ci`
-- `cd frontend && ng build`
-- `cd frontend && ng test --watch=false --browsers=ChromeHeadless`
-
-Infrastructure :
-
-- `docker compose up -d`
+- `npm ci`
+- `npm run build` (sortie : `dist/frontend/browser/`)
+- `npx ng test --watch=false --browsers=ChromeHeadless`
+- `npm start` (dev server sur http://localhost:4200)
 
 ## Architecture
 
@@ -81,13 +73,12 @@ Base de données :
 
 ## Sécurité
 
-- `DestinationUrlValidator` accepte uniquement HTTP/HTTPS ;
-- valider les URL au moment de leur écriture ;
-- ne jamais construire dynamiquement la destination dans `RedirectController` ;
-- ne pas affaiblir `SecurityConfig` ;
-- `/api/admin/**` reste protégé ;
-- ne jamais exposer de stack trace ;
-- ne jamais désactiver une protection uniquement pour faire passer un test.
+- ne jamais considérer qu'une route cachée protège quoi que ce soit :
+  la protection réelle est côté backend ;
+- `authGuard` reste obligatoire sur `/admin/**` ;
+- ne jamais stocker de secret dans le code ou dans `environment*.ts` ;
+- ne pas exposer d'identifiants de dev en production
+  (`environment.prod.ts` n'a pas de `devAutoLogin`).
 
 ## Méthode de travail
 

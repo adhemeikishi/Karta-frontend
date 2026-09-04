@@ -1,27 +1,72 @@
-# AdminFrontend
+# Karta — Frontend
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.21.
+Frontend Angular de Karta : la landing publique, la connexion, et le back-office
+privé (restaurants, QR, statistiques, menu structuré, studio de design).
 
-## Development server
+Le menu public (`/m/{code}`) et la redirection QR (`/q/{code}`) ne sont **pas**
+servis par ce projet : ils sont rendus par le backend Spring Boot, dans le
+repository séparé `Karta-backend`.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Prérequis
 
-## Code scaffolding
+- Node.js 18.19+ (ou 20+)
+- npm
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Installation et lancement
+
+```bash
+npm ci                # ou npm install
+npm start             # dev server sur http://localhost:4200
+```
+
+Le dev server attend le backend sur `http://localhost:8080`
+(voir `src/environments/environment.ts`).
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```bash
+npm run build
+```
 
-## Running unit tests
+Sortie : `dist/frontend/browser/` — des fichiers statiques, sans SSR.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## Tests
 
-## Running end-to-end tests
+```bash
+npx ng test --watch=false --browsers=ChromeHeadless
+```
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+## Configuration de l'API
 
-## Further help
+L'URL du backend est définie par `apiBaseUrl` :
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Fichier | Valeur | Usage |
+|---|---|---|
+| `src/environments/environment.ts` | `http://localhost:8080` | développement |
+| `src/environments/environment.prod.ts` | `''` (relatif) | production |
+
+`''` suppose que le frontend et l'API sont servis **depuis le même domaine**.
+Si le frontend est déployé sur un domaine distinct (Cloudflare) et le backend
+sur un autre (VPS), il faut :
+
+1. mettre l'URL absolue du backend dans `environment.prod.ts` ;
+2. déclarer l'origine du frontend dans `cors.allowed-origins` côté backend.
+
+## Routes
+
+| Route | Accès | Contenu |
+|---|---|---|
+| `/` | public | landing Karta |
+| `/landing` | public | alias de `/` |
+| `/login` | public | connexion |
+| `/admin/**` | privé (`authGuard`) | back-office |
+
+L'espace `/admin/**` est réservé à l'administrateur de Karta. Le guard Angular
+est un confort d'UX : la protection réelle est appliquée par le backend sur
+`/api/admin/**`.
+
+## Design
+
+Le système de design (tokens, typographie, composants, presets) est documenté
+dans [`DESIGN.md`](./DESIGN.md). Ne pas introduire de couleur, d'espacement ou
+de police hors de ces tokens.

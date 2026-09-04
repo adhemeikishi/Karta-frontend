@@ -1,6 +1,6 @@
 # Karta — DESIGN.md
 
-Source de vérité design pour le back-office Karta (`frontend/`) et le menu public
+Source de vérité design pour le back-office Karta (ce repository) et le menu public
 rendu (`backend/.../render`). Document **descriptif** : il documente ce qui existe déjà
 dans le repository, pas une aspiration. Quand une information n'est pas déterminable
 depuis le code, c'est écrit `À définir` plutôt qu'inventé.
@@ -9,8 +9,8 @@ Fichiers sources de vérité réels :
 
 | Ce qui est documenté ici | Fichier réel |
 |---|---|
-| Tokens (couleurs, radius, shadows, fonts) | `frontend/src/styles.css` (`:root`), `frontend/tailwind.config.js` |
-| Composants back-office | `frontend/src/app/**` |
+| Tokens (couleurs, radius, shadows, fonts) | `src/styles.css` (`:root`), `tailwind.config.js` |
+| Composants back-office | `src/app/**` |
 | Presets du menu public | `backend/src/main/java/com/qrmenu/menu/MenuPreset.java` |
 | Rendu du menu public | `backend/src/main/resources/templates/menu/menu.html`, `com.qrmenu.render.*` |
 | Règles produit / périmètre | `CLAUDE.md`, `docs/MENU_STRUCTURED.md`, `docs/DEPLOYMENT.md` |
@@ -19,7 +19,7 @@ Fichiers sources de vérité réels :
 `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DECISIONS.md`, `docs/CURRENT_STATE.md`
 n'existent pas dans ce repository — non référencés plus loin.
 
-**PrimeNG n'est pas utilisé.** Aucune dépendance UI tierce (`frontend/package.json`
+**PrimeNG n'est pas utilisé.** Aucune dépendance UI tierce (`package.json`
 ne référence que `@angular/*`, `rxjs`, `tailwindcss`). Karta a un système de composants
 **maison**, en classes CSS (`@layer components` dans `styles.css`) + utilitaires
 Tailwind. Toute consigne mentionnant PrimeNG ailleurs est erronée pour ce projet.
@@ -62,7 +62,7 @@ supprimer au prétexte qu'un détecteur les qualifie de bruit visuel** :
 | `.k-ticks` | Règle graduée, dégradé en fondu | Sous le titre du Dashboard, accent sur la page de connexion |
 
 Exception déjà déclarée dans `.impeccable/config.json` (`codex-grid-background`, fichier
-`frontend/src/styles.css`) : *« `.k-crosshair` est le motif d'enregistrement Karta
+`src/styles.css`) : *« `.k-crosshair` est le motif d'enregistrement Karta
 (= carte), utilisé derrière l'image QR (une surface de mesure/calibrage) et faiblement
 sur le panneau de connexion. »*
 
@@ -595,7 +595,7 @@ ce fichier fait foi). État au moment de la rédaction :
 | `broken-image` | `*` sur `restaurant-detail.component.html` | `[src]` est lié à une data URL `FileReader` (`qrImageDataUrl()`), gardée par `@if` — jamais vide au rendu |
 | `overused-font` | `plus jakarta sans` | Police de marque Karta imposée, verrouillée |
 | `overused-font` | `geist mono` | Police de marque Karta pour données/ID/technique, verrouillée |
-| `codex-grid-background` | `*` sur `frontend/src/styles.css` | `.k-crosshair` est le motif d'enregistrement Karta, volontaire (§1) |
+| `codex-grid-background` | `*` sur `src/styles.css` | `.k-crosshair` est le motif d'enregistrement Karta, volontaire (§1) |
 
 **Ne pas créer de nouvelle exception uniquement pour faire disparaître un avertissement.**
 Une exception doit correspondre soit à une vraie décision de design documentée ici, soit

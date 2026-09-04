@@ -7,7 +7,7 @@
         "rule": "broken-image",
         "value": "*",
         "files": [
-          "frontend/src/app/restaurants/restaurant-detail/restaurant-detail.component.html"
+          "src/app/restaurants/restaurant-detail/restaurant-detail.component.html"
         ],
         "createdAt": "2026-09-02T06:33:47.316Z",
         "reason": "model: [src] is bound to a FileReader data: URL from qrImageDataUrl(), guarded by @if (qrImageDataUrl(); as src) — never empty when rendered"
@@ -28,7 +28,7 @@
         "rule": "codex-grid-background",
         "value": "*",
         "files": [
-          "frontend/src/styles.css"
+          "src/styles.css"
         ],
         "createdAt": "2026-09-02T06:42:09.039Z",
         "reason": "model: .k-crosshair is the Karta (=carte/map) registration motif required by brief section 16; used behind the QR image (a measurement/registration surface) and faintly on the login panel"
