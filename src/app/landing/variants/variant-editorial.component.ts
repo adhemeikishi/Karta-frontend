@@ -1,14 +1,14 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PhoneFrameComponent } from '../../menu/design/phone-frame.component';
-import { LandingMenuMockComponent } from '../landing-menu-mock.component';
 import {
   LANDING_MENU_CONTENT,
   LANDING_MENU_PRESETS,
   LandingMenuPreset,
   LandingMenuPresetId,
+  mix,
 } from '../landing-menu-presets';
 import { LandingPricingComponent } from '../landing-pricing.component';
+import { PremiumConfiguratorComponent } from '../premium-configurator.component';
 import { RevealOnScrollDirective } from '../reveal-on-scroll.directive';
 import { scrollToAnchor } from '../scroll-to-anchor';
 
@@ -40,8 +40,7 @@ interface LandingWorkflowStep {
     selector: 'landing-variant-editorial',
     imports: [
         RouterLink,
-        PhoneFrameComponent,
-        LandingMenuMockComponent,
+        PremiumConfiguratorComponent,
         LandingPricingComponent,
         RevealOnScrollDirective,
     ],
@@ -55,13 +54,18 @@ export class VariantEditorialComponent {
   /** Noms de catégories réels, réutilisés (jamais dupliqués) pour les miniatures de la
    *  galerie de styles — jamais les plats/prix, qui restent exclusifs au téléphone. */
   readonly content = LANDING_MENU_CONTENT;
-  /** État de sélection de la galerie de styles — aucun téléphone ne le reflète (le
-   *  téléphone du produit a été retiré ; celui de #premium reste sur son propre style
-   *  fixe, `premiumPreset`, indépendant de ce choix). */
+  /** État de sélection de la galerie de styles (#produit) — aucun téléphone ne le
+   *  reflète ; le configurateur #premium a son propre état, indépendant. */
   readonly activePresetId = signal<LandingMenuPresetId>('modern');
 
   selectPreset(id: LandingMenuPresetId): void {
     this.activePresetId.set(id);
+  }
+
+  /** Fond des puces de catégorie dans la galerie de styles — même formule de filet
+   *  que le renderer (`mix(background, text, 0.16)`), calculée ici pour l'aperçu réduit. */
+  chipColor(p: LandingMenuPreset): string {
+    return mix(p.background, p.text, 0.14);
   }
 
   /** Workflow KartaAI réel : PDF → extraction/structuration → Review (validation
@@ -81,24 +85,6 @@ export class VariantEditorialComponent {
    *  un plat en cours de validation. Purement démonstratif — la vraie Review vit
    *  dans menu-review.component (voir docs/MENU_STRUCTURED.md). */
   readonly kartaAiValidatedDishes: readonly string[] = ['Burrata crémeuse', 'Pasta Truffe'];
-
-  /**
-   * Illustration PREMIUM (#premium) — jamais un 6e preset. Base = densité/typo du
-   * preset "Modern", mais fond/accent/texte remplacés pour représenter un exemple de
-   * couleurs choisies par le client (`primaryColor`/`secondaryColor` réels de
-   * `MenuDesign.java`), volontairement hors des 5 palettes de presets ci-dessus pour
-   * qu'on ne les confonde jamais.
-   */
-  readonly premiumPreset: LandingMenuPreset = {
-    id: 'modern',
-    label: 'Identité personnalisée',
-    background: '#F5F1E8',
-    accent: '#0F5132',
-    text: '#131312',
-    divider: 'rgba(19, 19, 18, 0.12)',
-    density: 'editorial',
-    typeface: 'sans',
-  };
 
   readonly features: readonly LandingFeature[] = [
     {

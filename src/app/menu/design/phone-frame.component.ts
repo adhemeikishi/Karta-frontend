@@ -23,8 +23,14 @@ import { Component, input } from '@angular/core';
       <div class="phone-body">
         <div class="phone-screen">
           <!-- Bandeau de statut peint à la couleur du menu : l'encoche se pose dessus
-               au lieu de recouvrir le haut de la page, comme sur un vrai téléphone. -->
-          <div class="phone-status" [style.background-color]="screenColor()">
+               au lieu de recouvrir le haut de la page, comme sur un vrai téléphone.
+               edgeToEdge : le contenu (image d'en-tête) monte jusqu'au bord haut de
+               l'écran et la barre de statut se superpose, transparente. -->
+          <div
+            class="phone-status"
+            [class.phone-status-edge]="edgeToEdge()"
+            [style.background-color]="edgeToEdge() ? null : screenColor()"
+          >
             <span class="phone-island" aria-hidden="true"></span>
           </div>
           <ng-content />
@@ -45,4 +51,11 @@ export class PhoneFrameComponent {
 
   /** Fond du menu rendu : le bandeau de statut s'y fond au lieu de trancher. */
   readonly screenColor = input('#FFFFFF');
+
+  /**
+   * Illustration PREMIUM : le bandeau d'en-tête du menu occupe le haut de l'écran
+   * (jusqu'aux coins arrondis), et la barre de statut — encoche comprise — se
+   * superpose au lieu d'occuper une bande opaque au-dessus du contenu.
+   */
+  readonly edgeToEdge = input(false);
 }

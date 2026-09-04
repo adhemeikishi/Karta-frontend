@@ -9,15 +9,9 @@
     [style.backdrop-filter]="shellBlur()"
     [style.-webkit-backdrop-filter]="shellBlur()"
   >
-    <!-- Logo Karta — identique à celui de la page de connexion, ne pas redessiner. -->
-    <a routerLink="/login" class="flex shrink-0 items-center gap-2.5" aria-label="Karta">
-      <span class="grid h-8 w-8 place-items-center rounded-md bg-persimmon">
-        <svg class="h-[18px] w-[18px] text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
-          <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
-        </svg>
-      </span>
-      <span class="text-[0.95rem] font-extrabold tracking-[-0.01em] text-ink-900">Karta</span>
+    <!-- Logo Karta — source unique : KartaLogoComponent. Navbar sur fond clair → tuile sombre. -->
+    <a routerLink="/login" class="flex shrink-0 items-center" aria-label="Karta">
+      <karta-logo variant="dark" [size]="32" />
     </a>
 
     <nav class="hidden items-center gap-6 md:flex" aria-label="Navigation principale">

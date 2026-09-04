@@ -24,19 +24,8 @@
       class="flex h-14 items-center gap-2.5 px-4"
       style="border-bottom: 1px solid var(--k-charcoal-line)"
     >
-      <span class="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-persimmon">
-        <svg
-          class="h-[18px] w-[18px] text-white"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-        >
-          <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
-          <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
-        </svg>
-      </span>
-      <span class="text-[0.95rem] font-extrabold tracking-[-0.01em] text-white">Karta</span>
+      <!-- Sidebar admin sur fond sombre (--k-charcoal) → tuile claire. -->
+      <karta-logo variant="light" [size]="32" />
       <span class="k-coord ml-auto" style="color: var(--k-charcoal-muted)">v1</span>
     </div>
 

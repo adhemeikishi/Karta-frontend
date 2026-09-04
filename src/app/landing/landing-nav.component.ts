@@ -1,5 +1,6 @@
 import { Component, HostListener, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { KartaLogoComponent } from '../shared/karta-logo.component';
 import { scrollToAnchor } from './scroll-to-anchor';
 
 /** Fin du morphing : au-delà de ce défilement (px), la navbar est pleinement compacte. */
@@ -19,7 +20,7 @@ const MORPH_DISTANCE = 96;
  */
 @Component({
     selector: 'landing-nav',
-    imports: [RouterLink],
+    imports: [RouterLink, KartaLogoComponent],
     templateUrl: './landing-nav.component.html'
 })
 export class LandingNavComponent {

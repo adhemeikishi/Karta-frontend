@@ -4,15 +4,8 @@
   <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
     <div class="grid grid-cols-1 gap-10 sm:grid-cols-[1.3fr_1fr_1fr]">
       <div>
-        <div class="flex items-center gap-2">
-          <span class="grid h-7 w-7 place-items-center rounded-sm bg-persimmon">
-            <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
-              <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
-            </svg>
-          </span>
-          <span class="text-sm font-extrabold tracking-[-0.01em] text-white">Karta</span>
-        </div>
+        <!-- Footer sur bg-charcoal (fond sombre) → tuile claire. -->
+        <karta-logo variant="light" [size]="28" />
         <p class="mt-4 max-w-[22rem] text-sm" style="color: var(--k-charcoal-muted)">
           Le menu digital qui remplace la carte papier : un QR permanent, un menu à
           jour, une identité qui vous appartient.

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Variante tuile claire : à poser sur un fond SOMBRE (footer, sidebar admin, panneau login). -->
+  <rect width="512" height="512" rx="114" fill="#ffffff"/>
+  <g fill="none" stroke="#6e6e6e" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M96 168V96h72"/>
+    <path d="M344 96h72v72"/>
+    <path d="M416 344v72h-72"/>
+    <path d="M168 416H96v-72"/>
+  </g>
+  <g fill="#141414" stroke="#141414" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="168" y="128" width="56" height="256" rx="28" stroke="none"/>
+    <line x1="214" y1="250" x2="366" y2="150" stroke-width="54"/>
+    <line x1="214" y1="256" x2="366" y2="374" stroke-width="62"/>
+  </g>
+</svg>

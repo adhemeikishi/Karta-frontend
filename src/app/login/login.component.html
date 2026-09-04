@@ -2,14 +2,9 @@
   <!-- Panneau identité -->
   <aside class="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex" style="background-color: var(--k-charcoal)">
     <div class="k-crosshair absolute inset-0 opacity-[0.06]" aria-hidden="true"></div>
-    <div class="relative flex items-center gap-2.5">
-      <span class="grid h-8 w-8 place-items-center rounded-md bg-persimmon">
-        <svg class="h-[18px] w-[18px] text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
-          <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
-        </svg>
-      </span>
-      <span class="text-[0.95rem] font-extrabold tracking-[-0.01em] text-white">Karta</span>
+    <!-- Panneau identité sur fond sombre (--k-charcoal) → tuile claire. -->
+    <div class="relative">
+      <karta-logo variant="light" [size]="32" />
     </div>
 
     <div class="relative">
@@ -26,14 +21,9 @@
   <!-- Formulaire -->
   <main class="flex items-center justify-center bg-canvas px-4 py-10">
     <div class="w-full max-w-sm">
-      <div class="mb-6 flex items-center gap-2.5 lg:hidden">
-        <span class="grid h-9 w-9 place-items-center rounded-md bg-persimmon">
-          <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" d="M12 3v4m0 10v4M3 12h4m10 0h4" />
-            <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
-          </svg>
-        </span>
-        <span class="text-lg font-extrabold tracking-[-0.01em] text-ink-900">Karta</span>
+      <!-- Bandeau mobile sur bg-canvas (fond clair) → tuile sombre. -->
+      <div class="mb-6 lg:hidden">
+        <karta-logo variant="dark" [size]="36" />
       </div>
 
       <h1 class="page-title">Connexion</h1>

@@ -187,7 +187,7 @@
             </p>
             <div class="mt-2.5 space-y-1.5">
               @for (category of content.categories; track category.name) {
-                <div class="truncate rounded-sm px-2.5 py-1.5 text-xs font-medium" [style.background-color]="preset.divider">
+                <div class="truncate rounded-sm px-2.5 py-1.5 text-xs font-medium" [style.background-color]="chipColor(preset)">
                   {{ category.name }}
                 </div>
               }
@@ -207,80 +207,12 @@
   </div>
 </section>
 
-<!-- Premium : illustration de l'identité de marque (nom, couleurs, logo, image
-     d'en-tête — voir MenuDesign.java). Jamais un 6e preset : la palette du téléphone
-     ci-dessous sort volontairement des 5 palettes de presets ci-dessus, et le
-     formulaire est désactivé (aria-disabled), c'est une vitrine du vrai studio de
-     style, pas un formulaire fonctionnel sur la landing. -->
+<!-- Premium : configurateur interactif de l'identité de marque (preset, couleurs,
+     nom, logo, image d'en-tête — voir MenuDesign.java) avec aperçu temps réel.
+     Le téléphone affiche <menu-render> : port fidèle de templates/menu/menu.html
+     (mêmes classes, même CSS, même thème résolu) — voir PremiumConfiguratorComponent. -->
 <section id="premium" class="scroll-mt-28 bg-canvas">
-  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
-    <div class="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_0.55fr]">
-      <div revealOnScroll>
-        <p class="mono text-xs text-ink-400">Premium</p>
-        <p class="mt-2 text-2xl font-semibold leading-snug tracking-[-0.01em] text-ink-900">
-          Votre identité. Votre menu.
-        </p>
-        <p class="mt-2 text-sm font-medium text-ink-700">
-          Un style ne suffit pas toujours. En Premium, posez votre nom, vos couleurs, votre
-          logo et votre image d'en-tête — le contenu du menu, lui, ne change jamais.
-        </p>
-
-        <!-- Aperçu désactivé du vrai studio (menu-design-studio.component.html) —
-             mêmes classes, mêmes libellés, mais purement illustratif ici. -->
-        <div class="mt-6 space-y-4" aria-disabled="true" inert>
-          <div>
-            <label class="field-label">Nom affiché</label>
-            <input type="text" class="input" value="Le Petit Persil" disabled />
-          </div>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label class="field-label">Couleur principale</label>
-              <div class="color-field">
-                <input type="color" class="color-input" [value]="premiumPreset.accent" disabled />
-                <span class="mono text-sm text-ink-600">{{ premiumPreset.accent }}</span>
-              </div>
-            </div>
-            <div>
-              <label class="field-label">Couleur secondaire</label>
-              <div class="color-field">
-                <input type="color" class="color-input" [value]="premiumPreset.background" disabled />
-                <span class="mono text-sm text-ink-600">{{ premiumPreset.background }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div>
-              <span class="field-label">Logo</span>
-              <div class="media-slot">
-                <span class="media-thumb flex items-center justify-center text-xs font-semibold" [style.background]="premiumPreset.background" [style.color]="premiumPreset.accent">LP</span>
-                <button type="button" class="btn btn-outline btn-sm" disabled>Remplacer</button>
-              </div>
-            </div>
-            <div>
-              <span class="field-label">Image d'en-tête</span>
-              <div class="media-slot">
-                <span class="media-thumb" [style.background]="'linear-gradient(135deg, ' + premiumPreset.accent + ', ' + premiumPreset.text + ')'"></span>
-                <button type="button" class="btn btn-outline btn-sm" disabled>Remplacer</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div revealOnScroll="80" [revealScale]="true" class="flex justify-center lg:justify-end">
-        <div class="phone-hover-lift">
-          <app-phone-frame [screenColor]="premiumPreset.background">
-            <landing-menu-mock
-              [preset]="premiumPreset"
-              brandName="Le Petit Persil"
-              logoInitial="LP"
-              [heroImage]="true"
-            />
-          </app-phone-frame>
-        </div>
-      </div>
-    </div>
-  </div>
+  <landing-premium-configurator />
 </section>
 
 <!-- Fonctionnalités : fonctionnalité → problème résolu → bénéfice. Le fond passe en

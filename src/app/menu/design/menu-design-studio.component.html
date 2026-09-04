@@ -44,7 +44,6 @@
               <button
                 type="button"
                 class="preset-card"
-                [class.preset-card-active]="d.preset === preset.id"
                 [attr.aria-pressed]="d.preset === preset.id"
                 (click)="selectPreset(preset.id)"
               >

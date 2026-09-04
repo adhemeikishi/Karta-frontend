@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { KartaLogoComponent } from '../shared/karta-logo.component';
 import { ShellService } from './shell.service';
 
 @Component({
     selector: 'app-layout',
-    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, KartaLogoComponent],
     templateUrl: './layout.component.html'
 })
 export class LayoutComponent {

@@ -5,10 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
+import { KartaLogoComponent } from '../shared/karta-logo.component';
 
 @Component({
     selector: 'app-login',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, KartaLogoComponent],
     templateUrl: './login.component.html'
 })
 export class LoginComponent {

@@ -1,0 +1,177 @@
+<div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+  <div class="premium-config">
+    <!-- ====================== Aperçu téléphone ======================
+         Le vrai rendu du menu Karta : menu-render est le port fidèle de
+         templates/menu/menu.html (mêmes classes, même CSS, même thème résolu). -->
+    <div class="premium-config-preview" revealOnScroll="80" [revealScale]="true">
+      <div class="phone-hover-lift">
+        <app-phone-frame [screenColor]="theme().background" [edgeToEdge]="!!theme().heroUrl">
+          <menu-render [class.is-switching]="switching()" [theme]="theme()" [menu]="menu()" />
+        </app-phone-frame>
+      </div>
+    </div>
+
+    <!-- ====================== Contrôles ====================== -->
+    <div class="premium-config-panel" revealOnScroll>
+      <div>
+        <p class="mono text-xs text-ink-400">Premium</p>
+        <p class="mt-2 text-2xl font-semibold leading-snug tracking-[-0.01em] text-ink-900">
+          Votre identité. Votre menu.
+        </p>
+        <p class="mt-2 text-sm font-medium text-ink-700">
+          Composez le menu comme dans le back-office : chaque changement apparaît
+          <strong>immédiatement</strong> dans le téléphone. Le contenu, lui, ne change jamais.
+        </p>
+      </div>
+
+      <!-- 1 · Style -->
+      <div class="premium-config-step">
+        <h3 class="section-title">1 · Style</h3>
+        <p class="field-hint !mt-1">Les 5 styles réels de Karta.</p>
+        <div class="preset-grid mt-3">
+          @for (p of presets; track p.id) {
+            <button
+              type="button"
+              class="preset-card"
+              [attr.aria-pressed]="p.id === presetId()"
+              (click)="selectPreset(p.id)"
+            >
+              <span
+                class="preset-swatch"
+                [style.background-color]="p.background"
+                [style.border-color]="p.text"
+              >
+                <span class="preset-swatch-line" [style.background-color]="p.text"></span>
+                <span class="preset-swatch-line preset-swatch-line-short" [style.background-color]="p.text"></span>
+                <span class="preset-swatch-dot" [style.background-color]="p.accent"></span>
+              </span>
+              <span class="preset-label">{{ p.label }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- 2 · Couleurs -->
+      <div class="premium-config-step">
+        <h3 class="section-title">2 · Couleurs</h3>
+        <div class="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="field-label" for="pc-primary">Couleur principale</label>
+            <div class="color-field">
+              <input
+                id="pc-primary"
+                type="color"
+                class="color-input"
+                [value]="colorFor('primary')"
+                (input)="setPrimary($any($event.target).value)"
+              />
+              <span class="mono text-sm text-ink-600">{{ colorFor('primary') }}</span>
+              @if (primaryColor()) {
+                <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="resetPrimary()">
+                  Réinitialiser
+                </button>
+              }
+            </div>
+            <p class="field-hint">Prix, filets et détails.</p>
+          </div>
+          <div>
+            <label class="field-label" for="pc-secondary">Couleur secondaire</label>
+            <div class="color-field">
+              <input
+                id="pc-secondary"
+                type="color"
+                class="color-input"
+                [value]="colorFor('secondary')"
+                (input)="setSecondary($any($event.target).value)"
+              />
+              <span class="mono text-sm text-ink-600">{{ colorFor('secondary') }}</span>
+              @if (secondaryColor()) {
+                <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="resetSecondary()">
+                  Réinitialiser
+                </button>
+              }
+            </div>
+            <p class="field-hint">Fond de la page. Le texte s'adapte pour rester lisible.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 · Nom -->
+      <div class="premium-config-step">
+        <h3 class="section-title">3 · Nom</h3>
+        <label class="field-label mt-3 block" for="pc-name">Nom affiché</label>
+        <input
+          id="pc-name"
+          type="text"
+          class="input"
+          maxlength="120"
+          placeholder="Le nom du restaurant"
+          [ngModel]="brandName()"
+          (ngModelChange)="brandName.set($event)"
+        />
+      </div>
+
+      <!-- 4 · Logo & en-tête -->
+      <div class="premium-config-step">
+        <h3 class="section-title">4 · Logo &amp; en-tête</h3>
+        <div class="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <span class="field-label block">Logo</span>
+            <div class="media-slot">
+              @if (logoUrl()) {
+                <img [src]="logoUrl()" alt="Logo" class="media-thumb media-thumb-contain" />
+              } @else {
+                <span class="media-placeholder">Aucun</span>
+              }
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline btn-sm" (click)="logoInput.click()">
+                  {{ logoUrl() ? 'Remplacer' : 'Ajouter' }}
+                </button>
+                @if (logoUrl()) {
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="clearLogo()">Retirer</button>
+                }
+              </div>
+            </div>
+            <input
+              #logoInput
+              type="file"
+              [attr.accept]="acceptAttr"
+              class="hidden"
+              (change)="onImageSelected($event, 'logo')"
+            />
+          </div>
+
+          <div>
+            <span class="field-label block">Image d'en-tête</span>
+            <div class="media-slot">
+              @if (heroUrl()) {
+                <img [src]="heroUrl()" alt="Image d'en-tête" class="media-thumb" />
+              } @else {
+                <span class="media-placeholder">Aucune</span>
+              }
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline btn-sm" (click)="heroInput.click()">
+                  {{ heroUrl() ? 'Remplacer' : 'Ajouter' }}
+                </button>
+                @if (heroUrl()) {
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="clearHero()">Retirer</button>
+                }
+              </div>
+            </div>
+            <input
+              #heroInput
+              type="file"
+              [attr.accept]="acceptAttr"
+              class="hidden"
+              (change)="onImageSelected($event, 'hero')"
+            />
+          </div>
+        </div>
+        @if (imageError()) {
+          <p class="alert-error mt-2">{{ imageError() }}</p>
+        }
+        <p class="field-hint">JPEG, PNG ou WebP — 5 Mo max. Aperçu local, rien n'est envoyé.</p>
+      </div>
+    </div>
+  </div>
+</div>
