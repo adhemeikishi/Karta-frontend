@@ -43,14 +43,14 @@ L'URL du backend est définie par `apiBaseUrl` :
 | Fichier | Valeur | Usage |
 |---|---|---|
 | `src/environments/environment.ts` | `http://localhost:8080` | développement |
-| `src/environments/environment.prod.ts` | `''` (relatif) | production |
+| `src/environments/environment.prod.ts` | `https://api.kartaqr.fr` | production |
 
-`''` suppose que le frontend et l'API sont servis **depuis le même domaine**.
-Si le frontend est déployé sur un domaine distinct (Cloudflare) et le backend
-sur un autre (VPS), il faut :
+Le frontend est déployé sur Cloudflare (`https://kartaqr.fr`) et le backend sur
+un VPS (`https://api.kartaqr.fr`) : **domaines distincts**. En conséquence :
 
-1. mettre l'URL absolue du backend dans `environment.prod.ts` ;
-2. déclarer l'origine du frontend dans `cors.allowed-origins` côté backend.
+1. `environment.prod.ts` contient l'URL absolue du backend ;
+2. l'origine `https://kartaqr.fr` est déclarée dans `cors.allowed-origins`
+   côté backend (`application-prod.yml` / `CORS_ALLOWED_ORIGINS`).
 
 ## Routes
 
