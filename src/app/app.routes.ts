@@ -8,10 +8,15 @@ import { MenuReviewComponent } from './menu/review/menu-review.component';
 import { authGuard } from './services/auth.guard';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'admin/dashboard' },
-  // Landing page publique — exploration de 5 directions visuelles (voir §6 du brief),
-  // route ajoutée sans toucher aux routes existantes ni au comportement de `''`.
-  // Lazy-loadée : 5 variantes ne doivent pas alourdir le bundle initial du back-office.
+  // Karta est le produit : `/` affiche la landing publique directement (pas de
+  // redirection vers l'espace privé). Lazy-loadée : la landing ne doit pas alourdir
+  // le bundle initial de l'espace d'administration, et inversement.
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./landing/landing.component').then((m) => m.LandingComponent),
+  },
+  // `/landing` conservée en alias (même composant) pour ne casser aucun lien existant.
   {
     path: 'landing',
     loadComponent: () => import('./landing/landing.component').then((m) => m.LandingComponent),
@@ -31,5 +36,7 @@ export const routes: Routes = [
       { path: 'restaurants/:id/menu/review', component: MenuReviewComponent },
     ],
   },
-  { path: '**', redirectTo: 'admin/dashboard' },
+  // Une URL inconnue reste un visiteur public : on ne le pousse jamais vers
+  // l'espace privé (voir §2/§3 du brief).
+  { path: '**', redirectTo: '' },
 ];
