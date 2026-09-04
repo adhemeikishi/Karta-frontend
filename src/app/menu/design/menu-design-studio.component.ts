@@ -34,10 +34,9 @@ import { PhoneFrameComponent } from './phone-frame.component';
  * pas de menu reconstruit en Angular, qui finirait fatalement par en diverger.
  */
 @Component({
-  selector: 'app-menu-design-studio',
-  standalone: true,
-  imports: [CommonModule, FormsModule, PhoneFrameComponent],
-  templateUrl: './menu-design-studio.component.html',
+    selector: 'app-menu-design-studio',
+    imports: [CommonModule, FormsModule, PhoneFrameComponent],
+    templateUrl: './menu-design-studio.component.html'
 })
 export class MenuDesignStudioComponent implements OnInit, OnDestroy {
   private readonly designService = inject(MenuDesignService);

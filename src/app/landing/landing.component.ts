@@ -10,9 +10,8 @@ import { VariantEditorialComponent } from './variants/variant-editorial.componen
  * contenu de la page.
  */
 @Component({
-  selector: 'app-landing',
-  standalone: true,
-  imports: [LandingNavComponent, LandingFooterComponent, VariantEditorialComponent],
-  templateUrl: './landing.component.html',
+    selector: 'app-landing',
+    imports: [LandingNavComponent, LandingFooterComponent, VariantEditorialComponent],
+    templateUrl: './landing.component.html'
 })
 export class LandingComponent {}

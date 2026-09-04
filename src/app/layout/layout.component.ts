@@ -5,10 +5,9 @@ import { AuthService } from '../services/auth.service';
 import { ShellService } from './shell.service';
 
 @Component({
-  selector: 'app-layout',
-  standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
-  templateUrl: './layout.component.html',
+    selector: 'app-layout',
+    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+    templateUrl: './layout.component.html'
 })
 export class LayoutComponent {
   private readonly authService = inject(AuthService);

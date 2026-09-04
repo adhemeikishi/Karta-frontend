@@ -22,10 +22,9 @@ import { MenuDraftService } from './review/menu-draft.service';
  * studio.
  */
 @Component({
-  selector: 'app-menu-section',
-  standalone: true,
-  imports: [CommonModule, MenuDesignStudioComponent, MenuEditorComponent],
-  templateUrl: './menu-section.component.html',
+    selector: 'app-menu-section',
+    imports: [CommonModule, MenuDesignStudioComponent, MenuEditorComponent],
+    templateUrl: './menu-section.component.html'
 })
 export class MenuSectionComponent implements OnInit {
   private readonly menuService = inject(MenuService);

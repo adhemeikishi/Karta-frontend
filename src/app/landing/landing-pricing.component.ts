@@ -17,10 +17,9 @@ export type BillingCycle = 'monthly' | 'yearly';
  * carte).
  */
 @Component({
-  selector: 'landing-pricing',
-  standalone: true,
-  imports: [RouterLink, RevealOnScrollDirective, LandingPriceCounterComponent],
-  templateUrl: './landing-pricing.component.html',
+    selector: 'landing-pricing',
+    imports: [RouterLink, RevealOnScrollDirective, LandingPriceCounterComponent],
+    templateUrl: './landing-pricing.component.html'
 })
 export class LandingPricingComponent {
   readonly layout = input<'cards' | 'table'>('cards');

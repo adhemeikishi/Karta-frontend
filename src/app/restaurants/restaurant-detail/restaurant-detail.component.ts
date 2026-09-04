@@ -30,10 +30,9 @@ interface TabDef {
  * premier élément - aucune logique multi-QR.
  */
 @Component({
-  selector: 'app-restaurant-detail',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MenuSectionComponent],
-  templateUrl: './restaurant-detail.component.html',
+    selector: 'app-restaurant-detail',
+    imports: [CommonModule, FormsModule, RouterLink, MenuSectionComponent],
+    templateUrl: './restaurant-detail.component.html'
 })
 export class RestaurantDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

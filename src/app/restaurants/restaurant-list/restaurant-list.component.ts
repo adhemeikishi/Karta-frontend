@@ -18,10 +18,9 @@ import { offerBadgeClass } from '../offer-badge';
  * La création utilise RestaurantService.create() ; aucune donnée fictive.
  */
 @Component({
-  selector: 'app-restaurant-list',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './restaurant-list.component.html',
+    selector: 'app-restaurant-list',
+    imports: [CommonModule, FormsModule, RouterLink],
+    templateUrl: './restaurant-list.component.html'
 })
 export class RestaurantListComponent implements OnInit {
   private readonly restaurantService = inject(RestaurantService);

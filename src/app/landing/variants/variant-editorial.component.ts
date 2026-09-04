@@ -37,16 +37,15 @@ interface LandingWorkflowStep {
  * n'est inventée (voir DESIGN.md §13, docs/MENU_STRUCTURED.md).
  */
 @Component({
-  selector: 'landing-variant-editorial',
-  standalone: true,
-  imports: [
-    RouterLink,
-    PhoneFrameComponent,
-    LandingMenuMockComponent,
-    LandingPricingComponent,
-    RevealOnScrollDirective,
-  ],
-  templateUrl: './variant-editorial.component.html',
+    selector: 'landing-variant-editorial',
+    imports: [
+        RouterLink,
+        PhoneFrameComponent,
+        LandingMenuMockComponent,
+        LandingPricingComponent,
+        RevealOnScrollDirective,
+    ],
+    templateUrl: './variant-editorial.component.html'
 })
 export class VariantEditorialComponent {
   readonly scrollToAnchor = scrollToAnchor;

@@ -18,10 +18,9 @@ const MORPH_DISTANCE = 96;
  * gardent une micro-transition CSS pour lisser les à-coups entre deux frames.
  */
 @Component({
-  selector: 'landing-nav',
-  standalone: true,
-  imports: [RouterLink],
-  templateUrl: './landing-nav.component.html',
+    selector: 'landing-nav',
+    imports: [RouterLink],
+    templateUrl: './landing-nav.component.html'
 })
 export class LandingNavComponent {
   readonly scrollToAnchor = scrollToAnchor;

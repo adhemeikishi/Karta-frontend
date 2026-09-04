@@ -29,10 +29,9 @@ import { MenuDraftService } from './menu-draft.service';
  * une action distincte depuis le studio.
  */
 @Component({
-  selector: 'app-menu-review',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './menu-review.component.html',
+    selector: 'app-menu-review',
+    imports: [CommonModule, FormsModule, RouterLink],
+    templateUrl: './menu-review.component.html'
 })
 export class MenuReviewComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

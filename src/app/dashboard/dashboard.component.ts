@@ -17,10 +17,9 @@ interface ActivityBar {
 }
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  templateUrl: './dashboard.component.html',
+    selector: 'app-dashboard',
+    imports: [CommonModule, RouterLink],
+    templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);

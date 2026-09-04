@@ -29,10 +29,9 @@ import {
  * n'existe dans le projet.
  */
 @Component({
-  selector: 'app-menu-editor',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './menu-editor.component.html',
+    selector: 'app-menu-editor',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './menu-editor.component.html'
 })
 export class MenuEditorComponent {
   private readonly menuService = inject(MenuService);
