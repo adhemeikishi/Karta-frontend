@@ -8,7 +8,7 @@
     aria-hidden="true"
   ></div>
 
-  <div class="relative mx-auto max-w-6xl px-4 pt-16 sm:px-6 sm:pt-20">
+  <div class="relative mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pb-24 sm:pt-20">
     <div class="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_0.6fr]">
       <div>
         <p revealOnScroll class="eyebrow" style="color: var(--k-persimmon)">Karta — Restaurant-tech</p>
@@ -50,8 +50,6 @@
         </div>
       </div>
     </div>
-
-    <div class="k-ticks mt-14 w-full"></div>
   </div>
 </section>
 
@@ -59,9 +57,13 @@
      dans l'ordre, chaque étape alignée sur le pipeline réel (kartaai, menu_drafts,
      Review, presets, publication explicite) — aucune étape inventée. Les étapes 01
      et 02 ont ici leur propre représentation visuelle ; 03 réutilise le mockup de
-     Review ; 04/05/06 sont les sections suivantes (#produit, #premium, publication). -->
-<section id="kartaai" class="scroll-mt-28 bg-white">
-  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+     Review ; 04/05/06 sont les sections suivantes (#produit, #premium, publication).
+     Fond canvas + .k-crosshair très discret (surface « de mesure », cf. DESIGN §1/§19) :
+     démarre le rythme de chapitres après le hero. -->
+<section id="kartaai" class="relative scroll-mt-28 bg-canvas">
+  <div class="k-crosshair pointer-events-none absolute inset-0 opacity-[0.04]" aria-hidden="true"></div>
+  <div class="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+    <div class="k-ticks mb-12 w-full"></div>
     <div revealOnScroll class="max-w-xl">
       <p class="eyebrow" style="color: var(--k-persimmon)">Le parcours</p>
       <h2 class="mt-3 text-3xl font-bold leading-tight tracking-[-0.02em] text-ink-900 sm:text-4xl">
@@ -96,7 +98,7 @@
         </p>
       </div>
 
-      <div class="rounded-lg border border-dashed p-5 sm:p-6" style="border-color: var(--k-ink-300); background-color: var(--k-canvas)">
+      <div class="rounded-lg border border-dashed p-5 sm:p-6" style="border-color: var(--k-ink-300); background-color: var(--k-white)">
         <p class="k-coord">Déposé dans Karta</p>
         <div revealOnScroll="160" class="card mt-3 flex items-center gap-4 p-4">
           <span class="grid h-11 w-11 shrink-0 place-items-center rounded-sm" style="background-color: var(--k-persimmon-soft); color: var(--k-persimmon)">
@@ -266,13 +268,22 @@
   </div>
 </section>
 
-<!-- Produit : spread éditorial, mockup + légende. Halo très léger derrière le
-     téléphone pour lui donner de la profondeur sans carte flottante superposée. Un
-     seul téléphone, 5 presets sélectionnables (voir §5 du brief) : jamais 5 mockups. -->
-<section id="produit" class="relative mx-auto max-w-6xl scroll-mt-28 overflow-hidden px-4 py-14 sm:px-6 sm:py-16">
+<!-- Produit : spread éditorial, mockup + légende. Halo persimmon très léger (même
+     mécanisme que le hero) derrière le téléphone pour la profondeur. Section blanche
+     entre deux bandes canvas (parcours / aperçu) : filet .k-hairline en tête pour
+     matérialiser le retour au blanc. Un seul téléphone, 5 presets (voir §5 du brief). -->
+<section id="produit" class="relative mx-auto max-w-6xl scroll-mt-28 overflow-hidden border-t bg-white px-4 py-14 sm:px-6 sm:py-16" style="border-color: var(--k-hairline)">
+  <div
+    class="pointer-events-none absolute right-0 top-1/3 h-[26rem] w-[26rem] rounded-full"
+    style="background: radial-gradient(closest-side, var(--k-persimmon), transparent); opacity: 0.05"
+    aria-hidden="true"
+  ></div>
+
+  <div class="relative k-ticks mb-12 w-full"></div>
+
   <!-- Le produit : un seul téléphone, un seul menu — jamais un autre contenu, jamais
        mélangé à la galerie de styles ci-dessous (voir §6 du brief). -->
-  <div revealOnScroll class="mx-auto max-w-2xl text-center">
+  <div revealOnScroll class="relative mx-auto max-w-2xl text-center">
     <p class="mono text-xs text-ink-400">04 · Preset</p>
     <p class="mt-2 text-2xl font-semibold leading-snug tracking-[-0.01em] text-ink-900 sm:text-3xl">
       Choisissez votre design.
@@ -288,7 +299,7 @@
        contenu, 5 identités » est faite en direct, jamais avec 5 mockups figés.
        Aucun traitement visuel du preset actif (choix produit, voir .preset-card) :
        le téléphone reflète déjà le style choisi. -->
-  <div revealOnScroll="80" class="mt-14 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto]">
+  <div revealOnScroll="80" class="relative mt-14 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto]">
     <div>
       <div class="preset-grid" role="radiogroup" aria-label="Style du menu">
         @for (preset of presets; track preset.id) {
@@ -331,8 +342,9 @@
      Le téléphone affiche <menu-render> : port fidèle de templates/menu/menu.html
      (mêmes classes, même CSS, même thème résolu) — voir PremiumConfiguratorComponent. -->
 <section id="premium" class="scroll-mt-28 bg-canvas">
-  <div revealOnScroll class="mx-auto max-w-6xl px-4 pt-14 sm:px-6 sm:pt-16">
-    <div class="max-w-sm">
+  <div class="mx-auto max-w-6xl px-4 pt-14 sm:px-6 sm:pt-16">
+    <div class="k-ticks mb-12 w-full"></div>
+    <div revealOnScroll class="max-w-sm">
       <p class="mono text-xs text-ink-400">05 · Aperçu</p>
       <h2 class="mt-2 text-2xl font-bold tracking-[-0.01em] text-ink-900 sm:text-3xl">
         Vous voyez le résultat avant de publier
@@ -354,9 +366,11 @@
 </section>
 
 <!-- 06 · Publication : le menu devient accessible aux clients via le QR permanent.
-     Publication explicite (jamais automatique) — cohérent avec MenuService. -->
-<section class="scroll-mt-28 bg-white">
+     Publication explicite (jamais automatique) — cohérent avec MenuService. Section
+     blanche après l'aperçu (canvas) : filet .k-hairline en tête. -->
+<section class="scroll-mt-28 border-t bg-white" style="border-color: var(--k-hairline)">
   <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+    <div class="k-ticks mb-12 w-full"></div>
     <div revealOnScroll class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_auto]">
       <div>
         <p class="mono text-xs text-ink-400">06 · Publication</p>
@@ -388,10 +402,12 @@
   </div>
 </section>
 
-<!-- Fonctionnalités : fonctionnalité → problème résolu → bénéfice. Le fond passe en
-     canvas (pas de bordure dure) : la teinte marque la transition de section. -->
+<!-- Pourquoi Karta : fonctionnalité → problème (carte papier) → résolution (Karta).
+     Bande canvas après la section blanche « Publication » : la teinte + .k-ticks
+     marquent la coupure. -->
 <section id="fonctionnalites" class="scroll-mt-28 bg-canvas">
   <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+    <div class="k-ticks mb-12 w-full"></div>
     <div revealOnScroll class="max-w-md">
       <p class="mono text-xs text-ink-400">Pourquoi Karta</p>
       <h2 class="mt-2 text-2xl font-bold tracking-[-0.01em] text-ink-900">
@@ -443,9 +459,14 @@
 
 <!-- Le QR : le différenciateur. Un QR permanent, imprimé une seule fois — la
      destination et le contenu changent, jamais le sticker. La mention kartaqr.fr est
-     ajoutée automatiquement à tous les exports (voir QrImageGenerator, backend). -->
-<section id="qr" class="scroll-mt-28 bg-white">
-  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+     ajoutée automatiquement à tous les exports (voir QrImageGenerator, backend).
+     Section blanche après la bande canvas « Pourquoi Karta » : filet .k-hairline en
+     tête + .k-crosshair très discret (surface « de calibrage » du QR, écho du cadre
+     QR du back-office, cf. DESIGN §1/§19). -->
+<section id="qr" class="relative scroll-mt-28 border-t bg-white" style="border-color: var(--k-hairline)">
+  <div class="k-crosshair pointer-events-none absolute inset-0 opacity-[0.04]" aria-hidden="true"></div>
+  <div class="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+    <div class="k-ticks mb-12 w-full"></div>
     <div revealOnScroll class="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto]">
       <div class="max-w-lg">
         <p class="mono text-xs text-ink-400">Le QR</p>
@@ -481,9 +502,18 @@
   </div>
 </section>
 
-<!-- Offres : hiérarchie commerciale claire, PREMIUM mis en avant sans être criard. -->
-<section id="offres" class="scroll-mt-28 bg-canvas">
-  <div class="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16">
+<!-- Offres : hiérarchie commerciale claire, PREMIUM mis en avant sans être criard.
+     Glow persimmon très léger en pied (même mécanisme que le hero) pour amorcer la
+     bascule vers la bande charcoal du CTA final. -->
+<section id="offres" class="relative scroll-mt-28 overflow-hidden bg-canvas">
+  <div
+    class="pointer-events-none absolute -bottom-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full"
+    style="background: radial-gradient(closest-side, var(--k-persimmon), transparent); opacity: 0.04"
+    aria-hidden="true"
+  ></div>
+
+  <div class="relative mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16">
+    <div class="k-ticks mb-12 w-full"></div>
     <div revealOnScroll class="max-w-md">
       <p class="mono text-xs text-ink-400">Les offres</p>
       <h2 class="mt-2 text-2xl font-bold tracking-[-0.01em] text-ink-900">
