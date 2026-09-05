@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LANDING_MENU_CONTENT,
@@ -6,8 +6,11 @@ import {
   LandingMenuPreset,
   LandingMenuPresetId,
   mix,
+  resolveLandingTheme,
 } from '../landing-menu-presets';
 import { LandingPricingComponent } from '../landing-pricing.component';
+import { MenuRenderComponent } from '../menu-render.component';
+import { PhoneFrameComponent } from '../../menu/design/phone-frame.component';
 import { PremiumConfiguratorComponent } from '../premium-configurator.component';
 import { RevealOnScrollDirective } from '../reveal-on-scroll.directive';
 import { scrollToAnchor } from '../scroll-to-anchor';
@@ -15,13 +18,10 @@ import { scrollToAnchor } from '../scroll-to-anchor';
 interface LandingFeature {
   id: 'qr' | 'edit' | 'identity';
   title: string;
-  problem: string;
-  benefit: string;
-}
-
-interface LandingStep {
-  title: string;
-  detail: string;
+  /** Situation « carte papier » — le problème. */
+  before: string;
+  /** Situation « Karta » — la résolution. */
+  after: string;
 }
 
 interface LandingWorkflowStep {
@@ -40,6 +40,8 @@ interface LandingWorkflowStep {
     selector: 'landing-variant-editorial',
     imports: [
         RouterLink,
+        MenuRenderComponent,
+        PhoneFrameComponent,
         PremiumConfiguratorComponent,
         LandingPricingComponent,
         RevealOnScrollDirective,
@@ -54,13 +56,25 @@ export class VariantEditorialComponent {
   /** Noms de catégories réels, réutilisés (jamais dupliqués) pour les miniatures de la
    *  galerie de styles — jamais les plats/prix, qui restent exclusifs au téléphone. */
   readonly content = LANDING_MENU_CONTENT;
-  /** État de sélection de la galerie de styles (#produit) — aucun téléphone ne le
-   *  reflète ; le configurateur #premium a son propre état, indépendant. */
+  /** État de sélection de la galerie de styles (#produit) — reflété en direct par le
+   *  téléphone de la section via {@link activePresetTheme}. Le configurateur #premium a
+   *  son propre état, indépendant. */
   readonly activePresetId = signal<LandingMenuPresetId>('modern');
 
   selectPreset(id: LandingMenuPresetId): void {
     this.activePresetId.set(id);
   }
+
+  /** Thème résolu du preset sélectionné (#produit) — même résolveur que le rendu réel
+   *  (`resolveLandingTheme` = port de `MenuThemeResolver`), aucune couleur imposée :
+   *  changer de preset se voit immédiatement dans le téléphone. */
+  readonly activePresetTheme = computed(() =>
+    resolveLandingTheme(
+      this.presets.find((p) => p.id === this.activePresetId()) ?? this.presets[0],
+      null,
+      null,
+    ),
+  );
 
   /** Fond des puces de catégorie dans la galerie de styles — même formule de filet
    *  que le renderer (`mix(background, text, 0.16)`), calculée ici pour l'aperçu réduit. */
@@ -86,31 +100,44 @@ export class VariantEditorialComponent {
    *  dans menu-review.component (voir docs/MENU_STRUCTURED.md). */
   readonly kartaAiValidatedDishes: readonly string[] = ['Burrata crémeuse', 'Pasta Truffe'];
 
+  /** Étape 02 — aperçu « menu structuré » : les mêmes catégories/plats réels que le
+   *  reste de la landing, réduits à 2 lignes par catégorie. Jamais un contenu
+   *  inventé — dérivé de LANDING_MENU_CONTENT. */
+  readonly structuredPreview = LANDING_MENU_CONTENT.categories.map((category) => ({
+    name: category.name,
+    items: category.items.slice(0, 2),
+  }));
+
+  /** Champs extraits automatiquement par KartaAI, affichés en puces « extraites ». */
+  readonly kartaAiExtracted: readonly string[] = ['Catégories', 'Plats', 'Descriptions', 'Prix'];
+
+  /** Section « Le QR » — faits vérifiables (voir QrImageGenerator backend, MenuService). */
+  readonly qrPoints: readonly string[] = [
+    'Export en PNG, SVG et version imprimable',
+    'La mention kartaqr.fr est ajoutée automatiquement sous chaque QR',
+    'La destination se met à jour toute seule à chaque publication',
+  ];
+
+  /** « Pourquoi Karta » — présenté en avant / après (carte papier → Karta). Chaque
+   *  bénéfice correspond à une capacité réellement livrée (voir DESIGN.md §14). */
   readonly features: readonly LandingFeature[] = [
     {
       id: 'qr',
       title: 'Un seul QR, pour toujours',
-      problem: 'Un QR qui change à chaque mise à jour oblige à tout réimprimer et recoller.',
-      benefit: 'Imprimé une fois, il reste valide indéfiniment — seul son contenu évolue.',
+      before: 'Le QR change à chaque version du menu : réimprimer, redécouper, recoller sur chaque table.',
+      after: 'Le QR est imprimé une seule fois. Seul son contenu évolue — jamais le sticker.',
     },
     {
       id: 'edit',
       title: 'Modifications instantanées',
-      problem: "Changer un prix ou retirer un plat en rupture prend des jours avec une carte imprimée.",
-      benefit: 'Enregistré en quelques secondes, publié uniquement quand vous le décidez.',
+      before: 'Changer un prix ou retirer un plat en rupture : réimprimer, puis remplacer toutes les cartes. Des jours.',
+      after: 'Modifier le prix → publier → terminé. Quelques secondes, à jour pour tout le monde.',
     },
     {
       id: 'identity',
       title: 'Une identité, pas un gabarit',
-      problem: 'Un menu générique ne ressemble à aucun restaurant en particulier.',
-      benefit: '5 styles de présentation, et en Premium, votre logo et vos couleurs.',
+      before: 'Un menu générique ne ressemble à aucun restaurant en particulier.',
+      after: '5 styles prêts à l’emploi, et en Premium votre logo, vos couleurs et votre image d’en-tête.',
     },
-  ];
-
-  readonly steps: readonly LandingStep[] = [
-    { title: 'Créez votre menu', detail: 'Catégories, plats, prix : votre carte, structurée.' },
-    { title: 'Personnalisez Karta', detail: 'Choisissez un style, ou composez votre identité (Premium).' },
-    { title: 'Affichez votre QR', detail: 'Un seul QR, généré automatiquement, permanent.' },
-    { title: 'Vos clients consultent le menu', detail: 'Sur leur téléphone, à jour à la seconde.' },
   ];
 }

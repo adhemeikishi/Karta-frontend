@@ -37,6 +37,8 @@ export interface LandingOfferPricing {
 export interface LandingOffer {
   id: RestaurantOffer;
   tagline: string;
+  /** Résumé « en une ligne » de ce que couvre l'offre — lecture en un coup d'œil. */
+  summary: string;
   /** Positionnement court (« pour qui »), affiché sous le tagline. */
   audience: string;
   /** Aligné index à index sur `LANDING_CAPABILITIES`. */
@@ -49,6 +51,7 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
   {
     id: 'BASIC',
     tagline: 'Votre carte PDF, servie par QR.',
+    summary: 'QR permanent + statistiques de scans.',
     audience: 'Pour découvrir Karta.',
     included: [true, true, false, false, false],
     highlighted: false,
@@ -62,6 +65,7 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
   {
     id: 'PRO',
     tagline: 'Menu structuré, mis à jour en un instant.',
+    summary: 'Menu structuré, éditeur, 5 styles et KartaAI.',
     audience: 'Le meilleur rapport valeur pour un menu vivant.',
     included: [true, true, true, true, false],
     highlighted: true,
@@ -75,6 +79,7 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
   {
     id: 'PREMIUM',
     tagline: "L'identité complète du restaurant.",
+    summary: 'Tout PRO + votre identité visuelle complète.',
     audience: 'Pour les restaurants qui veulent davantage de personnalisation.',
     included: [true, true, true, true, true],
     highlighted: false,

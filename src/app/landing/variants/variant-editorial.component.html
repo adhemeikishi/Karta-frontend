@@ -20,35 +20,33 @@
           Le menu qui ne se réimprime jamais.
         </h1>
         <p revealOnScroll="180" class="mt-6 max-w-md text-base text-ink-500">
-          Un QR permanent, posé une seule fois sur vos tables. Un menu structuré que
-          vous modifiez en quelques secondes et publiez quand vous le décidez. Karta
-          est le menu digital pensé pour de vrais restaurateurs — pas un outil
-          marketing de plus.
+          Un QR permanent. Un menu que vous modifiez en quelques secondes. Une carte
+          toujours à jour pour vos clients.
         </p>
         <div revealOnScroll="260" class="mt-8 flex flex-wrap items-center gap-3">
-          <a routerLink="/login" class="btn btn-primary">Se connecter</a>
-          <a href="#comment-ca-marche" (click)="scrollToAnchor('comment-ca-marche', $event)" class="btn btn-ghost">
-            Comment ça marche →
+          <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
+          <a href="#kartaai" (click)="scrollToAnchor('kartaai', $event)" class="btn btn-ghost">
+            Voir comment ça marche →
           </a>
         </div>
         <p revealOnScroll="320" class="k-coord mt-4">
-          Un espace de gestion unique pour le menu, le QR et les statistiques — rien d'autre à installer.
+          Menu, QR et statistiques au même endroit — rien d'autre à installer.
         </p>
       </div>
 
-      <!-- Colonne de chiffres, ton éditorial -->
+      <!-- Colonne de chiffres, ton éditorial — faits produit, pas des métriques marketing. -->
       <div revealOnScroll="220" class="space-y-6 lg:border-l lg:pl-6" style="border-color: var(--k-hairline)">
         <div>
-          <p class="mono text-3xl font-bold text-ink-900">01</p>
-          <p class="mt-1 text-xs text-ink-500">QR permanent par restaurant</p>
+          <p class="mono text-3xl font-bold text-ink-900">1</p>
+          <p class="mt-1 text-xs text-ink-500">QR permanent, imprimé une seule fois</p>
         </div>
         <div>
-          <p class="mono text-3xl font-bold text-ink-900">05</p>
-          <p class="mt-1 text-xs text-ink-500">Styles de présentation du menu</p>
+          <p class="mono text-3xl font-bold text-ink-900">5</p>
+          <p class="mt-1 text-xs text-ink-500">styles de menu prêts à l'emploi</p>
         </div>
         <div>
           <p class="mono text-3xl font-bold text-ink-900">0</p>
-          <p class="mt-1 text-xs text-ink-500">Réimpression nécessaire</p>
+          <p class="mt-1 text-xs text-ink-500">réimpression, jamais</p>
         </div>
       </div>
     </div>
@@ -57,37 +55,161 @@
   </div>
 </section>
 
-<!-- KartaAI : PDF → extraction → Review → preset → aperçu → publication. Raconte le
-     parcours réel avant de montrer les presets (section suivante) — narration
-     cohérente avec le pipeline backend réel (kartaai, menu_drafts, Review), aucune
-     étape inventée. -->
+<!-- Le parcours : PDF → KartaAI → Review → Preset → Aperçu → Publication. Raconté
+     dans l'ordre, chaque étape alignée sur le pipeline réel (kartaai, menu_drafts,
+     Review, presets, publication explicite) — aucune étape inventée. Les étapes 01
+     et 02 ont ici leur propre représentation visuelle ; 03 réutilise le mockup de
+     Review ; 04/05/06 sont les sections suivantes (#produit, #premium, publication). -->
 <section id="kartaai" class="scroll-mt-28 bg-white">
   <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
     <div revealOnScroll class="max-w-xl">
-      <p class="eyebrow" style="color: var(--k-persimmon)">KartaAI</p>
+      <p class="eyebrow" style="color: var(--k-persimmon)">Le parcours</p>
       <h2 class="mt-3 text-3xl font-bold leading-tight tracking-[-0.02em] text-ink-900 sm:text-4xl">
-        Votre menu existe déjà. Karta s'occupe du reste.
+        De votre PDF au menu en ligne, en six étapes.
       </h2>
       <p class="mt-4 text-base text-ink-500">
-        Importez votre menu existant. KartaAI en extrait les plats, descriptions et
-        prix, puis les transforme en menu structuré. Vous vérifiez le résultat,
-        choisissez votre design et publiez.
+        Vous partez de la carte que vous avez déjà. KartaAI en extrait les plats,
+        descriptions et prix et les structure ; vous vérifiez, choisissez votre
+        design, prévisualisez, puis publiez.
       </p>
     </div>
 
-    <!-- Workflow en 6 étapes : une ligne sur desktop, empilé sur mobile. -->
-    <div class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6 lg:grid-cols-6">
+    <!-- Index du parcours : 6 étapes, une ligne sur desktop, empilé sur mobile. -->
+    <ol class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6 lg:grid-cols-6">
       @for (step of kartaAiWorkflow; track step.label; let i = $index) {
-        <div [revealOnScroll]="i * 90" class="border-l-2 pl-3" style="border-color: var(--k-persimmon)">
+        <li [revealOnScroll]="i * 90" class="border-l-2 pl-3" style="border-color: var(--k-persimmon)">
           <p class="mono text-xs text-ink-400">0{{ i + 1 }}</p>
           <p class="mt-1 text-sm font-semibold text-ink-900">{{ step.label }}</p>
           <p class="mt-0.5 text-xs text-ink-500">{{ step.detail }}</p>
-        </div>
+        </li>
       }
+    </ol>
+
+    <!-- ══ 01 · PDF — le point de départ : la carte que le restaurateur a déjà. ══ -->
+    <div revealOnScroll="80" class="mt-16 grid grid-cols-1 items-center gap-8 sm:mt-20 lg:grid-cols-[0.9fr_1.1fr]">
+      <div>
+        <p class="mono text-xs text-ink-400">01 · PDF</p>
+        <h3 class="mt-2 text-xl font-bold tracking-[-0.01em] text-ink-900 sm:text-2xl">Votre menu existant</h3>
+        <p class="mt-3 max-w-sm text-sm text-ink-500">
+          Vous commencez avec la carte que vous avez déjà — un simple PDF. Rien à
+          ressaisir, rien à reconstruire : vous la déposez dans Karta.
+        </p>
+      </div>
+
+      <div class="rounded-lg border border-dashed p-5 sm:p-6" style="border-color: var(--k-ink-300); background-color: var(--k-canvas)">
+        <p class="k-coord">Déposé dans Karta</p>
+        <div revealOnScroll="160" class="card mt-3 flex items-center gap-4 p-4">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-sm" style="background-color: var(--k-persimmon-soft); color: var(--k-persimmon)">
+            <svg class="h-[22px] w-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 3.75H6.75A1.5 1.5 0 005.25 5.25v13.5a1.5 1.5 0 001.5 1.5h10.5a1.5 1.5 0 001.5-1.5V8.25L14.25 3.75z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 3.75v4.5h4.5M8.25 13.5h7.5M8.25 16.5h7.5" />
+            </svg>
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="mono truncate text-sm font-semibold text-ink-900">menu-restaurant.pdf</p>
+            <p class="mt-0.5 text-xs text-ink-500">PDF · 3 pages</p>
+          </div>
+          <span class="mono flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.6875rem] font-semibold" style="background-color: var(--k-success-soft); color: var(--k-success)">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Importé
+          </span>
+        </div>
+        <div class="mt-4 space-y-2" aria-hidden="true">
+          <div class="h-2 rounded-full" style="background-color: var(--k-ink-100); width: 82%"></div>
+          <div class="h-2 rounded-full" style="background-color: var(--k-ink-100); width: 64%"></div>
+          <div class="h-2 rounded-full" style="background-color: var(--k-ink-100); width: 73%"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Démonstration : mockup de la Review KartaAI, cœur de la section. -->
-    <div revealOnScroll="120" [revealScale]="true" class="card mx-auto mt-12 max-w-lg p-5 sm:p-6">
+    <!-- ══ 02 · KartaAI — la transformation PDF → menu structuré. ══ -->
+    <div revealOnScroll="80" class="mt-16 sm:mt-20">
+      <div class="max-w-sm">
+        <p class="mono text-xs text-ink-400">02 · KartaAI</p>
+        <h3 class="mt-2 text-xl font-bold tracking-[-0.01em] text-ink-900 sm:text-2xl">Extraction et structuration</h3>
+        <p class="mt-3 text-sm text-ink-500">
+          KartaAI lit le PDF et en extrait les catégories, les plats, les
+          descriptions et les prix. Le résultat : un menu structuré, prêt à vérifier.
+        </p>
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 items-start gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+        <!-- source → KartaAI → champs extraits -->
+        <div class="flex flex-col gap-3">
+          <div class="card flex items-center gap-3 p-4">
+            <svg class="h-6 w-6 shrink-0 text-ink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 3.75H6.75A1.5 1.5 0 005.25 5.25v13.5a1.5 1.5 0 001.5 1.5h10.5a1.5 1.5 0 001.5-1.5V8.25L14.25 3.75z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 3.75v4.5h4.5" />
+            </svg>
+            <span class="mono text-sm font-semibold text-ink-900">menu-restaurant.pdf</span>
+          </div>
+
+          <svg class="mx-4 h-4 w-4 rotate-90 text-ink-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16m0 0l-6-6m6 6l-6 6" />
+          </svg>
+
+          <div class="card flex items-center gap-3 p-4">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-md" style="background-color: var(--k-persimmon); color: #fff">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3zM18 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" />
+              </svg>
+            </span>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-ink-900">KartaAI</p>
+              <p class="mt-0.5 text-xs text-ink-500">Lecture et extraction du PDF</p>
+            </div>
+          </div>
+
+          <div class="mt-1 flex flex-wrap gap-2">
+            @for (field of kartaAiExtracted; track field) {
+              <span class="mono flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.6875rem] font-semibold" style="background-color: var(--k-success-soft); color: var(--k-success)">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                {{ field }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- menu structuré qui apparaît progressivement -->
+        <div class="card p-4">
+          <p class="k-coord">Menu structuré</p>
+          <div class="mt-3 space-y-3">
+            @for (category of structuredPreview; track category.name; let ci = $index) {
+              <div [revealOnScroll]="240 + ci * 160">
+                <p class="text-[0.7rem] font-bold uppercase tracking-wide" style="color: var(--k-persimmon)">
+                  {{ category.name }}
+                </p>
+                <div class="mt-1.5 space-y-1">
+                  @for (item of category.items; track item.name) {
+                    <div class="flex items-baseline justify-between gap-3 border-b pb-1 text-sm" style="border-color: var(--k-hairline)">
+                      <span class="truncate text-ink-700">{{ item.name }}</span>
+                      <span class="mono shrink-0 text-ink-900">{{ item.priceLabel }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 03 · Review — validation manuelle, jamais automatique. ══ -->
+    <div revealOnScroll="80" class="mt-16 max-w-sm sm:mt-20">
+      <p class="mono text-xs text-ink-400">03 · Review</p>
+      <h3 class="mt-2 text-xl font-bold tracking-[-0.01em] text-ink-900 sm:text-2xl">Vous vérifiez le résultat</h3>
+      <p class="mt-3 text-sm text-ink-500">
+        Rien n'est publié automatiquement. Vous validez chaque plat détecté, corrigez
+        une description ou un prix si besoin, et gardez la main.
+      </p>
+    </div>
+
+    <!-- Démonstration : mockup de la Review KartaAI. -->
+    <div revealOnScroll="120" [revealScale]="true" class="card mx-auto mt-6 max-w-lg p-5 sm:p-6">
       <div class="flex items-center justify-between gap-2">
         <p class="text-sm font-semibold text-ink-900">KartaAI · Validation du menu</p>
         <span class="k-coord shrink-0">PDF importé</span>
@@ -136,6 +258,11 @@
         </div>
       </div>
     </div>
+
+    <div revealOnScroll class="mt-14 flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-8" style="border-color: var(--k-hairline)">
+      <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
+      <span class="text-sm text-ink-500">Vous partez de votre PDF — Karta fait le reste.</span>
+    </div>
   </div>
 </section>
 
@@ -146,64 +273,56 @@
   <!-- Le produit : un seul téléphone, un seul menu — jamais un autre contenu, jamais
        mélangé à la galerie de styles ci-dessous (voir §6 du brief). -->
   <div revealOnScroll class="mx-auto max-w-2xl text-center">
-    <p class="mono text-xs text-ink-400">Le produit</p>
+    <p class="mono text-xs text-ink-400">04 · Preset</p>
     <p class="mt-2 text-2xl font-semibold leading-snug tracking-[-0.01em] text-ink-900 sm:text-3xl">
-      Votre menu. Votre style.
+      Choisissez votre design.
     </p>
-    <p class="mt-2 text-sm font-medium text-ink-700">
-      Commencez avec un design professionnel prêt à l'emploi.
-    </p>
-    <p class="mt-3 text-sm text-ink-500">
-      Catégories, plats, prix, disponibilité : gérés depuis un éditeur simple. Le
-      style — couleurs, densité, police — reste totalement indépendant du contenu.
-      Changez de style ci-dessous : c'est le même menu, jamais un autre contenu.
+    <p class="mt-2 text-sm text-ink-500">
+      Cinq presets réels, prêts à l'emploi. Changez de style ci-dessous : c'est le
+      même menu — mêmes catégories, mêmes plats, mêmes prix — seule l'identité change.
     </p>
   </div>
 
-  <!-- Les styles : même langage que les 3 cartes "Pourquoi Karta" (.card.feature-card,
-       même grille, même hover) — seule l'esthétique de la miniature change, jamais son
-       fonctionnement (role=radio, selectPreset, voir menu-design-studio.component.html
-       pour le même principe de miniature fond/accent/texte réels). -->
-  <div revealOnScroll="80" class="mt-16">
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5" role="radiogroup" aria-label="Styles de présentation du menu">
-      @for (preset of presets; track preset.id; let i = $index) {
-        <button
-          type="button"
-          role="radio"
-          [revealOnScroll]="i * 100"
-          class="card feature-card flex flex-col overflow-hidden p-0 text-left"
-          [class.preset-card-active]="activePresetId() === preset.id"
-          [attr.aria-checked]="activePresetId() === preset.id"
-          (click)="selectPreset(preset.id)"
-        >
-          <div
-            class="p-3"
-            [class.font-serif]="preset.typeface === 'serif'"
-            [style.background-color]="preset.background"
-            [style.color]="preset.text"
+  <!-- Le vrai rendu Karta (menu-render = port fidèle de menu/menu.html) dans un
+       châssis téléphone, piloté par le preset sélectionné : la démonstration « même
+       contenu, 5 identités » est faite en direct, jamais avec 5 mockups figés.
+       Aucun traitement visuel du preset actif (choix produit, voir .preset-card) :
+       le téléphone reflète déjà le style choisi. -->
+  <div revealOnScroll="80" class="mt-14 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto]">
+    <div>
+      <div class="preset-grid" role="radiogroup" aria-label="Style du menu">
+        @for (preset of presets; track preset.id) {
+          <button
+            type="button"
+            role="radio"
+            class="preset-card"
+            [attr.aria-checked]="activePresetId() === preset.id"
+            (click)="selectPreset(preset.id)"
           >
-            <p class="text-[0.7rem] font-bold uppercase tracking-wide" [style.color]="preset.accent">
-              {{ preset.label }}
-            </p>
-            <div class="mt-2.5 space-y-1.5">
-              @for (category of content.categories; track category.name) {
-                <div class="truncate rounded-sm px-2.5 py-1.5 text-xs font-medium" [style.background-color]="chipColor(preset)">
-                  {{ category.name }}
-                </div>
-              }
-            </div>
-            <div class="mt-2.5 h-7 rounded-sm" [style.background-color]="preset.accent" aria-hidden="true"></div>
-          </div>
-          <p class="border-t px-3 py-2.5 text-sm font-semibold text-ink-900" style="border-color: var(--k-hairline)">
-            {{ preset.label }}
-          </p>
-        </button>
-      }
+            <span class="preset-swatch" [style.background-color]="preset.background" [style.border-color]="preset.text">
+              <span class="preset-swatch-line" [style.background-color]="preset.text"></span>
+              <span class="preset-swatch-line preset-swatch-line-short" [style.background-color]="preset.text"></span>
+              <span class="preset-swatch-dot" [style.background-color]="preset.accent"></span>
+            </span>
+            <span class="preset-label">{{ preset.label }}</span>
+          </button>
+        }
+      </div>
+      <p class="mt-5 text-sm text-ink-500">
+        Touchez un style : le téléphone montre le même menu, la même carte — seule
+        l'identité visuelle change.
+      </p>
+      <p class="mt-4 text-sm font-medium text-ink-700">Un seul produit, cinq identités visuelles.</p>
+      <div class="mt-6">
+        <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
+      </div>
     </div>
-    <p class="mt-6 text-center text-sm font-medium text-ink-700">
-      Un seul produit, cinq identités visuelles.
-    </p>
-    <p class="mono mt-2 text-center text-xs text-ink-400">5 styles</p>
+
+    <div class="phone-hover-lift mx-auto">
+      <app-phone-frame [screenColor]="activePresetTheme().background">
+        <menu-render [theme]="activePresetTheme()" [menu]="content" />
+      </app-phone-frame>
+    </div>
   </div>
 </section>
 
@@ -212,7 +331,61 @@
      Le téléphone affiche <menu-render> : port fidèle de templates/menu/menu.html
      (mêmes classes, même CSS, même thème résolu) — voir PremiumConfiguratorComponent. -->
 <section id="premium" class="scroll-mt-28 bg-canvas">
+  <div revealOnScroll class="mx-auto max-w-6xl px-4 pt-14 sm:px-6 sm:pt-16">
+    <div class="max-w-sm">
+      <p class="mono text-xs text-ink-400">05 · Aperçu</p>
+      <h2 class="mt-2 text-2xl font-bold tracking-[-0.01em] text-ink-900 sm:text-3xl">
+        Vous voyez le résultat avant de publier
+      </h2>
+      <p class="mt-3 text-sm text-ink-500">
+        Le téléphone montre votre menu tel qu'il apparaîtra à vos clients. Style,
+        couleurs, nom, logo : chaque changement s'affiche immédiatement. Vous ne
+        publiez que quand le rendu vous convient.
+      </p>
+    </div>
+  </div>
   <landing-premium-configurator />
+  <div revealOnScroll class="mx-auto max-w-6xl px-4 pb-14 sm:px-6 sm:pb-16">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-8" style="border-color: var(--k-hairline)">
+      <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
+      <span class="text-sm text-ink-500">Composez votre identité, prévisualisez, publiez quand vous êtes prêt.</span>
+    </div>
+  </div>
+</section>
+
+<!-- 06 · Publication : le menu devient accessible aux clients via le QR permanent.
+     Publication explicite (jamais automatique) — cohérent avec MenuService. -->
+<section class="scroll-mt-28 bg-white">
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+    <div revealOnScroll class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_auto]">
+      <div>
+        <p class="mono text-xs text-ink-400">06 · Publication</p>
+        <h2 class="mt-2 text-2xl font-bold tracking-[-0.01em] text-ink-900 sm:text-3xl">
+          Votre menu est en ligne
+        </h2>
+        <p class="mt-3 max-w-md text-sm text-ink-500">
+          Vous publiez quand vous le décidez. Le menu devient accessible à vos
+          clients via le QR permanent posé sur vos tables — sans jamais rien
+          réimprimer.
+        </p>
+      </div>
+      <div revealOnScroll="120" class="card flex w-full max-w-xs items-center gap-4 p-5 lg:w-auto">
+        <span class="grid h-14 w-14 shrink-0 place-items-center rounded-sm" style="background-color: var(--k-persimmon-soft); color: var(--k-persimmon)">
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h6v6h-6v-6zM14.25 4.5h6v6h-6v-6zM3.75 15h6v6h-6v-6zM14.25 15h3m3 0h.008M14.25 18v.008M17.25 21h.008M20.25 18v3" />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-ink-900">Menu publié</p>
+          <p class="k-coord mt-1">Accessible via QR permanent</p>
+          <span class="mono mt-2 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[0.6875rem] font-semibold" style="background-color: var(--k-success-soft); color: var(--k-success)">
+            <span class="h-1.5 w-1.5 rounded-full" style="background-color: var(--k-success)" aria-hidden="true"></span>
+            En ligne
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- Fonctionnalités : fonctionnalité → problème résolu → bénéfice. Le fond passe en
@@ -249,43 +422,62 @@
             }
           </span>
           <p class="mt-4 text-sm font-semibold text-ink-900">{{ feature.title }}</p>
-          <p class="mt-2 text-sm text-ink-500">{{ feature.problem }}</p>
+          <p class="mt-3 text-sm text-ink-500">
+            <span class="mono text-[0.625rem] uppercase tracking-[0.08em] text-ink-400">Carte papier</span>
+            <span class="mt-1 block">{{ feature.before }}</span>
+          </p>
           <p class="mt-3 border-t pt-3 text-sm text-ink-700" style="border-color: var(--k-hairline)">
-            {{ feature.benefit }}
+            <span class="mono text-[0.625rem] uppercase tracking-[0.08em]" style="color: var(--k-persimmon)">Karta</span>
+            <span class="mt-1 block">{{ feature.after }}</span>
           </p>
         </div>
       }
     </div>
+
+    <div revealOnScroll class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
+      <a href="#offres" (click)="scrollToAnchor('offres', $event)" class="btn btn-ghost">Voir les tarifs →</a>
+    </div>
   </div>
 </section>
 
-<!-- Comment ça marche : timeline verticale fine, numéros massifs. -->
-<section id="comment-ca-marche" class="scroll-mt-28 bg-white">
-  <div class="mx-auto max-w-4xl px-4 py-14 sm:px-6 sm:py-16">
-    <div revealOnScroll class="max-w-md">
-      <p class="mono text-xs text-ink-400">Le parcours</p>
-      <h2 class="mt-2 text-2xl font-bold tracking-[-0.01em] text-ink-900">
-        De la carte au client, en quatre étapes.
-      </h2>
-    </div>
+<!-- Le QR : le différenciateur. Un QR permanent, imprimé une seule fois — la
+     destination et le contenu changent, jamais le sticker. La mention kartaqr.fr est
+     ajoutée automatiquement à tous les exports (voir QrImageGenerator, backend). -->
+<section id="qr" class="scroll-mt-28 bg-white">
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+    <div revealOnScroll class="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto]">
+      <div class="max-w-lg">
+        <p class="mono text-xs text-ink-400">Le QR</p>
+        <h2 class="mt-2 text-2xl font-bold tracking-[-0.01em] text-ink-900 sm:text-3xl">
+          Un QR imprimé une seule fois.
+        </h2>
+        <p class="mt-3 text-sm text-ink-500">
+          Collé une fois sur vos tables, le QR Karta reste valide même quand vous
+          changez un prix, retirez un plat ou refaites toute la carte. Vous ne
+          réimprimez jamais.
+        </p>
+        <ul class="mt-5 space-y-2.5 text-sm text-ink-700">
+          @for (point of qrPoints; track point) {
+            <li class="flex items-start gap-2">
+              <svg class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              {{ point }}
+            </li>
+          }
+        </ul>
+      </div>
 
-    <ol class="relative mt-10">
-      <div class="absolute bottom-4 left-[0.9rem] top-4 w-px" style="background-color: var(--k-hairline)" aria-hidden="true"></div>
-      @for (step of steps; track step.title; let i = $index; let last = $last) {
-        <li [revealOnScroll]="i * 110" class="relative flex items-start gap-6 py-4">
-          <span
-            class="mono relative z-10 flex h-[1.9rem] w-[1.9rem] shrink-0 items-center justify-center rounded-full text-sm font-bold"
-            style="background-color: var(--k-canvas); color: var(--k-ink-300); box-shadow: inset 0 0 0 1px var(--k-hairline)"
-          >
-            {{ i + 1 }}
-          </span>
-          <div [class.pb-2]="!last">
-            <p class="text-base font-medium text-ink-900">{{ step.title }}</p>
-            <p class="mt-1 text-sm text-ink-500">{{ step.detail }}</p>
-          </div>
-        </li>
-      }
-    </ol>
+      <div revealOnScroll="120" class="card mx-auto grid max-w-[15rem] justify-items-center gap-3 p-6">
+        <div class="grid h-32 w-32 place-items-center rounded-md" style="background-color: var(--k-ivory); color: var(--k-ink-900)">
+          <svg class="h-16 w-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h6v6h-6v-6zM14.25 4.5h6v6h-6v-6zM3.75 15h6v6h-6v-6zM14.25 15h3m3 0h.008M14.25 18v.008M17.25 21h.008M20.25 18v3" />
+          </svg>
+        </div>
+        <p class="mono text-xs text-ink-400">kartaqr.fr</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -315,14 +507,13 @@
   <div revealOnScroll class="relative mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24">
     <p class="eyebrow" style="color: var(--k-persimmon)">Prêt quand vous l'êtes</p>
     <h2 class="mt-3 max-w-xl text-3xl font-bold leading-tight tracking-[-0.02em] text-white sm:text-4xl">
-      Arrêtez de réimprimer votre carte.
+      Votre menu est déjà prêt.
     </h2>
     <p class="mt-4 max-w-md text-sm" style="color: var(--k-charcoal-muted)">
-      Un QR permanent, un menu à jour, tout géré au même endroit. Connectez-vous et
-      prenez la main sur votre carte dès aujourd'hui.
+      Importez votre carte, choisissez votre style et publiez quand vous êtes prêt.
     </p>
     <div class="mt-7">
-      <a routerLink="/login" class="btn btn-primary">Se connecter</a>
+      <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
     </div>
   </div>
 </section>
