@@ -44,15 +44,14 @@
           </p>
         }
         <span [class]="offerBadgeClass(offer.id)" class="w-fit">{{ offer.id }}</span>
-        <p class="mt-4 text-base font-semibold text-ink-900">{{ offer.tagline }}</p>
-        <p class="mt-1.5 text-sm text-ink-600">{{ offer.summary }}</p>
+        <p class="mt-4 flex-1 text-sm leading-relaxed text-ink-600">{{ offer.summary }}</p>
 
         <!-- Prix : la ligne du prix barré garde toujours sa hauteur (visible ou non)
              et le compteur anime le MÊME élément entre mensuel et annuel — jamais de
              saut de hauteur ni de recréation du compteur (voir landing-offers.ts pour
              les tarifs définitifs). Le badge de réduction est en position absolue :
              il ne décale jamais le reste de la carte. -->
-        <div class="billing-price relative mt-5 border-t pt-5" style="border-color: var(--k-hairline)">
+        <div class="billing-price relative mt-6 border-t pt-6" style="border-color: var(--k-hairline)">
           <div class="billing-price-original-slot">
             <span class="billing-price-original" [class.billing-price-original-visible]="billingCycle() === 'yearly'">
               {{ formatEuro(offer.pricing.yearlyOriginal) }} €
@@ -66,18 +65,6 @@
           </p>
         </div>
 
-        <ul class="mt-5 flex-1 space-y-2.5 border-t pt-5 text-sm text-ink-600" style="border-color: var(--k-hairline)">
-          @for (capability of capabilities; track capability; let i = $index) {
-            @if (offer.included[i]) {
-              <li class="flex items-start gap-2">
-                <svg class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                {{ capability }}
-              </li>
-            }
-          }
-        </ul>
         <a
           routerLink="/login"
           class="btn mt-6 w-full"

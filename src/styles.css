@@ -1065,6 +1065,145 @@ body {
     color: var(--k-success);
     box-shadow: 0 0 0 2px var(--k-white);
   }
+
+  /* ── Landing V2 — art direction ────────────────────────────────────────────
+     Trois éléments seulement : la carte « papier » (section Transformation), le
+     ruban de process (unique réutilisation du motif gradué), la liste de presets
+     (section Showcase). Aucun nouveau token. */
+
+  /* La carte actuelle du restaurateur, avant Karta : dense, légèrement de
+     travers — un objet physique posé sur la table, pas une capture d'écran. */
+  .v2-paper {
+    @apply rounded-md p-5 sm:p-6;
+    background-color: var(--k-ivory);
+    border: 1px solid var(--k-hairline);
+    transform: rotate(-1.2deg);
+  }
+  @media (max-width: 1023px) {
+    .v2-paper {
+      transform: none;
+    }
+  }
+
+  /* Ruban de process 01 → 06 : la colonne vertébrale du parcours. Le trait reprend
+     exactement le motif gradué de .k-ticks (repeating-linear-gradient, --k-ink-200) —
+     seule réutilisation de la signature en dehors de la section QR. */
+  .v2-ribbon {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 1rem;
+  }
+  .v2-ribbon::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0.22rem;
+    height: 2px;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--k-ink-200) 0,
+      var(--k-ink-200) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  }
+  .v2-ribbon-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+  .v2-ribbon-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--k-r-full);
+    background-color: var(--k-persimmon);
+  }
+  .v2-ribbon-num {
+    font-family: var(--k-font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    color: var(--k-ink-400);
+  }
+  .v2-ribbon-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--k-ink-900);
+  }
+  .v2-ribbon-detail {
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--k-ink-500);
+  }
+  @media (max-width: 767px) {
+    .v2-ribbon {
+      grid-template-columns: 1fr;
+      row-gap: 1.4rem;
+      column-gap: 0;
+    }
+    .v2-ribbon::before {
+      top: 0;
+      bottom: 0;
+      left: 0.22rem;
+      right: auto;
+      width: 2px;
+      height: auto;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--k-ink-200) 0,
+        var(--k-ink-200) 1px,
+        transparent 1px,
+        transparent 8px
+      );
+    }
+    .v2-ribbon-step {
+      padding-left: 1.5rem;
+    }
+    .v2-ribbon-dot {
+      position: absolute;
+      left: 0.05rem;
+      top: 0.1rem;
+    }
+  }
+
+  /* Sélecteur de style (section Showcase) : les 5 noms en liste typographique.
+     L'actif passe en ink-900 et son filet persimmon s'étend. Le téléphone à côté
+     reflète déjà le choix : pas de swatch, pas de carte. */
+  .v2-preset-row {
+    @apply flex w-full items-center justify-between gap-4 py-3.5 text-left;
+  }
+  .v2-preset-row:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--k-persimmon-ring);
+    border-radius: var(--k-r-xs);
+  }
+  .v2-preset-name {
+    @apply text-xl font-semibold tracking-[-0.01em];
+    color: var(--k-ink-400);
+    transition: color var(--k-t-base) var(--k-ease);
+  }
+  .v2-preset-row:hover .v2-preset-name {
+    color: var(--k-ink-700);
+  }
+  .v2-preset-row-active .v2-preset-name {
+    color: var(--k-ink-900);
+  }
+  .v2-preset-mark {
+    width: 1.5rem;
+    height: 2px;
+    border-radius: var(--k-r-full);
+    background-color: var(--k-ink-200);
+    transition:
+      width var(--k-t-base) var(--k-ease),
+      background-color var(--k-t-base) var(--k-ease);
+  }
+  .v2-preset-row-active .v2-preset-mark {
+    width: 2.5rem;
+    background-color: var(--k-persimmon);
+  }
 }
 
 /* ==========================================================================
