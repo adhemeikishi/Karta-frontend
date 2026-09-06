@@ -18,8 +18,14 @@ import { Component, computed, input } from '@angular/core';
 @Component({
   selector: 'karta-logo',
   standalone: true,
+  // `:host` en `inline-flex` : sans display explicite, l'hôte est `inline` et le
+  // `<span>` interne reste une boîte inline-level qui traîne le demi-interligne de
+  // sa line-box — dans un conteneur flex (navbar, sidebar admin) le logo se
+  // retrouve alors ~3px trop haut. En faisant de l'hôte le conteneur flex, le
+  // `<span>` devient un simple flex-item et la boîte colle au dessin (32px = 32px).
+  styles: [':host{display:inline-flex}'],
   template: `
-    <span class="inline-flex items-center gap-2.5">
+    <span class="flex items-center gap-2.5">
       <img
         [src]="variant() === 'light' ? '/karta-logo-light.svg' : '/karta-logo-dark.svg'"
         alt=""

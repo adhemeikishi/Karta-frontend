@@ -6,35 +6,9 @@
      Presets / prix / contenu de menu = sources de vérité existantes, jamais inventés.
      ═══════════════════════════════════════════════════════════════════════════ -->
 
-<!-- ── HERO ── Manifeste éditorial. Le message seul, beaucoup d'air. ──────────── -->
-<section class="relative overflow-hidden bg-white">
-  <div
-    class="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full"
-    style="background: radial-gradient(closest-side, var(--k-persimmon), transparent); opacity: 0.045"
-    aria-hidden="true"
-  ></div>
-
-  <div class="relative mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20">
-    <p revealOnScroll class="mono text-xs tracking-[0.14em] text-ink-400">karta ·</p>
-    <h1
-      revealOnScroll="80"
-      [revealScale]="true"
-      class="mt-5 text-[2.25rem] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink-900 sm:text-5xl lg:text-[4.25rem]"
-    >
-      Le QR reste.<br />Le menu évolue.
-    </h1>
-    <p revealOnScroll="160" class="mt-6 max-w-md text-base leading-relaxed text-ink-600">
-      Un QR permanent posé une fois sur vos tables. Derrière, un menu que vous
-      changez en quelques secondes.
-    </p>
-    <div revealOnScroll="240" class="mt-9 flex flex-wrap items-center gap-3">
-      <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
-      <a href="#kartaai" (click)="scrollToAnchor('kartaai', $event)" class="btn btn-ghost">
-        Voir comment ça marche
-      </a>
-    </div>
-  </div>
-</section>
+<!-- ── HERO ── Capitales sur fond charcoal topographique. Voir landing/hero/.
+     Fond sombre → navbar inversée via LandingChromeService. ─────────────────── -->
+<landing-hero />
 
 <!-- ── TRANSFORMATION ── Papier → KartaAI → structuré. Étapes 01·02·03. ──────── -->
 <section id="kartaai" class="scroll-mt-24 bg-white">

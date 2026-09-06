@@ -1,20 +1,21 @@
 <header class="sticky top-0 z-30">
   <div
-    class="nav-shell mx-auto flex h-16 items-center justify-between px-4 sm:px-6"
+    class="nav-shell mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(max-content,1fr)_auto_minmax(max-content,1fr)] lg:gap-6"
+    [class.nav-on-dark]="onDark()"
     [style.max-width]="shellMaxWidth()"
     [style.transform]="'translateY(' + shellTranslateY() + 'px) scale(' + shellScale() + ')'"
     [style.background-color]="shellBackground()"
-    [style.border-color]="shellBorderColor()"
-    [style.box-shadow]="'0 1px 3px rgba(19, 19, 18, ' + shellShadowOpacity() + ')'"
+    [style.box-shadow]="shellBoxShadow()"
     [style.backdrop-filter]="shellBlur()"
     [style.-webkit-backdrop-filter]="shellBlur()"
   >
-    <!-- Logo Karta — source unique : KartaLogoComponent. Navbar sur fond clair → tuile sombre. -->
-    <a routerLink="/login" class="flex shrink-0 items-center" aria-label="Karta">
-      <karta-logo variant="dark" [size]="32" />
+    <!-- Logo Karta — source unique : KartaLogoComponent. Fond clair → tuile sombre ;
+         hero D (fond sombre) → tuile claire. -->
+    <a routerLink="/login" class="flex shrink-0 items-center justify-self-start" aria-label="Karta">
+      <karta-logo [variant]="onDark() ? 'light' : 'dark'" [size]="32" />
     </a>
 
-    <nav class="hidden items-center gap-6 md:flex" aria-label="Navigation principale">
+    <nav class="hidden items-center gap-6 justify-self-center lg:flex" aria-label="Navigation principale">
       <a
         href="#fonctionnalites"
         (click)="scrollToAnchor('fonctionnalites', $event)"
@@ -38,37 +39,39 @@
       </a>
     </nav>
 
-    <div class="hidden shrink-0 items-center gap-2 sm:flex">
-      <a routerLink="/login" class="btn btn-ghost btn-sm">Se connecter</a>
-      <a routerLink="/login" class="btn btn-primary btn-sm">Créer mon menu</a>
-    </div>
+    <div class="flex shrink-0 items-center gap-2 justify-self-end">
+      <div class="hidden items-center gap-2 lg:flex">
+        <a routerLink="/login" class="btn btn-ghost btn-sm">Se connecter</a>
+        <a routerLink="/login" class="btn btn-primary btn-sm">Créer mon menu</a>
+      </div>
 
-    <!-- Bouton mobile : hamburger / croix, même motif que le menu mobile du back-office. -->
-    <button
-      type="button"
-      (click)="toggleMobileMenu()"
-      class="btn-icon shrink-0 text-ink-500 hover:bg-ink-100 hover:text-ink-900 sm:hidden"
-      [attr.aria-expanded]="mobileOpen()"
-      aria-label="Ouvrir le menu"
-      aria-controls="landing-mobile-menu"
-    >
-      @if (mobileOpen()) {
-        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-        </svg>
-      } @else {
-        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-          <path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
-      }
-    </button>
+      <!-- Bouton mobile : hamburger / croix, même motif que le menu mobile du back-office. -->
+      <button
+        type="button"
+        (click)="toggleMobileMenu()"
+        class="btn-icon text-ink-500 hover:bg-ink-100 hover:text-ink-900 lg:hidden"
+        [attr.aria-expanded]="mobileOpen()"
+        aria-label="Ouvrir le menu"
+        aria-controls="landing-mobile-menu"
+      >
+        @if (mobileOpen()) {
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        } @else {
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        }
+      </button>
+    </div>
   </div>
 
   <!-- Panneau mobile : toujours dans le DOM, transform+opacity uniquement (anti-jank
        §7) — jamais une hauteur animée. Ferme au clic sur une ancre. -->
   <div
     id="landing-mobile-menu"
-    class="landing-mobile-menu sm:hidden"
+    class="landing-mobile-menu lg:hidden"
     [class.landing-mobile-menu-open]="mobileOpen()"
     [attr.aria-hidden]="!mobileOpen()"
   >
@@ -91,5 +94,5 @@
 </header>
 
 @if (mobileOpen()) {
-  <div class="landing-mobile-backdrop sm:hidden" (click)="closeMobileMenu()" aria-hidden="true"></div>
+  <div class="landing-mobile-backdrop lg:hidden" (click)="closeMobileMenu()" aria-hidden="true"></div>
 }

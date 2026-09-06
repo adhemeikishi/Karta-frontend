@@ -1,6 +1,7 @@
-import { Component, HostListener, computed, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { KartaLogoComponent } from '../shared/karta-logo.component';
+import { LandingChromeService } from './landing-chrome.service';
 import { scrollToAnchor } from './scroll-to-anchor';
 
 /** Fin du morphing : au-delà de ce défilement (px), la navbar est pleinement compacte. */
@@ -30,13 +31,38 @@ export class LandingNavComponent {
   /** 0 = tout en haut, 1 = entièrement morphée. */
   readonly progress = signal(0);
 
-  readonly shellMaxWidth = computed(() => `${72 - this.progress() * 26}rem`);
+  /** Hero sombre (variante D) à l'écran → navbar inversée (contenu clair, pastille charcoal). */
+  readonly onDark = inject(LandingChromeService).darkHero;
+
+  /** 72rem au repos → 60rem compacte. Le plancher reste assez large pour que la
+   *  navigation complète tienne **centrée** sans jamais chevaucher le CTA
+   *  (seuil mesuré ≈ 56rem : logo + liens + CTA + gaps + padding, zones latérales
+   *  égales pour le centrage). En-dessous de `lg`, la nav bascule sur le
+   *  hamburger et ce plancher n'a plus d'incidence. */
+  readonly shellMaxWidth = computed(() => `${72 - this.progress() * 12}rem`);
   readonly shellTranslateY = computed(() => this.progress() * 10);
   readonly shellScale = computed(() => 1 - this.progress() * 0.02);
-  readonly shellBackground = computed(() => `rgba(255, 255, 255, ${this.progress() * 0.85})`);
-  readonly shellBorderColor = computed(() => `rgba(230, 230, 228, ${this.progress()})`);
+  readonly shellBackground = computed(() =>
+    this.onDark()
+      ? `rgba(12, 12, 12, ${this.progress() * 0.9})`
+      : `rgba(255, 255, 255, ${this.progress() * 0.85})`,
+  );
+  readonly shellBorderColor = computed(() =>
+    this.onDark()
+      ? `rgba(42, 41, 38, ${this.progress()})`
+      : `rgba(230, 230, 228, ${this.progress()})`,
+  );
   readonly shellShadowOpacity = computed(() => this.progress() * 0.06);
   readonly shellBlur = computed(() => `blur(${this.progress() * 14}px)`);
+
+  /** Filet 1px + ombre portée, tous deux en `box-shadow` (aucune `border` : une
+   *  bordure `border-box` décalerait le contenu de 1px par rapport au container
+   *  du hero et désalignerait le logo de `karta ·`). `inset` → le filet suit le
+   *  border-radius et ne participe pas à la boîte. */
+  readonly shellBoxShadow = computed(
+    () =>
+      `inset 0 0 0 1px ${this.shellBorderColor()}, 0 1px 3px rgba(19, 19, 18, ${this.shellShadowOpacity()})`,
+  );
 
   private ticking = false;
 

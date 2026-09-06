@@ -6,6 +6,7 @@ import {
   LandingMenuPresetId,
   resolveLandingTheme,
 } from '../landing-menu-presets';
+import { HeroComponent } from '../hero/hero.component';
 import { LandingPricingComponent } from '../landing-pricing.component';
 import { MenuRenderComponent } from '../menu-render.component';
 import { PhoneFrameComponent } from '../../menu/design/phone-frame.component';
@@ -34,6 +35,7 @@ interface LandingWorkflowStep {
     selector: 'landing-variant-editorial',
     imports: [
         RouterLink,
+        HeroComponent,
         MenuRenderComponent,
         PhoneFrameComponent,
         PremiumConfiguratorComponent,
