@@ -56,12 +56,10 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
   {
     id: 'BASIC',
     quote: 'Votre menu est en ligne.',
-    featuresLead: 'QR + PDF',
+    featuresLead: 'QR Code Karta',
     features: [
-      'URL personnalisée',
+      'Menu digital accessible par QR Code',
       'Informations du restaurant',
-      'Horaires & coordonnées',
-      'Statistiques de scans',
       'Branding Karta visible',
     ],
     cta: 'Commencer',
