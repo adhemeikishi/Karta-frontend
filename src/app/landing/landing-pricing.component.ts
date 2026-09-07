@@ -1,6 +1,5 @@
 import { Component, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { offerBadgeClass } from '../restaurants/offer-badge';
 import { formatEuro, LandingPriceCounterComponent } from './landing-price-counter.component';
 import { LANDING_CAPABILITIES, LANDING_OFFERS, LandingOffer } from './landing-offers';
 import { RevealOnScrollDirective } from './reveal-on-scroll.directive';
@@ -25,7 +24,6 @@ export class LandingPricingComponent {
   readonly layout = input<'cards' | 'table'>('cards');
   readonly offers = LANDING_OFFERS;
   readonly capabilities = LANDING_CAPABILITIES;
-  readonly offerBadgeClass = offerBadgeClass;
   readonly formatEuro = formatEuro;
 
   readonly billingCycle = signal<BillingCycle>('monthly');

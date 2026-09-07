@@ -43,15 +43,14 @@
             Recommandée
           </p>
         }
-        <span [class]="offerBadgeClass(offer.id)" class="w-fit">{{ offer.id }}</span>
-        <p class="mt-4 flex-1 text-sm leading-relaxed text-ink-600">{{ offer.summary }}</p>
+        <span class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-500">{{ offer.id }}</span>
 
         <!-- Prix : la ligne du prix barré garde toujours sa hauteur (visible ou non)
              et le compteur anime le MÊME élément entre mensuel et annuel — jamais de
              saut de hauteur ni de recréation du compteur (voir landing-offers.ts pour
              les tarifs définitifs). Le badge de réduction est en position absolue :
              il ne décale jamais le reste de la carte. -->
-        <div class="billing-price relative mt-6 border-t pt-6" style="border-color: var(--k-hairline)">
+        <div class="billing-price relative mt-4">
           <div class="billing-price-original-slot">
             <span class="billing-price-original" [class.billing-price-original-visible]="billingCycle() === 'yearly'">
               {{ formatEuro(offer.pricing.yearlyOriginal) }} €
@@ -65,13 +64,39 @@
           </p>
         </div>
 
+        <p class="mt-1 text-sm italic text-ink-500">«&nbsp;{{ offer.quote }}&nbsp;»</p>
+
+        <!-- Fonctionnalités : 1re ligne mise en avant (coche persimmon), puis la
+             sous-liste. `flex-1` pousse le bouton en bas — les 3 cartes s'alignent. -->
+        <div class="mt-5 flex-1 border-t pt-5" style="border-color: var(--k-hairline)">
+          <p class="flex items-start gap-2 text-sm font-semibold text-ink-900">
+            <svg class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            {{ offer.featuresLead }}
+          </p>
+          <ul class="mt-3 space-y-2">
+            @for (feature of offer.features; track feature) {
+              <li class="flex items-start gap-2 text-sm text-ink-600">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-ink-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                {{ feature }}
+              </li>
+            }
+          </ul>
+          @if (offer.footnote) {
+            <p class="mt-4 text-center text-xs leading-relaxed text-ink-400">{{ offer.footnote }}</p>
+          }
+        </div>
+
         <a
           routerLink="/login"
           class="btn mt-6 w-full"
           [class.btn-primary]="offer.highlighted"
           [class.btn-outline]="!offer.highlighted"
         >
-          Choisir {{ offer.id }}
+          {{ offer.cta }} <span aria-hidden="true">&rarr;</span>
         </a>
       </div>
     }
@@ -85,7 +110,7 @@
           <th class="text-left">Fonctionnalité</th>
           @for (offer of offers; track offer.id) {
             <th class="text-center">
-              <span [class]="offerBadgeClass(offer.id)">{{ offer.id }}</span>
+              <span class="text-sm font-semibold text-ink-900">{{ offer.id }}</span>
             </th>
           }
         </tr>

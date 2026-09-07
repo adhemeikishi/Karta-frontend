@@ -36,12 +36,17 @@ export interface LandingOfferPricing {
 
 export interface LandingOffer {
   id: RestaurantOffer;
-  tagline: string;
-  /** Résumé « en une ligne » de ce que couvre l'offre — lecture en un coup d'œil. */
-  summary: string;
-  /** Positionnement court (« pour qui »), affiché sous le tagline. */
-  audience: string;
-  /** Aligné index à index sur `LANDING_CAPABILITIES`. */
+  /** Phrase courte en exergue, sous le prix (les guillemets sont ajoutés par le template). */
+  quote: string;
+  /** Première ligne de la liste, mise en avant (ex. « Tout de Basic, plus : »). */
+  featuresLead: string;
+  /** Sous-liste de fonctionnalités affichée dans la carte. */
+  features: readonly string[];
+  /** Note de bas de carte (PREMIUM uniquement). */
+  footnote?: string;
+  /** Libellé du bouton d'action. */
+  cta: string;
+  /** Aligné index à index sur `LANDING_CAPABILITIES` — utilisé par le tableau comparatif. */
   included: readonly boolean[];
   highlighted: boolean;
   pricing: LandingOfferPricing;
@@ -50,9 +55,16 @@ export interface LandingOffer {
 export const LANDING_OFFERS: readonly LandingOffer[] = [
   {
     id: 'BASIC',
-    tagline: 'Votre carte PDF, servie par QR.',
-    summary: 'QR permanent + statistiques de scans.',
-    audience: 'Pour découvrir Karta.',
+    quote: 'Votre menu est en ligne.',
+    featuresLead: 'QR + PDF',
+    features: [
+      'URL personnalisée',
+      'Informations du restaurant',
+      'Horaires & coordonnées',
+      'Statistiques de scans',
+      'Branding Karta visible',
+    ],
+    cta: 'Commencer',
     included: [true, true, false, false, false],
     highlighted: false,
     pricing: {
@@ -64,9 +76,18 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
   },
   {
     id: 'PRO',
-    tagline: 'Menu structuré, mis à jour en un instant.',
-    summary: 'Menu structuré, éditeur, 5 styles et KartaAI.',
-    audience: 'Le meilleur rapport valeur pour un menu vivant.',
+    quote: 'Votre menu devient digital.',
+    featuresLead: 'Tout de Basic, plus :',
+    features: [
+      'KartaAI',
+      'Menu structuré',
+      '5 presets',
+      'Éditeur',
+      'Aperçu',
+      'Publication',
+      'Branding Karta visible',
+    ],
+    cta: 'Passer à Pro',
     included: [true, true, true, true, false],
     highlighted: true,
     pricing: {
@@ -78,9 +99,18 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
   },
   {
     id: 'PREMIUM',
-    tagline: "L'identité complète du restaurant.",
-    summary: 'Tout PRO + votre identité visuelle complète.',
-    audience: 'Pour les restaurants qui veulent davantage de personnalisation.',
+    quote: 'Votre menu devient votre identité.',
+    featuresLead: 'Tout de Pro, plus :',
+    features: [
+      'Nom du restaurant',
+      'Logo',
+      'Couleur principale',
+      'Couleur secondaire',
+      'Image',
+      'White-label',
+    ],
+    footnote: 'Idéal pour les restaurants avec une véritable identité de marque.',
+    cta: 'Créer mon menu',
     included: [true, true, true, true, true],
     highlighted: false,
     pricing: {

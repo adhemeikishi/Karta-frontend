@@ -6,14 +6,14 @@ import { scrollToAnchor } from '../scroll-to-anchor';
 /**
  * Hero de la landing — direction unique.
  *
- * Typographie capitale sur fond charcoal topographique :
+ * Typographie capitale ivoire sur photo d'ambiance voilée :
  * « L'interface. / Reste. » puis décrochage « Le menu. / Évolue. ». « Évolue. »
  * passe à un serif éditorial italique persimmon (signature typographique).
- * Éditorial, cartographique, sobre.
+ * Éditorial, sobre.
  *
- * Le fond est purement CSS (couches topo / rake / grain / vignette + fondu vers
- * la section claire), voir `.hero-panel-dark` dans styles.css — aucune animation
- * au repos, `prefers-reduced-motion` neutralise la parallaxe de scroll.
+ * Le fond : photo `hero-photo.jpg` + voile de lisibilité + vignette + fondu vers
+ * la section claire, voir `.hero-panel-dark` dans styles.css — aucune animation
+ * au repos.
  *
  * La navbar (transparente en haut de page) s'inverse sur ce fond sombre via
  * `LandingChromeService.darkHero`, actif tant que ce composant est monté.

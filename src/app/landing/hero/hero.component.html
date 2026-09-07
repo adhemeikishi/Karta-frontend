@@ -4,8 +4,9 @@
      « L'interface. / Reste. » puis décrochage « Le menu. / Évolue. ». « Évolue. »
      change de voix : serif éditorial italique + persimmon (.hero-caps-editorial),
      signature typographique — pas un effet. CTA : /login + #kartaai.
-     Fond : couches CSS (topo, rake, grain, vignette) + fondu progressif vers la
-     section claire suivante (::after de .hero-panel-dark). Aucune animation au repos.
+     Fond : photo (hero-photo.jpg) + voile de lisibilité (scrim) + vignette + fondu
+     progressif vers la section claire suivante (::after de .hero-panel-dark).
+     Aucune animation au repos.
      La navbar s'inverse via LandingChromeService tant que ce hero est monté.
      Entrée : .hero-in (au montage, pas au scroll).
      ═══════════════════════════════════════════════════════════════════════════ -->
@@ -13,11 +14,9 @@
 <!-- -mt-16 : la navbar (sticky) réserve 64px de flux en haut ; on remonte le
      panneau sous elle pour que le charcoal parte du bord (sinon bande claire). -->
 <section class="hero-panel-dark relative isolate -mt-16 overflow-hidden">
-  <div class="hero-d-topo" aria-hidden="true"></div>
-  <div class="hero-d-rake" aria-hidden="true"></div>
-  <div class="hero-d-grain" aria-hidden="true"></div>
+  <div class="hero-d-photo" aria-hidden="true"></div>
+  <div class="hero-d-scrim" aria-hidden="true"></div>
   <div class="hero-d-vignette" aria-hidden="true"></div>
-  <span class="hero-d-coord mono" aria-hidden="true">45.7578&deg;&nbsp;N<br />4.8320&deg;&nbsp;E</span>
 
   <div class="relative z-[2] mx-auto max-w-6xl px-4 pb-24 pt-28 sm:px-6 sm:pb-32 sm:pt-36">
     <p class="hero-in mono text-xs tracking-[0.14em]" style="color: var(--k-charcoal-muted)">karta ·</p>

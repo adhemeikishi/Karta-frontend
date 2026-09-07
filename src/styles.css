@@ -1273,16 +1273,13 @@ body {
     }
   }
 
-  /* ── Hero · fond charcoal topographique ───────────────────────────────────
-     Une carte technique imprimée sur un papier noir très dense. Couches CSS
-     empilées, toutes ≤ ~9 % d'opacité : la typo reste le premier élément lu.
-       .hero-d-topo   — courbes de niveau (crête + bassin), quelques repères de
-                        relevé et une limite en pointillé ; parallaxe de scroll
-                        très faible, coupée en reduced-motion / mobile.
-       .hero-d-rake   — une inclinaison de lumière discrète (pas de « boule »).
-       .hero-d-grain  — grain fractal très léger.
-       .hero-d-vignette — assombrit les bords, concentre l'œil sur la typo.
-       ::after        — fondu progressif du charcoal vers la section claire.
+  /* ── Hero · fond photographique ───────────────────────────────────────────
+     Photo d'ambiance (salle + chevalet QR Karta) recouverte d'un voile charcoal
+     pour que la typo capitale ivoire reste le premier élément lu.
+       .hero-d-photo    — la photo, plein cadre, `cover`.
+       .hero-d-scrim    — voile charcoal, plus dense à gauche (sous la typo).
+       .hero-d-vignette — assombrit les bords.
+       ::after          — fondu progressif du charcoal vers la section claire.
      Tokens Karta uniquement. */
   .hero-panel-dark {
     background-color: var(--k-eclipse);
@@ -1299,91 +1296,52 @@ body {
     color: var(--k-white);
   }
 
-  /* Fondu du fond sombre vers la section claire suivante — le charcoal se dissout
-     dans le blanc de #kartaai sur une longue zone (≈ 170-240px). Aucun palier :
-     le noir perd d'abord son intensité (alpha décroissant), puis la rampe vers le
-     blanc est étalée avec des écarts assez petits pour qu'aucune arête ni bande ne
-     se lise. Teinte légèrement chaude, alignée sur le charcoal. Posé sous le
-     contenu (z-index 1) : ne recouvre jamais la typo ni les CTA.
-     Pas de border, pas de box-shadow, pas de blur. */
-  .hero-panel-dark::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: clamp(170px, 21vh, 240px);
-    z-index: 1;
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom,
-      rgba(12, 12, 12, 0) 0%,
-      rgba(12, 12, 12, 0.35) 32%,
-      rgba(13, 13, 12, 0.72) 50%,
-      rgb(23, 23, 22) 62%,
-      rgb(45, 45, 43) 71%,
-      rgb(78, 78, 75) 79%,
-      rgb(120, 120, 116) 86%,
-      rgb(165, 165, 161) 92%,
-      rgb(205, 205, 202) 96%,
-      rgb(233, 233, 231) 98.5%,
-      rgb(255, 255, 255) 100%
-    );
-  }
+  /* Pas de fondu vers la section claire suivante : coupe nette entre le hero
+     sombre et #kartaai (blanc). Le bas du hero est ramené à un #0C0C0C plein
+     via .hero-d-scrim pour que l'arête soit charcoal → blanc, jamais photo → blanc. */
 
-  .hero-d-topo,
-  .hero-d-rake,
-  .hero-d-grain,
+  .hero-d-photo,
+  .hero-d-scrim,
   .hero-d-vignette {
     position: absolute;
     inset: 0;
     pointer-events: none;
   }
 
-  /* Courbes de niveau : nappe débordée à droite (crête hors-champ), bassin
-     secondaire plus bas, repères de relevé, limite en pointillé. Masquée vers la
-     gauche pour laisser la typo respirer. */
-  .hero-d-topo {
-    inset: -22% -14% -20% 16%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 640' preserveAspectRatio='xMidYMid slice'%3E%3Cdefs%3E%3Cpath id='r' d='M600 90C712 80 812 140 828 248C840 332 802 404 700 444C594 486 476 468 396 410C328 362 308 274 342 206C326 158 350 104 414 82C474 62 528 80 600 90Z'/%3E%3Cpath id='b' d='M500 442C574 432 650 448 682 494C708 532 692 584 618 610C550 632 476 614 444 562C418 520 430 472 462 454C478 442 486 444 500 442Z'/%3E%3C/defs%3E%3Cg fill='none' stroke='%23f6f6f6' stroke-linecap='round'%3E%3Cg stroke-width='1.4'%3E%3Cuse href='%23r' stroke-opacity='0.1'/%3E%3Cuse href='%23r' stroke-opacity='0.084' transform='rotate(5 600 250) translate(600 250) scale(1.5) translate(-600 -250)'/%3E%3Cuse href='%23r' stroke-opacity='0.068' transform='rotate(-4 600 250) translate(600 250) scale(2.05) translate(-600 -250)'/%3E%3Cuse href='%23r' stroke-opacity='0.054' transform='rotate(8 600 250) translate(600 250) scale(2.7) translate(-600 -250)'/%3E%3Cuse href='%23r' stroke-opacity='0.044' transform='rotate(-6 600 250) translate(600 250) scale(3.5) translate(-600 -250)'/%3E%3Cuse href='%23r' stroke-opacity='0.036' transform='rotate(11 600 250) translate(600 250) scale(4.5) translate(-600 -250)'/%3E%3C/g%3E%3Cg stroke-width='1.2'%3E%3Cuse href='%23b' stroke-opacity='0.06'/%3E%3Cuse href='%23b' stroke-opacity='0.048' transform='rotate(-5 560 500) translate(560 500) scale(1.5) translate(-560 -500)'/%3E%3Cuse href='%23b' stroke-opacity='0.038' transform='rotate(7 560 500) translate(560 500) scale(2.1) translate(-560 -500)'/%3E%3Cuse href='%23b' stroke-opacity='0.03' transform='rotate(-3 560 500) translate(560 500) scale(2.9) translate(-560 -500)'/%3E%3C/g%3E%3Cpath d='M-40 300C210 244 380 380 560 326C740 272 900 356 960 314' stroke-width='1.1' stroke-opacity='0.05' stroke-dasharray='2 8'/%3E%3Cg stroke-width='1.3' stroke-opacity='0.085'%3E%3Cpath d='M256 296h12M262 290v12'/%3E%3Cpath d='M784 262h12M790 256v12'/%3E%3Cpath d='M556 462h12M562 456v12'/%3E%3Cpath d='M412 548h12M418 542v12'/%3E%3Cpath d='M726 536h12M732 530v12'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right center;
-    background-size: cover;
-    -webkit-mask-image: linear-gradient(255deg, #000 10%, rgba(0, 0, 0, 0.5) 55%, transparent 90%);
-    mask-image: linear-gradient(255deg, #000 10%, rgba(0, 0, 0, 0.5) 55%, transparent 90%);
+  .hero-d-photo {
+    /* cadrage décalé : le chevalet QR clair sort vers la droite, la salle sombre
+       passe derrière la typo. */
+    background: url("/hero-photo.jpg") 24% center / cover no-repeat;
   }
 
-  .hero-d-rake {
-    background: linear-gradient(
-      107deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.028) 44%,
-      transparent 70%
-    );
-  }
-
-  .hero-d-grain {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 130 130'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='130' height='130' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 130px 130px;
-    opacity: 0.035;
+  /* Voile de lisibilité : charcoal dense à gauche et au centre (sous toute la
+     typo capitale, y compris « Le menu. / évolue. » décroché), plus léger à
+     l'extrême droite. Passe verticale : assombrit le haut (navbar inversée) et
+     ramène le bas à un #0C0C0C plein sur toute la largeur → coupe nette et
+     régulière vers la section claire, sans photo tranchée par l'arête. */
+  .hero-d-scrim {
+    background:
+      linear-gradient(
+        95deg,
+        rgba(12, 12, 12, 0.96) 0%,
+        rgba(12, 12, 12, 0.9) 34%,
+        rgba(12, 12, 12, 0.79) 62%,
+        rgba(12, 12, 12, 0.58) 84%,
+        rgba(12, 12, 12, 0.48) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(12, 12, 12, 0.58) 0%,
+        rgba(12, 12, 12, 0.14) 24%,
+        rgba(12, 12, 12, 0.16) 46%,
+        rgba(12, 12, 12, 0.5) 64%,
+        rgba(12, 12, 12, 0.95) 82%,
+        #0c0c0c 90%
+      );
   }
 
   .hero-d-vignette {
-    background: radial-gradient(128% 92% at 50% 2%, transparent 48%, rgba(0, 0, 0, 0.32) 100%);
-  }
-
-  /* Coordonnées abstraites — un seul repère de type relevé, discret. */
-  .hero-d-coord {
-    position: absolute;
-    right: 1rem;
-    top: 5.25rem;
-    z-index: 2;
-    text-align: right;
-    font-size: 0.625rem;
-    line-height: 1.55;
-    letter-spacing: 0.16em;
-    color: var(--k-charcoal-muted);
-    pointer-events: none;
+    background: radial-gradient(128% 92% at 50% 2%, transparent 44%, rgba(0, 0, 0, 0.4) 100%);
   }
 
   /* Règle graduée de bas de hero — même motif que .k-ticks, encre claire. */
@@ -1400,36 +1358,20 @@ body {
     mask-image: linear-gradient(to right, #000 0, #000 45%, transparent 100%);
   }
 
-  /* Parallaxe très faible de la nappe topo, pilotée par le scroll (aucun mouvement
-     au repos). Coupée si non supportée, en reduced-motion, ou sur mobile. */
-  @supports (animation-timeline: scroll()) {
-    @media (min-width: 640px) and (prefers-reduced-motion: no-preference) {
-      .hero-d-topo {
-        animation: hero-d-parallax linear both;
-        animation-timeline: scroll();
-        animation-range: 0 95vh;
-      }
-    }
-  }
-
-  @media (min-width: 640px) {
-    .hero-d-coord {
-      right: 1.5rem;
-      top: 6.5rem;
-    }
-  }
-
-  /* Mobile : le fond se simplifie fortement — rake retiré, nappe topo réduite et
-     atténuée, repère de coordonnées masqué. Lisibilité maximale du Hero. */
+  /* Mobile : la typo occupe toute la largeur — on cadre la photo sur la salle
+     (côté sombre) et on renforce le voile. */
   @media (max-width: 639px) {
-    .hero-d-rake,
-    .hero-d-coord {
-      display: none;
+    .hero-d-photo {
+      background-position: 62% center;
     }
-    .hero-d-topo {
-      inset: -12% -32% 4% 0;
-      opacity: 0.6;
-      background-position: right top;
+    .hero-d-scrim {
+      background: linear-gradient(
+        180deg,
+        rgba(12, 12, 12, 0.88) 0%,
+        rgba(12, 12, 12, 0.66) 42%,
+        rgba(12, 12, 12, 0.9) 82%,
+        #0c0c0c 92%
+      );
     }
   }
 }
@@ -1454,13 +1396,6 @@ body {
   to {
     opacity: 1;
     transform: none;
-  }
-}
-
-/* Hero — dérive très faible de la nappe topographique, pilotée par le scroll. */
-@keyframes hero-d-parallax {
-  to {
-    transform: translate3d(-2.2%, 3.5%, 0);
   }
 }
 
