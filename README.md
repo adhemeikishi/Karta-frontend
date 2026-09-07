@@ -28,7 +28,32 @@ Le dev server attend le backend sur `http://localhost:8080`
 npm run build
 ```
 
-Sortie : `dist/frontend/browser/` — des fichiers statiques, sans SSR.
+Sortie : `dist/frontend/browser/` — des fichiers statiques (prérendu à la
+compilation, `outputMode: static` ; aucun serveur SSR à l'exécution).
+
+## Déploiement (Cloudflare Pages)
+
+Le dossier publié est **`dist/frontend/browser/`**.
+
+- Les 6 routes publiques (`/`, `/landing`, `/pricing`, `/features`, `/faq`,
+  `/contact`) sont **prérendues** : un fichier HTML par route, servi tel quel.
+- `/login` et `/admin/**` sont rendues **côté client** : aucun fichier ne leur
+  correspond, elles vivent uniquement dans le bundle Angular (coquille
+  `index.csr.html`).
+- `public/_redirects` fournit le repli SPA nécessaire :
+
+  ```
+  /*    /index.csr.html    200
+  ```
+
+  Cloudflare Pages sert d'abord tout asset statique existant (routes prérendues,
+  JS/CSS/images) ; pour tout le reste, cette règle renvoie la coquille cliente en
+  **200** et Angular prend le relais. **Sans ce fichier, `kartaqr.fr/login`
+  renvoie 404.** Ne pas activer en plus l'option « Single Page Application » du
+  tableau de bord Cloudflare : elle pointerait sur `index.html` (la landing
+  prérendue) au lieu de `index.csr.html`.
+
+Régression couverte par `e2e/production-spa-fallback.spec.ts`.
 
 ## Tests
 

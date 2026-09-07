@@ -1,0 +1,14 @@
+# Cloudflare Pages — repli SPA (voir README « Déploiement »).
+#
+# Le build (`outputMode: static`) prérend 6 routes publiques, chacune avec son
+# propre fichier : `/` → index.html, `/pricing` → pricing/index.html, etc. Cloudflare
+# Pages sert ces fichiers (et les JS/CSS/images) tels quels — cette règle ne s'y
+# applique pas, un asset statique existant a toujours la priorité.
+#
+# Les routes rendues côté client — `/login`, `/admin/**`, toute URL inconnue —
+# n'existent que dans le bundle Angular ; aucun fichier ne leur correspond. Sans
+# cette règle, Cloudflare renvoie un 404 avant même que l'application ne charge.
+# On sert alors la coquille cliente `index.csr.html` en HTTP 200 : Angular démarre
+# dans le navigateur et son routeur résout la route (LoginComponent, authGuard, ou
+# `**` → `/` pour une URL inconnue).
+/*    /index.csr.html    200
