@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 const STORAGE_KEY = 'qrmenu_admin_credentials';
@@ -19,6 +19,14 @@ interface StoredCredentials {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+
+  /**
+   * Endpoint réel de l'API d'administration Karta, utilisé UNIQUEMENT pour valider
+   * des identifiants Basic Auth avant de les stocker (il n'existe pas d'endpoint
+   * token/`/me` en V1). Point de référence unique : le jour où l'Espace Restaurateur
+   * aura sa propre authentification, seule cette ligne change.
+   */
+  private readonly credentialCheckUrl = `${environment.apiBaseUrl}/api/admin/dashboard`;
 
   /** Signal réactif consulté par le guard/layout pour savoir si on est "connecté". */
   readonly isAuthenticated = signal<boolean>(this.readStoredCredentials() !== null);
@@ -44,6 +52,22 @@ export class AuthService {
   }
 
   /**
+   * Vérifie des identifiants Basic Auth contre le backend, **sans rien stocker**.
+   * Émet la réponse en cas de succès (2xx) ou propage l'erreur HTTP (401, réseau…)
+   * pour que l'appelant distingue « identifiants refusés » de « serveur injoignable ».
+   *
+   * Volontairement hors intercepteur : à ce stade aucun identifiant n'est stocké,
+   * on passe l'en-tête directement. Seul appel légitime du frontend à
+   * {@link credentialCheckUrl}, avec {@link tryDevAutoLogin}.
+   */
+  verifyCredentials(username: string, password: string): Observable<unknown> {
+    const encoded = btoa(`${username}:${password}`);
+    return this.http.get(this.credentialCheckUrl, {
+      headers: { Authorization: `Basic ${encoded}` },
+    });
+  }
+
+  /**
    * Auto-connexion en développement local uniquement : tente les identifiants
    * de dev définis dans environment.ts (absents de environment.prod.ts - voir
    * ce fichier). Vérifie réellement contre le backend avant de stocker quoi que
@@ -56,19 +80,12 @@ export class AuthService {
     }
 
     const { username, password } = environment.devAutoLogin;
-    const encoded = btoa(`${username}:${password}`);
 
-    return this.http
-      .get(`${environment.apiBaseUrl}/api/admin/dashboard`, {
-        headers: { Authorization: `Basic ${encoded}` },
-      })
-      .pipe(
-        map(() => {
-          this.setCredentials(username, password);
-          return true;
-        }),
-        catchError(() => of(false))
-      );
+    return this.verifyCredentials(username, password).pipe(
+      tap(() => this.setCredentials(username, password)),
+      map(() => true),
+      catchError(() => of(false)),
+    );
   }
 
   private readStoredCredentials(): StoredCredentials | null {

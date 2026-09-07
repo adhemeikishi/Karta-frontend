@@ -1,9 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
 import { KartaLogoComponent } from '../shared/karta-logo.component';
 
@@ -13,7 +11,6 @@ import { KartaLogoComponent } from '../shared/karta-logo.component';
     templateUrl: './login.component.html'
 })
 export class LoginComponent {
-  private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -31,29 +28,22 @@ export class LoginComponent {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    const encoded = btoa(`${this.username}:${this.password}`);
-
-    // On vérifie les identifiants avant de les stocker, en appelant un endpoint
-    // admin réel - pas d'intercepteur ici volontairement (les credentials ne
-    // sont pas encore stockés), on passe l'en-tête directement.
-    this.http
-      .get(`${environment.apiBaseUrl}/api/admin/dashboard`, {
-        headers: { Authorization: `Basic ${encoded}` },
-      })
-      .subscribe({
-        next: () => {
-          this.authService.setCredentials(this.username, this.password);
-          this.loading.set(false);
-          this.router.navigate(['/admin/dashboard']);
-        },
-        error: (err) => {
-          this.loading.set(false);
-          if (err?.status === 401) {
-            this.errorMessage.set('Identifiants incorrects.');
-          } else {
-            this.errorMessage.set('Impossible de contacter le serveur QR Menu.');
-          }
-        },
-      });
+    // Vérification des identifiants contre le backend avant de les stocker.
+    // (endpoint centralisé dans AuthService — voir AuthService.credentialCheckUrl)
+    this.authService.verifyCredentials(this.username, this.password).subscribe({
+      next: () => {
+        this.authService.setCredentials(this.username, this.password);
+        this.loading.set(false);
+        this.router.navigate(['/admin/dashboard']);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        if (err?.status === 401) {
+          this.errorMessage.set('Identifiants incorrects.');
+        } else {
+          this.errorMessage.set('Impossible de contacter le serveur QR Menu.');
+        }
+      },
+    });
   }
 }
