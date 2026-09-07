@@ -11,32 +11,21 @@
   >
     <!-- Logo Karta — source unique : KartaLogoComponent. Fond clair → tuile sombre ;
          hero D (fond sombre) → tuile claire. -->
-    <a routerLink="/login" class="flex shrink-0 items-center justify-self-start" aria-label="Karta">
+    <a routerLink="/" class="flex shrink-0 items-center justify-self-start" aria-label="Karta — accueil">
       <karta-logo [variant]="onDark() ? 'light' : 'dark'" [size]="32" />
     </a>
 
     <nav class="hidden items-center gap-6 justify-self-center lg:flex" aria-label="Navigation principale">
-      <a
-        href="#fonctionnalites"
-        (click)="scrollToAnchor('fonctionnalites', $event)"
-        class="text-sm font-medium text-ink-600 transition-colors duration-150 ease-karta hover:text-ink-900"
-      >
-        Fonctionnalités
-      </a>
-      <a
-        href="#kartaai"
-        (click)="scrollToAnchor('kartaai', $event)"
-        class="text-sm font-medium text-ink-600 transition-colors duration-150 ease-karta hover:text-ink-900"
-      >
-        Comment ça marche
-      </a>
-      <a
-        href="#offres"
-        (click)="scrollToAnchor('offres', $event)"
-        class="text-sm font-medium text-ink-600 transition-colors duration-150 ease-karta hover:text-ink-900"
-      >
-        Tarifs
-      </a>
+      @for (link of links; track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="text-ink-900"
+          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+          class="text-sm font-medium text-ink-600 transition-colors duration-150 ease-karta hover:text-ink-900"
+        >
+          {{ link.label }}
+        </a>
+      }
     </nav>
 
     <div class="flex shrink-0 items-center gap-2 justify-self-end">
@@ -51,7 +40,7 @@
         (click)="toggleMobileMenu()"
         class="btn-icon text-ink-500 hover:bg-ink-100 hover:text-ink-900 lg:hidden"
         [attr.aria-expanded]="mobileOpen()"
-        aria-label="Ouvrir le menu"
+        [attr.aria-label]="mobileOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
         aria-controls="landing-mobile-menu"
       >
         @if (mobileOpen()) {
@@ -68,7 +57,7 @@
   </div>
 
   <!-- Panneau mobile : toujours dans le DOM, transform+opacity uniquement (anti-jank
-       §7) — jamais une hauteur animée. Ferme au clic sur une ancre. -->
+       §7) — jamais une hauteur animée. Ferme au clic sur un lien. -->
   <div
     id="landing-mobile-menu"
     class="landing-mobile-menu lg:hidden"
@@ -76,15 +65,17 @@
     [attr.aria-hidden]="!mobileOpen()"
   >
     <nav class="flex flex-col gap-1 p-3" aria-label="Navigation principale (mobile)">
-      <a href="#fonctionnalites" (click)="navigateAndClose('fonctionnalites', $event)" class="landing-mobile-menu-link">
-        Fonctionnalités
-      </a>
-      <a href="#kartaai" (click)="navigateAndClose('kartaai', $event)" class="landing-mobile-menu-link">
-        Comment ça marche
-      </a>
-      <a href="#offres" (click)="navigateAndClose('offres', $event)" class="landing-mobile-menu-link">
-        Tarifs
-      </a>
+      @for (link of links; track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="bg-ink-100 text-ink-900"
+          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+          (click)="closeMobileMenu()"
+          class="landing-mobile-menu-link"
+        >
+          {{ link.label }}
+        </a>
+      }
       <div class="mt-2 flex flex-col gap-2 border-t pt-3" style="border-color: var(--k-hairline)">
         <a routerLink="/login" (click)="closeMobileMenu()" class="btn btn-ghost w-full">Se connecter</a>
         <a routerLink="/login" (click)="closeMobileMenu()" class="btn btn-primary w-full">Créer mon menu</a>

@@ -43,7 +43,7 @@
             Recommandée
           </p>
         }
-        <span class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-500">{{ offer.id }}</span>
+        <span class="badge-offer">{{ offer.id }}</span>
 
         <!-- Prix : la ligne du prix barré garde toujours sa hauteur (visible ou non)
              et le compteur anime le MÊME élément entre mensuel et annuel — jamais de
@@ -91,7 +91,7 @@
         </div>
 
         <a
-          routerLink="/login"
+          [routerLink]="ctaLink()"
           class="btn mt-6 w-full"
           [class.btn-primary]="offer.highlighted"
           [class.btn-outline]="!offer.highlighted"
@@ -102,15 +102,17 @@
     }
   </div>
 } @else {
-  <!-- Tableau comparatif dense : capacités en ligne, offres en colonne. -->
-  <div class="overflow-x-auto">
+  <!-- Tableau comparatif dense : capacités en ligne, offres en colonne. Sur mobile,
+       la table est resserrée et en pleine largeur (pricing-compare) pour tenir sans
+       défilement horizontal ; au-delà de `sm` elle reprend le gabarit standard. -->
+  <div class="pricing-compare overflow-x-auto">
     <table class="data-table w-full">
       <thead>
         <tr>
-          <th class="text-left">Fonctionnalité</th>
+          <th scope="col" class="text-left">Fonctionnalité</th>
           @for (offer of offers; track offer.id) {
-            <th class="text-center">
-              <span class="text-sm font-semibold text-ink-900">{{ offer.id }}</span>
+            <th scope="col" class="text-center">
+              <span class="badge-offer">{{ offer.id }}</span>
             </th>
           }
         </tr>
@@ -118,15 +120,23 @@
       <tbody>
         @for (capability of capabilities; track capability; let i = $index) {
           <tr>
-            <td class="text-ink-700">{{ capability }}</td>
+            <th
+              scope="row"
+              class="border-t px-4 py-3 text-left font-normal text-ink-700"
+              style="border-color: var(--k-hairline)"
+            >
+              {{ capability }}
+            </th>
             @for (offer of offers; track offer.id) {
               <td class="text-center">
                 @if (offer.included[i]) {
                   <svg class="mx-auto h-4 w-4" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
+                  <span class="sr-only">Inclus</span>
                 } @else {
-                  <span class="text-ink-300" aria-hidden="true">—</span>
+                  <span class="text-ink-400" aria-hidden="true">—</span>
+                  <span class="sr-only">Non inclus</span>
                 }
               </td>
             }
@@ -136,7 +146,7 @@
           <td></td>
           @for (offer of offers; track offer.id) {
             <td class="text-center">
-              <a routerLink="/login" class="btn btn-outline btn-sm">Choisir</a>
+              <a [routerLink]="ctaLink()" class="btn btn-outline btn-sm" [attr.aria-label]="'Choisir l’offre ' + offer.id">Choisir</a>
             </td>
           }
         </tr>

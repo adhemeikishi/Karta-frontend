@@ -1,14 +1,13 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { KartaLogoComponent } from '../shared/karta-logo.component';
 import { LandingChromeService } from './landing-chrome.service';
-import { scrollToAnchor } from './scroll-to-anchor';
 
 /** Fin du morphing : au-delà de ce défilement (px), la navbar est pleinement compacte. */
 const MORPH_DISTANCE = 96;
 
 /**
- * Navbar de la landing page Karta — pleine largeur/transparente en haut de page,
+ * Navbar du site public Karta — pleine largeur/transparente en haut de page,
  * devient une barre compacte flottante en descendant (principe du composant
  * "resizable navbar" fourni en référence, reproduit en Angular/CSS natif : aucune
  * dépendance ajoutée, aucun code React copié).
@@ -18,27 +17,36 @@ const MORPH_DISTANCE = 96;
  * recalculés à chaque frame de scroll (le navigateur reflow de toute façon au
  * scroll — ceci n'ajoute rien de plus), tandis que `background-color`/`box-shadow`
  * gardent une micro-transition CSS pour lisser les à-coups entre deux frames.
+ *
+ * Navigation : Accueil / Fonctionnalités / Tarifs / FAQ / Contact — `routerLink`,
+ * une page par lien. Le style de la barre est inchangé.
  */
 @Component({
-    selector: 'landing-nav',
-    imports: [RouterLink, KartaLogoComponent],
-    templateUrl: './landing-nav.component.html'
+  selector: 'landing-nav',
+  imports: [RouterLink, RouterLinkActive, KartaLogoComponent],
+  templateUrl: './landing-nav.component.html',
 })
 export class LandingNavComponent {
-  readonly scrollToAnchor = scrollToAnchor;
   readonly mobileOpen = signal(false);
+
+  /** Liens de navigation — source unique, réutilisés desktop + mobile. */
+  readonly links = [
+    { label: 'Accueil', path: '/' },
+    { label: 'Fonctionnalités', path: '/features' },
+    { label: 'Tarifs', path: '/pricing' },
+    { label: 'FAQ', path: '/faq' },
+    { label: 'Contact', path: '/contact' },
+  ] as const;
 
   /** 0 = tout en haut, 1 = entièrement morphée. */
   readonly progress = signal(0);
 
-  /** Hero sombre (variante D) à l'écran → navbar inversée (contenu clair, pastille charcoal). */
+  /** Hero sombre à l'écran → navbar inversée (contenu clair, pastille charcoal). */
   readonly onDark = inject(LandingChromeService).darkHero;
 
   /** 72rem au repos → 60rem compacte. Le plancher reste assez large pour que la
-   *  navigation complète tienne **centrée** sans jamais chevaucher le CTA
-   *  (seuil mesuré ≈ 56rem : logo + liens + CTA + gaps + padding, zones latérales
-   *  égales pour le centrage). En-dessous de `lg`, la nav bascule sur le
-   *  hamburger et ce plancher n'a plus d'incidence. */
+   *  navigation complète tienne **centrée** sans jamais chevaucher le CTA. En-dessous
+   *  de `lg`, la nav bascule sur le hamburger et ce plancher n'a plus d'incidence. */
   readonly shellMaxWidth = computed(() => `${72 - this.progress() * 12}rem`);
   readonly shellTranslateY = computed(() => this.progress() * 10);
   readonly shellScale = computed(() => 1 - this.progress() * 0.02);
@@ -56,8 +64,7 @@ export class LandingNavComponent {
   readonly shellBlur = computed(() => `blur(${this.progress() * 14}px)`);
 
   /** Filet 1px + ombre portée, tous deux en `box-shadow` (aucune `border` : une
-   *  bordure `border-box` décalerait le contenu de 1px par rapport au container
-   *  du hero et désalignerait le logo de `karta ·`). `inset` → le filet suit le
+   *  bordure `border-box` décalerait le contenu de 1px). `inset` → le filet suit le
    *  border-radius et ne participe pas à la boîte. */
   readonly shellBoxShadow = computed(
     () =>
@@ -87,9 +94,11 @@ export class LandingNavComponent {
     this.mobileOpen.set(false);
   }
 
-  /** Ferme le menu mobile avant de défiler — sinon le panneau reste ouvert au-dessus de la section visée. */
-  navigateAndClose(id: string, event: MouseEvent): void {
-    this.closeMobileMenu();
-    scrollToAnchor(id, event);
+  /** Échap referme le menu mobile (aucun effet quand il est déjà fermé). */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.mobileOpen()) {
+      this.mobileOpen.set(false);
+    }
   }
 }

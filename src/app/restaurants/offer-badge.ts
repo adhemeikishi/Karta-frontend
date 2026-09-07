@@ -1,13 +1,8 @@
 import { RestaurantOffer } from '../models/restaurant.model';
 
-/** Classes du badge d'offre (voir .badge* dans styles.css). Partagé liste + détail. */
-export function offerBadgeClass(offer: RestaurantOffer): string {
-  switch (offer) {
-    case 'PREMIUM':
-      return 'badge badge-premium';
-    case 'PRO':
-      return 'badge badge-pro';
-    default:
-      return 'badge badge-basic';
-  }
+/** Classe du libellé d'offre (BASIC/PRO/PREMIUM) — texte simple, voir `.badge-offer`
+ *  dans styles.css. Même graphie pour les 3 offres (plus de traitement métallique).
+ *  Signature conservée (`offer` ignoré) pour ne pas toucher les appelants. */
+export function offerBadgeClass(_offer: RestaurantOffer): string {
+  return 'badge-offer';
 }

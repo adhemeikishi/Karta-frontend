@@ -14,6 +14,10 @@ export type BillingCycle = 'monthly' | 'yearly';
  *
  * Le switch Mensuel/Annuel est commun aux trois offres (un seul état, pas un par
  * carte).
+ *
+ * `ctaLink` : cible des boutons. Par défaut `/contact` — le paiement et le choix
+ * d'offre sont hors périmètre V1 (voir `RestaurantOffer.java`), on ne dirige donc
+ * pas vers un tunnel d'achat inexistant.
  */
 @Component({
     selector: 'landing-pricing',
@@ -22,6 +26,7 @@ export type BillingCycle = 'monthly' | 'yearly';
 })
 export class LandingPricingComponent {
   readonly layout = input<'cards' | 'table'>('cards');
+  readonly ctaLink = input('/contact');
   readonly offers = LANDING_OFFERS;
   readonly capabilities = LANDING_CAPABILITIES;
   readonly formatEuro = formatEuro;

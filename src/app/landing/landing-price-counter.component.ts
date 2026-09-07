@@ -1,4 +1,5 @@
-import { Component, OnDestroy, effect, input, signal } from '@angular/core';
+import { Component, OnDestroy, PLATFORM_ID, effect, inject, input, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 /** ~1.4s : dans la fourchette 1.2–1.6s demandée pour le compteur de prix. */
 export const PRICE_COUNTER_DURATION_MS = 1400;
@@ -49,6 +50,8 @@ export class LandingPriceCounterComponent implements OnDestroy {
 
   private animatedFrom = 0;
   private raf?: number;
+  /** Prerender/SSR : pas de `window`/`requestAnimationFrame` — on rend le montant final directement. */
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   constructor() {
     effect(() => {
@@ -65,6 +68,11 @@ export class LandingPriceCounterComponent implements OnDestroy {
   private animateTo(target: number): void {
     if (this.raf) {
       cancelAnimationFrame(this.raf);
+    }
+    if (!this.isBrowser) {
+      this.animatedFrom = target;
+      this.displayed.set(formatEuro(target));
+      return;
     }
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) {

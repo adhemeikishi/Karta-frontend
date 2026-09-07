@@ -11,7 +11,7 @@ import { scrollToAnchor } from '../scroll-to-anchor';
  * passe à un serif éditorial italique persimmon (signature typographique).
  * Éditorial, sobre.
  *
- * Le fond : photo `hero-photo.jpg` + voile de lisibilité + vignette + fondu vers
+ * Le fond : photo `hero-photo.webp` + voile de lisibilité + vignette + fondu vers
  * la section claire, voir `.hero-panel-dark` dans styles.css — aucune animation
  * au repos.
  *

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /$
+Allow: /pricing
+Allow: /features
+Allow: /faq
+Allow: /contact
+Disallow: /admin
+Disallow: /login
+
+Sitemap: https://kartaqr.fr/sitemap.xml

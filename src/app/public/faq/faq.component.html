@@ -1,0 +1,48 @@
+<!-- ═══ /faq ═══ Questions dérivées de la landing. Aucune condition commerciale
+     inventée : pour souscrire / changer d'offre → Contact. ═══ -->
+
+<section class="section bg-white">
+  <div class="container-narrow section-y">
+    <p class="eyebrow">FAQ</p>
+    <h1 class="h2-marketing mt-3 max-w-2xl">Questions fréquentes</h1>
+    <p class="lead mt-4 max-w-xl">
+      Tout ce qui revient souvent, repris des explications de la page d'accueil.
+    </p>
+
+    <nav class="mt-8 flex flex-wrap gap-x-4 gap-y-2" aria-label="Catégories">
+      @for (group of groups; track group.id) {
+        <a
+          [href]="'#' + group.id"
+          (click)="scrollToAnchor(group.id, $event)"
+          class="text-sm text-ink-500 underline-offset-2 hover:text-ink-900 hover:underline"
+        >
+          {{ group.title }}
+        </a>
+      }
+    </nav>
+
+    @for (group of groups; track group.id) {
+      <div [id]="group.id" class="scroll-mt-24 pt-12">
+        <h2 revealOnScroll class="text-lg font-bold tracking-[-0.01em] text-ink-900">
+          {{ group.title }}
+        </h2>
+        <div revealOnScroll class="mt-2">
+          <app-faq-accordion [items]="group.items" />
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ── CTA clôture ── -->
+<section class="bg-charcoal">
+  <div revealOnScroll class="container-narrow py-24 sm:py-32">
+    <h2 class="h2-marketing max-w-xl text-white">Votre question n'y est pas ?</h2>
+    <p class="lead on-dark-muted mt-5 max-w-md">
+      Écrivez-nous, on répond vite.
+    </p>
+    <div class="mt-8">
+      <a routerLink="/contact" class="btn btn-primary">Nous contacter</a>
+    </div>
+  </div>
+</section>

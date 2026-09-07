@@ -1,35 +1,38 @@
 <!-- Même fond que le CTA final (bg-charcoal, pas de bordure entre les deux) : la
      page se referme sur une seule bande sombre, pas un bloc supplémentaire. -->
 <footer class="bg-charcoal">
-  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+  <div class="container py-12 sm:py-14">
     <div class="grid grid-cols-1 gap-10 sm:grid-cols-[1.3fr_1fr_1fr]">
       <div>
         <!-- Footer sur bg-charcoal (fond sombre) → tuile claire. -->
         <karta-logo variant="light" [size]="28" />
-        <p class="mt-4 max-w-[22rem] text-sm" style="color: var(--k-charcoal-muted)">
+        <p class="mt-4 max-w-[22rem] text-sm on-dark-muted">
           Le menu digital qui remplace la carte papier : un QR permanent, un menu à
           jour, une identité qui vous appartient.
         </p>
-        <p class="k-coord mt-6" style="color: var(--k-charcoal-muted)">Karta · v1</p>
+        <p class="k-coord mt-6 on-dark-muted">Karta · v1</p>
       </div>
 
       <div>
-        <p class="eyebrow" style="color: var(--k-charcoal-muted)">Produit</p>
+        <p class="eyebrow on-dark-muted">Produit</p>
         <nav class="mt-4 flex flex-col gap-3 text-sm" aria-label="Produit">
-          <a href="#fonctionnalites" (click)="scrollToAnchor('fonctionnalites', $event)" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+          <a routerLink="/features" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
             Fonctionnalités
           </a>
-          <a href="#kartaai" (click)="scrollToAnchor('kartaai', $event)" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
-            Comment ça marche
-          </a>
-          <a href="#offres" (click)="scrollToAnchor('offres', $event)" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+          <a routerLink="/pricing" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
             Tarifs
+          </a>
+          <a routerLink="/faq" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+            FAQ
+          </a>
+          <a routerLink="/contact" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
+            Contact
           </a>
         </nav>
       </div>
 
       <div>
-        <p class="eyebrow" style="color: var(--k-charcoal-muted)">Compte</p>
+        <p class="eyebrow on-dark-muted">Compte</p>
         <nav class="mt-4 flex flex-col gap-3 text-sm" aria-label="Compte">
           <a routerLink="/login" class="text-white/80 transition-colors duration-150 ease-karta hover:text-white">
             Se connecter
@@ -41,7 +44,7 @@
       </div>
     </div>
 
-    <p class="k-coord mt-10 border-t pt-6" style="border-color: var(--k-charcoal-line); color: var(--k-charcoal-muted)">
+    <p class="k-coord mt-10 border-t pt-6 on-dark-muted" style="border-color: var(--k-charcoal-line)">
       © {{ year }} Karta. Moins de files. Plus de commandes.
     </p>
   </div>

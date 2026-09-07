@@ -12,7 +12,6 @@ import { MenuRenderComponent } from '../menu-render.component';
 import { PhoneFrameComponent } from '../../menu/design/phone-frame.component';
 import { PremiumConfiguratorComponent } from '../premium-configurator.component';
 import { RevealOnScrollDirective } from '../reveal-on-scroll.directive';
-import { scrollToAnchor } from '../scroll-to-anchor';
 
 interface LandingWorkflowStep {
   label: string;
@@ -45,8 +44,6 @@ interface LandingWorkflowStep {
     templateUrl: './variant-editorial.component.html'
 })
 export class VariantEditorialComponent {
-  readonly scrollToAnchor = scrollToAnchor;
-
   /** 5 presets réels — miroir de MenuPreset.java (voir landing-menu-presets.ts). */
   readonly presets = LANDING_MENU_PRESETS;
   /** Contenu de démonstration — forme identique à PublicMenuDtos.PublicMenu. */

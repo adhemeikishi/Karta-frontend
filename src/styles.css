@@ -35,10 +35,6 @@
   /* Bordures / séparateurs — neutres et discrets */
   --k-hairline: #e6e6e4;
 
-  /* Accents secondaires — usage ponctuel uniquement */
-  --k-slate: #4a6d7c;
-  --k-teal: #6b8e8e;
-
   /* Sémantique */
   --k-success: #2e7d57;
   --k-success-soft: #e7f2ec;
@@ -206,6 +202,62 @@ body {
     font-variant-numeric: tabular-nums;
   }
 
+  /* --- Pages marketing (landing + futures /pricing, /features, /contact…) -----
+     Primitives partagées : mêmes containers, même rythme vertical, même échelle
+     de titres que la landing validée. Extraites verbatim des motifs répétés —
+     aucune nouvelle valeur. Voir DESIGN.md §20. */
+  .section {
+    @apply scroll-mt-24;
+  }
+  .container {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .container-narrow {
+    @apply mx-auto w-full max-w-4xl px-4 sm:px-6;
+  }
+  /* Rythme vertical par défaut d'une section marketing. Les écarts (section
+     « respiration », CTA) restent explicites en utilitaires. */
+  .section-y {
+    @apply py-20 sm:py-28;
+  }
+  .section-y-lg {
+    @apply py-28 sm:py-40;
+  }
+  /* Titre de section marketing — capitales fortes, tracking serré, éditorial.
+     Distinct de .page-title (back-office, 1.35rem). Sur fond sombre : ajouter
+     `text-white` en utilitaire. */
+  .h2-marketing {
+    @apply text-3xl font-extrabold leading-[1.05] tracking-[-0.03em] text-ink-900 sm:text-4xl;
+  }
+  /* Chapeau / paragraphe d'introduction sous un titre de section. */
+  .lead {
+    @apply text-sm leading-relaxed text-ink-500;
+  }
+  /* Texte sur surface sombre (hero, sections charcoal, footer). */
+  .on-dark-muted {
+    color: var(--k-charcoal-muted);
+  }
+
+  /* Accordéon FAQ — <details>/<summary> natifs (app-faq-accordion). */
+  .faq-summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-4 py-5 pr-1;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .faq-summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-summary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--k-persimmon-ring);
+    border-radius: var(--k-r-xs);
+  }
+  .faq-chevron {
+    transition: transform var(--k-t-base) var(--k-ease);
+  }
+  .faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+  }
+
   /* --- Boutons --------------------------------------------------------- */
   .btn {
     @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap
@@ -275,7 +327,10 @@ body {
     --tw-ring-color: var(--k-persimmon-ring);
   }
 
-  /* --- Formulaires --------------------------------------------------------- */
+  /* --- Formulaires -----------------------------------------------------------
+     `.input` couvre aussi <textarea> (ajouter `resize-y`) et <select>. Pas de
+     classe .checkbox/.radio : aucun <input> de ce type dans le produit (les
+     choix se font via des boutons `role="radio"`). */
   .input,
   .select {
     @apply w-full rounded-md border bg-white px-3 py-2 text-sm text-ink-900
@@ -286,6 +341,12 @@ body {
   .input:focus,
   .select:focus {
     border-color: var(--k-persimmon);
+  }
+  /* État erreur d'un champ (formulaire /contact) — liseré danger, ring danger. */
+  .input-invalid,
+  .input-invalid:focus {
+    border-color: var(--k-danger-line);
+    --tw-ring-color: rgba(192, 64, 59, 0.25);
   }
   .search-input {
     @apply w-full rounded-md border bg-white py-2 pl-9 pr-3 text-sm text-ink-900
@@ -307,29 +368,10 @@ body {
     content: "";
     @apply h-1.5 w-1.5 rounded-full bg-current;
   }
-  /* Offres — libellés inchangés (BASIC/PRO/PREMIUM), traitement visuel métallique
-     sobre : léger dégradé bronze/argent/or + liseré interne discret. Pas de reflet
-     ni de motif "médaille" — une matière, pas une décoration. */
-  .badge-basic {
-    background: linear-gradient(160deg, #d9a568 0%, #a06a35 100%);
-    color: #3a2210;
-    box-shadow:
-      inset 0 0 0 1px rgba(58, 34, 16, 0.28),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-  .badge-pro {
-    background: linear-gradient(160deg, #eaeaea 0%, #b5b5b5 100%);
-    color: #2b2b2b;
-    box-shadow:
-      inset 0 0 0 1px rgba(43, 43, 43, 0.22),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  }
-  .badge-premium {
-    background: linear-gradient(160deg, #e0b458 0%, #a4791a 100%);
-    color: #3a2705;
-    box-shadow:
-      inset 0 0 0 1px rgba(58, 39, 5, 0.28),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  /* Offres — libellé texte simple (BASIC/PRO/PREMIUM), aucun traitement « médaille ».
+     Capitales interlettrées, encre discrète — même graphie que les cartes du pricing. */
+  .badge-offer {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-ink-500;
   }
   /* Statuts */
   .badge-active {
@@ -864,6 +906,12 @@ body {
   .landing-mobile-menu-open .landing-mobile-menu-link:nth-child(3) {
     transition-delay: 120ms;
   }
+  .landing-mobile-menu-open .landing-mobile-menu-link:nth-child(4) {
+    transition-delay: 160ms;
+  }
+  .landing-mobile-menu-open .landing-mobile-menu-link:nth-child(5) {
+    transition-delay: 200ms;
+  }
   .landing-mobile-backdrop {
     @apply fixed inset-0 z-10;
     background-color: rgba(19, 19, 18, 0.32);
@@ -1089,6 +1137,33 @@ body {
     box-shadow: 0 0 0 2px var(--k-white);
   }
 
+  /* Tableau comparatif des offres (/pricing, layout="table") sur mobile : les 4
+     colonnes ne tiennent pas dans `.container` à 390px → au lieu d'un défilement
+     horizontal sans repère, on passe la zone en pleine largeur et on resserre le
+     rembourrage des cellules pour que tout soit visible d'un coup. Réinitialisé
+     dès `sm` (gabarit standard du DS). */
+  @media (max-width: 639px) {
+    .pricing-compare {
+      margin-inline: -1rem;
+    }
+    .pricing-compare .data-table th,
+    .pricing-compare .data-table td {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+    .pricing-compare .data-table th:first-child,
+    .pricing-compare .data-table td:first-child {
+      padding-left: 1rem;
+    }
+    .pricing-compare .data-table th:last-child,
+    .pricing-compare .data-table td:last-child {
+      padding-right: 1rem;
+    }
+    .pricing-compare .badge-offer {
+      letter-spacing: 0.06em;
+    }
+  }
+
   /* ── Landing V2 — art direction ────────────────────────────────────────────
      Trois éléments seulement : la carte « papier » (section Transformation), le
      ruban de process (unique réutilisation du motif gradué), la liste de presets
@@ -1310,8 +1385,9 @@ body {
 
   .hero-d-photo {
     /* cadrage décalé : le chevalet QR clair sort vers la droite, la salle sombre
-       passe derrière la typo. */
-    background: url("/hero-photo.jpg") 24% center / cover no-repeat;
+       passe derrière la typo. WebP (~109 Ko) ; le .jpg d'origine (~652 Ko) ne sert
+       plus qu'à l'aperçu social (og:image, index.html) où le JPEG reste le plus sûr. */
+    background: url("/hero-photo.webp") 24% center / cover no-repeat;
   }
 
   /* Voile de lisibilité : charcoal dense à gauche et au centre (sous toute la

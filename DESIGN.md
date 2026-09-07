@@ -41,6 +41,12 @@ Tailwind. Toute consigne mentionnant PrimeNG ailleurs est erronée pour ce proje
 |---|---|---|
 | Interface (UI, corps, titres) | **Plus Jakarta Sans** | `--k-font-sans`, `tailwind.config.js: fontFamily.sans` |
 | Données, IDs, technique | **Geist Mono** | `--k-font-mono`, `tailwind.config.js: fontFamily.mono` |
+| Signature éditoriale — **hero landing uniquement** | **Instrument Serif** *(italique)* | `--k-font-editorial`, classe `.hero-caps-editorial` (le mot « évolue. ») |
+
+Instrument Serif est **verrouillé au hero** : une seule occurrence, une seule voix
+(le décrochage typographique de « évolue. »). Ne jamais l'utiliser ailleurs — ni titre,
+ni corps, ni back-office. Plus Jakarta Sans + Geist Mono restent les deux seules polices
+d'interface.
 
 Ce sont des **règles de marque**, pas un choix esthétique à remettre en question. Un
 détecteur signalant ces polices comme « overused » doit être ignoré — exception déjà
@@ -118,29 +124,15 @@ Les textes d'alerte utilisent des teintes légèrement plus sombres pour le cont
 (`#8F2F2B` sur `alert-error`, `#7A4A08` sur `alert-warning`) — ne pas les confondre avec
 les tokens de base ci-dessus, ce sont des variantes « texte sur fond teinté ».
 
-### Accents secondaires — usage ponctuel uniquement
-
-`--k-slate` (`#4A6D7C`) et `--k-teal` (`#6B8E8E`) : présents dans les tokens mais **sans
-usage identifié actuellement dans les composants**. À traiter comme réservés, pas comme
-un jeu de couleurs à mobiliser librement.
-
 ### Règle
 
-**`--k-persimmon` est la seule couleur d'accent.** Toute nouvelle couleur d'accent
+**`--k-persimmon` est la seule couleur d'accent.** Pas de deuxième accent : `--k-slate`
+et `--k-teal` ont été **supprimés** (aucun usage). Toute nouvelle couleur d'accent
 (violet, bleu, vert vif, etc.) est hors charte — vérifier d'abord si `persimmon`,
 `success`, `warning` ou `danger` couvre déjà le besoin avant d'en proposer une nouvelle.
 
-### Exception scopée — matière des badges d'offre
-
-`.badge-basic`/`.badge-pro`/`.badge-premium` (`styles.css`) portent chacun un dégradé
-métallique **en teintes hex directes, non tokenisées** — bronze/cuivre, argent/chrome,
-or, `linear-gradient(160deg, …)` + `box-shadow` interne discret (liseré + reflet léger
-en haut). Ce n'est **pas** une nouvelle couleur d'accent au sens de la règle ci-dessus :
-c'est une décision produit scopée à ces trois classes uniquement, pour évoquer une
-matière (le rang de l'offre), jamais une gamification (pas d'emoji, pas de pictogramme
-médaille/trophée). Les libellés restent `BASIC`/`PRO`/`PREMIUM` — voir §11. Ne pas
-étendre ce traitement à d'autres badges (statut, disponibilité) ni le retokeniser sans
-qu'un vrai besoin de réutilisation apparaisse ailleurs (§17).
+Les libellés d'offre `BASIC` / `PRO` / `PREMIUM` sont du **texte simple** (`.badge-offer`,
+capitales interlettrées, `ink-500`) — aucun traitement « médaille » / métallique.
 
 ---
 
@@ -158,7 +150,20 @@ qu'un vrai besoin de réutilisation apparaisse ailleurs (§17).
 | Eyebrow | `.eyebrow` | `0.6875rem` mono, uppercase, tracking `.14em` | Sur-titre discret |
 | Coordonnée technique | `.k-coord` | `0.6875rem` mono, tracking `.04em`, `ink-400` | Dates, compteurs annexes |
 | Donnée / KPI | `.kpi-value`, `.mono` | mono, `tabular-nums` | Tout chiffre significatif |
-| Badge | `.badge` | `0.6875rem` mono, uppercase, tracking `.06em` | Statuts, offres |
+| Badge | `.badge` | `0.6875rem` mono, uppercase, tracking `.06em` | Statuts |
+| Libellé d'offre | `.badge-offer` | `text-xs` semibold, uppercase, tracking `.14em`, `ink-500` | `BASIC`/`PRO`/`PREMIUM` |
+
+### Échelle marketing (landing + pages `/pricing`, `/features`, `/contact`…)
+
+Distincte de l'échelle back-office ci-dessus — plus grande, plus contrastée, éditoriale.
+Voir §20 pour les primitives de layout associées.
+
+| Rôle | Classe | Taille / poids | Usage |
+|---|---|---|---|
+| Display (hero) | `.hero-caps` | `clamp(2rem, 8.5vw, 5.5rem)` / 800, `tracking -0.04em`, uppercase | Titre du hero uniquement |
+| Signature | `.hero-caps-editorial` | idem + Instrument Serif italique, persimmon | Un mot du hero (« évolue. ») |
+| H2 de section | `.h2-marketing` | `text-3xl → sm:text-4xl` / 800, `leading 1.05`, `tracking -0.03em` | Un par section marketing |
+| Chapeau | `.lead` | `text-sm`, `leading-relaxed`, `ink-500` | Paragraphe d'intro sous un H2 |
 
 **Règle** : tout ce qui est un **nombre**, un **ID**, une **date**, un **prix** ou un
 **code** passe en `.mono` (Geist Mono). Tout le reste reste en Plus Jakarta Sans.
@@ -213,9 +218,9 @@ Ombres **toutes teintées charcoal**, jamais grises neutres, et volontairement d
 | Token | Valeur | Usage |
 |---|---|---|
 | `--k-shadow-xs` | `0 1px 2px rgba(19,19,18,.04)` | Cards au repos — quasi invisible |
-| `--k-shadow-sm` | double ombre fine | Non observé en usage direct actuellement |
-| `--k-shadow-md` | `0 8px 24px -6px rgba(19,19,18,.12)` | Non observé en usage direct actuellement |
-| `--k-shadow-pop` | `0 16px 48px -12px rgba(12,12,12,.28)` | Modales (élément le plus élevé de l'UI) |
+| `--k-shadow-sm` | double ombre fine | Survol des cards de la landing (`feature-card`, `pricing-card`) — décollement discret |
+| `--k-shadow-md` | `0 8px 24px -6px rgba(19,19,18,.12)` | Carte d'offre recommandée (`pricing-card-highlighted`) |
+| `--k-shadow-pop` | `0 16px 48px -12px rgba(12,12,12,.28)` | Modales, menu mobile de la navbar (élément le plus élevé de l'UI) |
 
 **Règle explicite (anti-slop)** : les cards utilisent `shadow-xs` + une bordure `1px
 solid hairline` — **la bordure porte la séparation, pas l'ombre**. Ne jamais ajouter une
@@ -231,7 +236,14 @@ l'écran — a droit à une ombre marquée (`shadow-pop`).
 |---|---|
 | Easing unique | `--k-ease: cubic-bezier(0.2, 0, 0, 1)` (nommé `ease-karta` dans Tailwind) |
 | Durée rapide | `--k-t-fast: 140ms` (backdrop de modale) |
-| Durée standard | `--k-t-base: 180ms` (panneau de modale, transitions de composants) |
+| Durée standard | `--k-t-base: 180ms` (panneau de modale, transitions de composants, survol des cards) |
+| Changement d'état contenu | `--k-t-swap: 320ms` *(landing)* — bascule preset / mensuel↔annuel, menu mobile |
+| Entrée au scroll — petit élément | `--k-t-reveal: 700ms` *(landing)* — `.reveal` (texte, ligne), `RevealOnScrollDirective` |
+| Entrée au scroll — gros élément | `--k-t-reveal-lg: 950ms` *(landing)* — `.reveal-scale` (mockup téléphone, carte), avec légère mise à l'échelle |
+
+Les trois dernières durées sont **scopées à la landing** : entrées jouées une seule fois
+par élément (IntersectionObserver), jamais de boucle. Coupées par `prefers-reduced-motion`
+comme le reste (bloc global en fin de `styles.css`).
 
 ### Autorisé
 
@@ -357,12 +369,10 @@ dans le code actuel — à ne pas introduire.
 ### Badges
 
 Deux familles distinctes, ne pas les confondre :
-- **Offre** (`badge-basic`/`badge-pro`/`badge-premium`) : traitement **matière**
-  métallique sobre — bronze/cuivre (BASIC), argent/chrome (PRO), or (PREMIUM) — dégradé
-  discret + liseré interne, sans reflet marqué ni motif décoratif. Libellé affiché =
-  nom réel de l'offre (`BASIC`/`PRO`/`PREMIUM`), jamais renommé en "Bronze/Argent/Or" ni
-  accompagné d'emoji/pictogramme médaille (voir exception §2). La hiérarchie de valeur
-  (bronze < argent < or) reste lisible par la matière, pas par un renommage.
+- **Offre** (`badge-offer`) : **texte simple** — `BASIC` / `PRO` / `PREMIUM` en capitales
+  interlettrées, `ink-500`, sans fond ni bordure. Aucun traitement métallique / médaille.
+  La hiérarchie de valeur se lit dans le contenu de la carte (prix, liste), pas dans le
+  libellé. Même classe pour les 3 offres, landing et back-office.
 - **Statut** (`badge-active`/`inactive`/`ready`/`published`/`draft`) : couleur
   sémantique + `badge-dot`.
 
@@ -549,10 +559,13 @@ retour visuel de son résultat** — jamais la décoration en premier.
 Avant d'introduire :
 
 - une nouvelle couleur → vérifier `--k-persimmon`/`success`/`warning`/`danger`/l'échelle
-  `ink-*` (§2) ;
-- une nouvelle police → il n'y en a que deux, verrouillées (§1) ;
+  `ink-*` (§2). Un seul accent : persimmon ;
+- une nouvelle police → Plus Jakarta Sans (UI) + Geist Mono (données) ; Instrument Serif
+  est verrouillé au hero. Aucune quatrième (§1) ;
 - un nouveau radius → `xs/sm/md/lg` couvre déjà tout (§5) ;
 - une nouvelle ombre → `xs` (cards) et `pop` (modales) suffisent (§6) ;
+- un nouveau container / rythme de section → `.section` / `.container` / `.section-y`
+  (§20) ; un nouveau titre marketing → `.h2-marketing` / `.lead` (§3) ;
 - un nouveau composant → relire §11, la variante existe probablement déjà ;
 - une nouvelle animation → `k-fade`/`k-pop`/`k-sweep` + easing unique (§7) ;
 - une nouvelle dépendance UI → il n'y en a aucune ; ne pas en ajouter une pour un besoin
@@ -601,6 +614,57 @@ ce fichier fait foi). État au moment de la rédaction :
 Une exception doit correspondre soit à une vraie décision de design documentée ici, soit
 à un faux positif technique démontrable (comme `broken-image` ci-dessus). En cas de
 doute, corriger le problème plutôt que l'ignorer.
+
+---
+
+## 20. Primitives marketing (landing + `/pricing`, `/features`, `/contact`…)
+
+Le back-office et les pages marketing partagent **les mêmes tokens** (§2, §5, §6, §7) mais
+pas la même densité (§8) : les pages marketing ont leur propre jeu de primitives de
+layout et de titres, extraites de la landing validée (`styles.css`, `@layer components`,
+bloc *« Pages marketing »*). Une future page publique doit s'assembler **uniquement** avec
+ces classes — jamais recopier les chaînes utilitaires à la main.
+
+| Primitive | `@apply` | Rôle |
+|---|---|---|
+| `.section` | `scroll-mt-24` | `<section>` avec une ancre (`id`). Le `bg-*` reste un utilitaire (`bg-white` / `bg-canvas` / `bg-charcoal`). |
+| `.container` | `mx-auto w-full max-w-6xl px-4 sm:px-6` | Largeur de contenu standard (72rem). Surchargeable : `class="container max-w-5xl"`. |
+| `.container-narrow` | `mx-auto w-full max-w-4xl px-4 sm:px-6` | Contenu resserré (CTA de clôture, texte long). |
+| `.section-y` | `py-20 sm:py-28` | Rythme vertical par défaut d'une section. |
+| `.section-y-lg` | `py-28 sm:py-40` | Section « respiration » (beaucoup de vide, un seul message). |
+| `.h2-marketing` | `text-3xl font-extrabold leading-[1.05] tracking-[-0.03em] text-ink-900 sm:text-4xl` | Titre de section. Sur fond sombre : ajouter `text-white`. |
+| `.lead` | `text-sm leading-relaxed text-ink-500` | Chapeau sous le titre. |
+| `.on-dark-muted` | `color: var(--k-charcoal-muted)` | Texte discret sur surface sombre (remplace les `style="color: …"` inline). |
+
+**Structure type d'une section :**
+
+```html
+<section id="…" class="section bg-white">
+  <div class="container section-y">
+    <h2 class="h2-marketing max-w-xl">…</h2>
+    <p class="lead mt-4 max-w-md">…</p>
+    …
+  </div>
+</section>
+```
+
+Les écarts au rythme (`pt-*`/`pb-*` séparés autour d'un composant intercalé, CTA en
+`py-24 sm:py-32`) restent en utilitaires explicites sur le `.container` — ils sont rares
+et intentionnels, ne pas créer une classe pour chacun.
+
+Le **hero** garde son layout propre (`landing/hero/`, `-mt-16`, fond photo + scrim) — il
+n'utilise pas `.section`/`.container`.
+
+---
+
+## Changelog design system
+
+- **Fondation DS** : extraction des primitives marketing (§20) depuis la landing ;
+  suppression des tokens d'accent morts `--k-slate` / `--k-teal` ; libellés d'offre
+  passés en texte simple (`.badge-offer`, plus de traitement métallique — ex-§2/§11) ;
+  `.container` de Tailwind désactivée (`corePlugins`) au profit de la primitive Karta ;
+  `DESIGN.md` §3/§6/§7/§11/§17 alignés sur l'usage réel. Aucun changement visuel sur la
+  landing (vérifié : build, 30 tests, captures 1440px section par section).
 
 ---
 

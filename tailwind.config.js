@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{html,ts}"],
+  // `.container` est une primitive Karta (styles.css, pages marketing) — on
+  // désactive celle de Tailwind pour éviter toute collision.
+  corePlugins: { container: false },
   theme: {
     extend: {
       fontFamily: {
@@ -51,8 +54,6 @@ module.exports = {
           200: "#DBDAD5",
           100: "#EEEEE9",
         },
-        "slate-accent": "#4A6D7C",
-        "teal-accent": "#6B8E8E",
         success: { DEFAULT: "#2E7D57", soft: "#E7F2EC" },
         danger: { DEFAULT: "#C0403B", soft: "#FBECEB" },
       },
