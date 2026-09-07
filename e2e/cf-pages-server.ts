@@ -1,23 +1,34 @@
 import { createServer, Server } from 'node:http';
 import { readFileSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, dirname } from 'node:path';
 import type { AddressInfo } from 'node:net';
 
 /**
  * Sert un dossier statique **à la manière de Cloudflare Pages** — l'hébergeur réel du
- * frontend Karta (`https://kartaqr.fr`). Sert à vérifier, hors navigateur de dev, que la
- * sortie de `npm run build` se comporte comme en production.
+ * frontend Karta (`https://kartaqr.fr`). Sert à vérifier, hors navigateur de dev, que
+ * la sortie de `npm run build` se comporte comme en production, y compris les pièges
+ * qui ont causé un 404 puis une boucle `ERR_TOO_MANY_REDIRECTS`.
  *
- * Règles reproduites :
- *  1. si un fichier statique correspond au chemin (avec résolution `…/index.html`), il est
- *     servi tel quel en 200 — un asset a toujours la priorité sur `_redirects` ;
- *  2. sinon, les règles de `_redirects` s'appliquent (rewrite `200` → sert la cible sans
- *     changer l'URL ; `301/302/308` → redirection) ;
- *  3. sinon, 404.
+ * Comportements reproduits (docs Cloudflare Pages) :
  *
- * C'est cette étape 2 qui manquait en production : sans `_redirects`, `/login` et
- * `/admin/**` (routes rendues côté client, sans fichier prérendu) tombaient en 404.
+ *  1. **`_redirects` s'applique AVANT les assets, et même si un asset existe.**
+ *     C'est pourquoi une règle `/*` est dangereuse : elle masquerait les pages
+ *     prérendues.
+ *  2. **Normalisation d'URL HTML `auto-trailing-slash`** (défaut) :
+ *       `/x.html`            → 307 vers `/x`
+ *       `/x` (x/index.html)  → 307 vers `/x/`
+ *       `/x/` (x/index.html) → 200, sert `x/index.html`
+ *       `/x` (x.html)        → 200, sert `x.html`
+ *       `/index.html`        → 307 vers `/`
+ *       `/`                  → 200, sert `index.html`
+ *     Cette normalisation s'applique aussi à la **cible d'un rewrite `200`** — d'où
+ *     la boucle quand la cible est `/index.csr.html` (307 → `/index.csr` → règle
+ *     `/*` → `/index.csr.html` → 307 → …).
+ *  3. **`404.html`** : si présent au niveau supérieur, il est servi (statut 404)
+ *     pour tout chemin sans asset ni règle, et il désactive le « mode SPA
+ *     implicite » de Cloudflare.
  */
+
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
@@ -56,19 +67,42 @@ function parseRedirects(root: string): Rule[] {
   }
 }
 
-function resolveFile(root: string, pathname: string): string | null {
-  const candidates = [pathname];
-  if (!extname(pathname)) {
-    candidates.push(pathname.replace(/\/$/, '') + '.html', join(pathname, 'index.html'));
+function isFile(root: string, rel: string): boolean {
+  try {
+    return statSync(join(root, rel)).isFile();
+  } catch {
+    return false;
   }
-  for (const c of candidates) {
-    try {
-      if (statSync(join(root, c)).isFile()) return c;
-    } catch {
-      /* not a file */
-    }
+}
+
+type Resolution =
+  | { kind: 'file'; file: string }
+  | { kind: 'redirect'; location: string }
+  | { kind: 'none' };
+
+/** Résolution d'un chemin en asset, avec la normalisation `auto-trailing-slash`. */
+function resolveAsset(root: string, pathname: string): Resolution {
+  if (pathname === '/') {
+    return isFile(root, 'index.html') ? { kind: 'file', file: 'index.html' } : { kind: 'none' };
   }
-  return null;
+  // /a/b/index.html → 307 /a/b/   ;   /a/b.html → 307 /a/b
+  if (pathname.endsWith('/index.html')) {
+    return { kind: 'redirect', location: pathname.slice(0, -'index.html'.length) };
+  }
+  if (pathname.endsWith('.html')) {
+    return { kind: 'redirect', location: pathname.slice(0, -'.html'.length) };
+  }
+  if (pathname.endsWith('/')) {
+    const idx = pathname.slice(1) + 'index.html';
+    return isFile(root, idx) ? { kind: 'file', file: idx } : { kind: 'none' };
+  }
+  // pas de slash final
+  const asHtml = pathname.slice(1) + '.html';
+  if (isFile(root, asHtml)) return { kind: 'file', file: asHtml };
+  const asDirIndex = pathname.slice(1) + '/index.html';
+  if (isFile(root, asDirIndex)) return { kind: 'redirect', location: pathname + '/' };
+  if (isFile(root, pathname.slice(1))) return { kind: 'file', file: pathname.slice(1) };
+  return { kind: 'none' };
 }
 
 function matchRule(rules: Rule[], pathname: string): Rule | null {
@@ -82,6 +116,17 @@ function matchRule(rules: Rule[], pathname: string): Rule | null {
   return null;
 }
 
+/** `404.html` le plus proche en remontant l'arborescence (comme Cloudflare Pages). */
+function find404(root: string, pathname: string): string | null {
+  let dir = dirname(pathname);
+  while (true) {
+    const rel = join(dir, '404.html').replace(/^[/\\]/, '');
+    if (isFile(root, rel)) return rel;
+    if (dir === '/' || dir === '.' || dir === '') return null;
+    dir = dirname(dir);
+  }
+}
+
 export interface CfPagesServer {
   url: string;
   close(): Promise<void>;
@@ -90,17 +135,16 @@ export interface CfPagesServer {
 export async function startCfPagesServer(root: string): Promise<CfPagesServer> {
   const rules = parseRedirects(root);
 
+  function serveFile(res: import('node:http').ServerResponse, file: string, status = 200) {
+    const body = readFileSync(join(root, file));
+    res.writeHead(status, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' });
+    res.end(body);
+  }
+
   const server: Server = createServer((req, res) => {
     const pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://local').pathname);
 
-    const asset = resolveFile(root, pathname === '/' ? '/index.html' : pathname);
-    if (asset) {
-      const body = readFileSync(join(root, asset));
-      res.writeHead(200, { 'content-type': MIME[extname(asset)] ?? 'application/octet-stream' });
-      res.end(body);
-      return;
-    }
-
+    // 1. _redirects — appliqué avant les assets, qu'un asset existe ou non.
     const rule = matchRule(rules, pathname);
     if (rule) {
       if (rule.code >= 300 && rule.code < 400) {
@@ -108,19 +152,44 @@ export async function startCfPagesServer(root: string): Promise<CfPagesServer> {
         res.end();
         return;
       }
-      const dest = resolveFile(root, rule.to);
-      if (dest) {
-        const body = readFileSync(join(root, dest));
-        res.writeHead(rule.code || 200, {
-          'content-type': MIME[extname(dest)] ?? 'application/octet-stream',
-        });
-        res.end(body);
+      // rewrite 200 : la cible passe par la même normalisation HTML → une 307 sur
+      // la cible est renvoyée au client (c'est le vecteur de la boucle).
+      const target = resolveAsset(root, rule.to);
+      if (target.kind === 'redirect') {
+        res.writeHead(307, { location: target.location });
+        res.end();
+        return;
+      }
+      if (target.kind === 'file') {
+        serveFile(res, target.file, 200);
+        return;
+      }
+      // cible introuvable → on continue vers 404
+    }
+
+    // 2. asset statique (avec normalisation d'URL).
+    if (!rule) {
+      const asset = resolveAsset(root, pathname);
+      if (asset.kind === 'redirect') {
+        res.writeHead(307, { location: asset.location });
+        res.end();
+        return;
+      }
+      if (asset.kind === 'file') {
+        serveFile(res, asset.file, 200);
         return;
       }
     }
 
+    // 3. 404.html le plus proche (statut 404).
+    const notFound = find404(root, pathname);
+    if (notFound) {
+      serveFile(res, notFound, 404);
+      return;
+    }
+
     res.writeHead(404, { 'content-type': 'text/plain' });
-    res.end('Not Found — Cloudflare Pages renverrait 404 ici.');
+    res.end('Not Found');
   });
 
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));

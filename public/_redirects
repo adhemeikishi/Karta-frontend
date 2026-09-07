@@ -1,14 +1,18 @@
-# Cloudflare Pages — repli SPA (voir README « Déploiement »).
+# Cloudflare Pages — routes rendues côté client (voir README « Déploiement »).
 #
-# Le build (`outputMode: static`) prérend 6 routes publiques, chacune avec son
-# propre fichier : `/` → index.html, `/pricing` → pricing/index.html, etc. Cloudflare
-# Pages sert ces fichiers (et les JS/CSS/images) tels quels — cette règle ne s'y
-# applique pas, un asset statique existant a toujours la priorité.
+# Les 6 routes publiques sont PRÉRENDUES (un fichier HTML chacune) et servies telles
+# quelles. AUCUNE règle ici ne les vise :
+#   - pas de `/*` : sur Cloudflare Pages, une règle `_redirects` s'applique même
+#     quand un asset statique existe au même chemin — un `/*` masquerait donc les
+#     pages prérendues ;
+#   - la cible est le RÉPERTOIRE `/app-shell/`, jamais un fichier `.html` :
+#     Cloudflare redirige tout `*.html` (307) vers son URL sans extension, ce qui,
+#     avec un `/*` vers `/index.csr.html`, produisait une boucle ERR_TOO_MANY_REDIRECTS.
 #
-# Les routes rendues côté client — `/login`, `/admin/**`, toute URL inconnue —
-# n'existent que dans le bundle Angular ; aucun fichier ne leur correspond. Sans
-# cette règle, Cloudflare renvoie un 404 avant même que l'application ne charge.
-# On sert alors la coquille cliente `index.csr.html` en HTTP 200 : Angular démarre
-# dans le navigateur et son routeur résout la route (LoginComponent, authGuard, ou
-# `**` → `/` pour une URL inconnue).
-/*    /index.csr.html    200
+# `/app-shell/index.html` = copie de `index.csr.html` (voir scripts/postbuild-cloudflare.mjs).
+# Les URL sans règle ni asset (URL inconnue) tombent sur `404.html`, également la
+# coquille cliente : Angular démarre puis renvoie vers `/` (route `**`).
+
+/login       /app-shell/    200
+/admin       /app-shell/    200
+/admin/*     /app-shell/    200

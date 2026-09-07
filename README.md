@@ -33,27 +33,43 @@ compilation, `outputMode: static` ; aucun serveur SSR à l'exécution).
 
 ## Déploiement (Cloudflare Pages)
 
-Le dossier publié est **`dist/frontend/browser/`**.
+- **Build output directory** : `dist/frontend/browser/`
+- **Build command** : `npm ci && npm run build`
 
-- Les 6 routes publiques (`/`, `/landing`, `/pricing`, `/features`, `/faq`,
-  `/contact`) sont **prérendues** : un fichier HTML par route, servi tel quel.
-- `/login` et `/admin/**` sont rendues **côté client** : aucun fichier ne leur
-  correspond, elles vivent uniquement dans le bundle Angular (coquille
-  `index.csr.html`).
-- `public/_redirects` fournit le repli SPA nécessaire :
+`npm run build` = `ng build` (prérendu statique) **puis**
+`scripts/postbuild-cloudflare.mjs`, qui prépare le dossier pour Cloudflare Pages :
 
-  ```
-  /*    /index.csr.html    200
-  ```
+| Chemin | Rôle |
+|---|---|
+| `index.html`, `pricing/index.html`, … | 6 routes publiques **prérendues**, servies telles quelles |
+| `index.csr.html` | coquille cliente vide (routes rendues côté navigateur) |
+| `app-shell/index.html` | **copie** de `index.csr.html`, cible « propre » (répertoire, sans `.html`) des règles `_redirects` |
+| `404.html` | **copie** de `index.csr.html` : repli pour toute URL inconnue |
+| `_redirects` | règles **scopées** vers `/app-shell/` pour `/login` et `/admin/**` |
 
-  Cloudflare Pages sert d'abord tout asset statique existant (routes prérendues,
-  JS/CSS/images) ; pour tout le reste, cette règle renvoie la coquille cliente en
-  **200** et Angular prend le relais. **Sans ce fichier, `kartaqr.fr/login`
-  renvoie 404.** Ne pas activer en plus l'option « Single Page Application » du
-  tableau de bord Cloudflare : elle pointerait sur `index.html` (la landing
-  prérendue) au lieu de `index.csr.html`.
+```
+# public/_redirects
+/login       /app-shell/    200
+/admin       /app-shell/    200
+/admin/*     /app-shell/    200
+```
 
-Régression couverte par `e2e/production-spa-fallback.spec.ts`.
+**Pourquoi pas `/*  /index.csr.html  200` :** sur Cloudflare Pages une règle
+`_redirects` s'applique *même si un asset existe* (un `/*` masquerait les pages
+prérendues) et Cloudflare redirige tout `*.html` en **307** vers l'URL sans
+extension. `/*  /index.csr.html  200` menait donc à
+`/` → `/index.csr.html` → 307 `/index.csr` → `/*` → `/index.csr.html` → … =
+**`ERR_TOO_MANY_REDIRECTS`**. Cibler un répertoire (`/app-shell/`) et scoper aux
+routes client évite les deux pièges.
+
+**Dashboard Cloudflare :** ne PAS activer l'option « Single Page Application »
+(elle ajouterait un repli global vers `index.html`, la landing prérendue). La
+présence de `404.html` désactive de toute façon ce mode implicite. Vérifier que
+le mode SSL/TLS est **Full** (ou Full Strict), jamais *Flexible* — *Flexible*
+provoque aussi une boucle HTTP↔HTTPS sur le domaine.
+
+Régression couverte par `e2e/production-spa-fallback.spec.ts` (simulateur
+Cloudflare Pages dans `e2e/cf-pages-server.ts`).
 
 ## Tests
 
