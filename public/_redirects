@@ -16,3 +16,7 @@
 /login       /app-shell/    200
 /admin       /app-shell/    200
 /admin/*     /app-shell/    200
+/app         /app-shell/    200
+/app/*       /app-shell/    200
+/onboarding  /app-shell/    200
+/onboarding/*  /app-shell/  200

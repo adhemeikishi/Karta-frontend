@@ -1,0 +1,81 @@
+<!-- Zone de dépôt : éditoriale, posée dans la page, pas une boîte SaaS. Le bouton
+     reste la voie principale (clavier, téléphone) ; le glisser-déposer est un
+     raccourci. Une fois le fichier retenu, la zone devient l'annonce du fichier et
+     le CTA prend le relais.
+
+     .imp-drop-demo : indice visuel passif (CSS pur, voir styles.css) — un PDF entre
+     depuis l'extérieur de la zone pour montrer le geste attendu. Purement décoratif
+     (aria-hidden), jamais un faux dépôt/traitement. Posé en dehors de `.imp-drop`
+     (qui garde `overflow-hidden` pour son fond quadrillé) afin de pouvoir déborder
+     au-dessus de la zone, et au premier plan (z-index) pour rester visible même une
+     fois « entré » dans la boîte — le wrapper porte donc les états/écouteurs réels
+     (dragover/drop, .imp-drop-active, .imp-drop-idle-demo) : sa boîte de rendu est
+     strictement identique à celle de `.imp-drop` (aucun padding propre), la cible de
+     drop ne change pas. Actif seulement en idle (.imp-drop-idle-demo, posé quand
+     aucun fichier n'est retenu) et coupé net dès qu'une vraie interaction commence
+     (:hover/:focus-within/dragging réel) ou sous prefers-reduced-motion. -->
+<div
+  class="imp-drop-demo-wrap"
+  [class.imp-drop-active]="dragging()"
+  [class.imp-drop-idle-demo]="!file()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave()"
+  (drop)="onDrop($event)"
+>
+  <div class="imp-drop-demo" aria-hidden="true">
+    <svg class="imp-drop-demo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 3.75h8.25L18 7.5v12.75a1.5 1.5 0 0 1-1.5 1.5h-9a1.5 1.5 0 0 1-1.5-1.5V5.25a1.5 1.5 0 0 1 1.5-1.5Z" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M14 3.75V7.5h3.75" />
+      <path stroke-linecap="round" d="M9 13.5h6M9 16.5h4" />
+    </svg>
+    <span class="imp-drop-demo-label">menu.pdf</span>
+  </div>
+
+  <div class="imp-drop">
+    <div class="k-crosshair imp-drop-grid" aria-hidden="true"></div>
+
+    @if (file(); as chosen) {
+      <div class="imp-drop-body">
+        <p class="eyebrow">Fichier retenu</p>
+        <p class="imp-drop-file">{{ chosen.name }}</p>
+        <p class="k-coord mt-1">{{ chosen.size }}</p>
+
+        <button type="button" class="btn btn-primary mt-7" (click)="start()">
+          Créer mon menu digital
+        </button>
+        <button type="button" class="imp-drop-change mt-4" (click)="clear()">
+          Choisir un autre fichier
+        </button>
+      </div>
+    } @else {
+      <div class="imp-drop-body">
+        <p class="eyebrow">01 / Menu existant</p>
+
+        <svg class="imp-drop-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v13m0 0l-5-5m5 5l5-5" />
+          <path stroke-linecap="round" d="M4 20h16" />
+        </svg>
+
+        <p class="imp-drop-title">Déposez votre menu PDF</p>
+        <p class="imp-drop-note">ou choisissez un fichier sur votre appareil</p>
+
+        <label class="btn btn-primary mt-6">
+          Créer mon menu digital
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            class="sr-only"
+            aria-label="Choisir mon menu au format PDF"
+            (change)="onFileSelected($event)"
+          />
+        </label>
+
+        <p class="k-coord mt-4">PDF · 10 Mo maximum</p>
+
+        @if (error()) {
+          <p class="alert-error mt-4 text-left" role="alert">{{ error() }}</p>
+        }
+      </div>
+    }
+  </div>
+</div>

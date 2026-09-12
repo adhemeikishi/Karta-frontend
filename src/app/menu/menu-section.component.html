@@ -99,7 +99,7 @@
 
         @if (showEditor()) {
           <!--
-            Le menu structuré existe réellement (KartaAI validé, ou création manuelle déjà
+            Le menu structuré existe réellement (KartaIA validé, ou création manuelle déjà
             entamée) : on affiche l'éditeur. Ne dépend jamais du nombre de catégories — un
             menu tout juste créé, encore vide, doit continuer à afficher l'éditeur plutôt
             que de revenir à l'état initial.
@@ -129,7 +129,7 @@
         } @else if (canTransformPdf()) {
           <!--
             CAS 1 — une carte PDF existe mais aucun menu structuré n'a encore été créé
-            (typiquement un client BASIC passé à PRO). KartaAI est proposé comme
+            (typiquement un client BASIC passé à PRO). KartaIA est proposé comme
             accélérateur, jamais comme préalable : la création manuelle reste un choix
             explicite juste en dessous.
           -->
@@ -165,20 +165,20 @@
 
             <p class="mt-4 text-sm text-ink-600">
               Votre carte PDF peut être transformée automatiquement en menu digital.
-              KartaAI détectera les catégories, plats, descriptions et prix.
+              KartaIA détectera les catégories, plats, descriptions et prix.
             </p>
 
             <div class="mt-4 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                (click)="startKartaAiTransform()"
+                (click)="startKartaIaTransform()"
                 [disabled]="transforming()"
                 class="btn btn-primary"
               >
                 @if (transforming()) {
                   <span class="spinner"></span> Analyse en cours…
                 } @else {
-                  Transformer avec KartaAI →
+                  Transformer avec KartaIA →
                 }
               </button>
               <button type="button" (click)="fileInput.click()" [disabled]="busy() || transforming()" class="btn btn-outline btn-sm">
@@ -205,7 +205,7 @@
 
             <div class="mt-4 pt-4" style="border-top: 1px solid var(--k-hairline)">
               <p class="text-sm text-ink-500">
-                Vous préférez ne pas utiliser KartaAI ?
+                Vous préférez ne pas utiliser KartaIA ?
                 <button type="button" (click)="startManualCreation()" class="btn btn-ghost btn-sm">
                   Créer mon menu manuellement
                 </button>
@@ -215,13 +215,13 @@
         } @else {
           <!--
             CAS 3 — ni carte PDF, ni menu structuré : choix explicite entre importer une
-            carte (pour KartaAI) et créer le menu directement à la main.
+            carte (pour KartaIA) et créer le menu directement à la main.
           -->
           <div class="mb-6 rounded-md p-5" style="border: 1px solid var(--k-hairline); background-color: var(--k-ivory)">
             <p class="text-sm font-semibold text-ink-900">Votre menu n'est pas encore créé</p>
             <p class="mt-2 text-sm text-ink-600">
               Créez votre carte directement, catégorie par catégorie, ou importez une carte
-              PDF pour la transformer automatiquement avec KartaAI.
+              PDF pour la transformer automatiquement avec KartaIA.
             </p>
             <div class="mt-4 flex flex-wrap items-center gap-2">
               <button type="button" (click)="startManualCreation()" class="btn btn-primary">

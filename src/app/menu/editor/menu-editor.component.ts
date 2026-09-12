@@ -22,15 +22,24 @@ import {
  * État local puis enregistrement explicite — aucune écriture avant « Enregistrer les
  * modifications ». Le style et la publication restent le rôle de
  * {@link MenuDesignStudioComponent}, à côté : cet éditeur ne modifie que la structure
- * (mêmes routes, même contrat `PUT .../menu` que la Review KartaAI et que le studio).
+ * (mêmes routes, même contrat `PUT .../menu` que la Review KartaIA et que le studio).
  *
  * Réorganisation par flèches ↑/↓ (pas de glisser-déposer) : c'est déjà le mécanisme
- * utilisé par la Review KartaAI pour les catégories, et aucune librairie de drag & drop
+ * utilisé par la Review KartaIA pour les catégories, et aucune librairie de drag & drop
  * n'existe dans le projet.
+ *
+ * <strong>Lire d'abord, modifier ensuite.</strong> Une carte se lit — nom, description,
+ * prix — et ne se modifie qu'un plat à la fois. Tout afficher en champs de saisie
+ * transformait la page en formulaire de soixante lignes où plus rien ne ressortait.
+ * Chaque plat est donc une ligne ; l'édition ouvre une surface à sa place, et
+ * {@link cancelEdit} restaure réellement la valeur d'avant.
  */
 @Component({
     selector: 'app-menu-editor',
     imports: [CommonModule, FormsModule],
+    // Sans display explicite l'hôte reste `inline` : la barre d'enregistrement collante
+    // n'aurait pas de bloc de référence, et les marges des sections seraient ignorées.
+    styles: [':host{display:block}'],
     templateUrl: './menu-editor.component.html'
 })
 export class MenuEditorComponent {
@@ -43,6 +52,17 @@ export class MenuEditorComponent {
   readonly menuChange = output<Menu>();
 
   readonly categories = signal<EditableCategory[]>([]);
+
+  /** `uid` du plat ouvert en édition. Un seul à la fois : la carte reste lisible. */
+  readonly editingUid = signal<string | null>(null);
+
+  /**
+   * Valeurs du plat au moment de l'ouverture.
+   *
+   * « Annuler » doit vraiment annuler : les champs sont liés à l'objet par `ngModel`,
+   * donc la saisie l'a déjà modifié. Sans cette copie, le bouton mentirait.
+   */
+  private editSnapshot: Pick<EditableItem, 'name' | 'description' | 'priceEuros'> | null = null;
   private savedKey = signal('');
   private initialized = false;
 
@@ -177,13 +197,49 @@ export class MenuEditorComponent {
     this.justSaved.set(false);
   }
 
+  // ------------------------------------------------------------------ édition d'un plat
+
+  isEditing(item: EditableItem): boolean {
+    return this.editingUid() === item.uid;
+  }
+
+  startEdit(item: EditableItem): void {
+    this.editSnapshot = {
+      name: item.name,
+      description: item.description,
+      priceEuros: item.priceEuros,
+    };
+    this.editingUid.set(item.uid);
+  }
+
+  /** Referme sans toucher aux valeurs : ce qui a été saisi est conservé. */
+  closeEdit(): void {
+    this.editSnapshot = null;
+    this.editingUid.set(null);
+  }
+
+  /** Referme ET restaure les valeurs d'avant l'ouverture. */
+  cancelEdit(item: EditableItem): void {
+    if (this.editSnapshot) {
+      item.name = this.editSnapshot.name;
+      item.description = this.editSnapshot.description;
+      item.priceEuros = this.editSnapshot.priceEuros;
+      this.priceDisplay.set(item.uid, formatPriceInput(item.priceEuros));
+    }
+    this.closeEdit();
+    this.onFieldChange();
+  }
+
   // ------------------------------------------------------------------ plats
 
+  /** Un plat ajouté n'a encore ni nom ni prix : il s'ouvre directement en édition. */
   addItem(categoryIndex: number): void {
+    const item = newItem();
     this.categories.update((list) =>
-      list.map((c, i) => (i === categoryIndex ? { ...c, items: [...c.items, newItem()] } : c)),
+      list.map((c, i) => (i === categoryIndex ? { ...c, items: [...c.items, item] } : c)),
     );
     this.justSaved.set(false);
+    this.startEdit(item);
   }
 
   moveItem(categoryIndex: number, itemIndex: number, direction: -1 | 1): void {
@@ -239,6 +295,8 @@ export class MenuEditorComponent {
   confirmRemoveItem(): void {
     const pending = this.pendingDeleteItem();
     if (pending) {
+      // Le plat supprimé peut être celui ouvert en édition : la surface doit se fermer.
+      this.closeEdit();
       this.categories.update((list) =>
         list.map((c, ci) =>
           ci === pending.categoryIndex
@@ -279,6 +337,17 @@ export class MenuEditorComponent {
 
   onPriceBlur(item: EditableItem): void {
     this.priceDisplay.set(item.uid, formatPriceInput(item.priceEuros));
+  }
+
+  /**
+   * Prix tel qu'il se lit sur la ligne : « 12,90 € », ou un tiret cadratin quand il
+   * manque. Afficher « 0,00 € » laisserait croire à un plat gratuit.
+   */
+  displayPrice(item: EditableItem): string {
+    if (item.priceEuros === null || item.priceEuros < 0) {
+      return '—';
+    }
+    return `${formatPriceInput(item.priceEuros)} €`;
   }
 
   onFieldChange(): void {

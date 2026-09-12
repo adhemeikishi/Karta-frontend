@@ -1,116 +1,103 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     Landing Karta — V2 Art Direction.
-     Une composition différente par section, une compréhension immédiate.
-     Signature graphique rationnée : .k-ticks = ruban de process (1×),
-     .k-crosshair = section QR (1×). Geist Mono = données uniquement.
-     Presets / prix / contenu de menu = sources de vérité existantes, jamais inventés.
+     Landing Karta — le funnel EST la page.
+
+     HERO → PROBLÈME → 01 votre menu (expérience d'import : dépôt → analyse →
+     carte → verrou → /pricing) → 02 le style (+ option PREMIUM) → 03 publication
+     → abonnement → FAQ → CTA final.
+
+     Le chapitre 01 est interactif : il *montre* la transformation au lieu de la
+     décrire. Les anciens chapitres statiques (« Karta le transforme », « Vous
+     vérifiez », « Votre carte est prête ») y sont absorbés — les garder aurait
+     fait dire deux fois la même chose, une fois en images fixes, une fois en vrai.
+
+     Les repères de chapitre sont des `.eyebrow` (« 01 · Votre menu »), la même
+     numérotation que l'onboarding réel : le parcours se lit sans lire.
+     Une composition par chapitre, jamais un gabarit répété. Signature graphique
+     rationnée : .k-crosshair = zone de dépôt + section QR. Geist Mono = données.
+     Presets / prix / contenu de menu / compteurs / FAQ = sources de vérité
+     existantes, jamais inventés.
      Layout : primitives .section / .container / .section-y / .h2-marketing / .lead
-     (styles.css, DESIGN.md §20) — partagées avec les futures pages marketing.
+     (styles.css, DESIGN.md §20).
+
+     CTA : le libellé suit l'étape — « Importer mon menu » (01) → « Débloquer ma
+     carte » (fin de l'expérience, vers /pricing) → « Créer ma carte » / « Publier
+     ma carte » (chapitres suivants, vers /login).
      ═══════════════════════════════════════════════════════════════════════════ -->
 
 <!-- ── HERO ── Capitales sur fond charcoal topographique. Voir landing/hero/.
      Fond sombre → navbar inversée via LandingChromeService. ─────────────────── -->
 <landing-hero />
 
-<!-- ── TRANSFORMATION ── Papier → KartaAI → structuré. Étapes 01·02·03. ──────── -->
-<section id="kartaai" class="section bg-white">
+<!-- ── PROBLÈME ── Ce que coûte une carte imprimée. 4 étapes grises vs 3 nettes. ─ -->
+<section id="probleme" class="section bg-white">
   <div class="container section-y">
-    <h2 revealOnScroll class="h2-marketing max-w-2xl">
-      Votre menu existe déjà. Karta le rend vivant.
+    <h2 revealOnScroll class="h2-marketing max-w-xl">
+      Un changement de prix ne devrait pas obliger à refaire votre carte.
     </h2>
-
-    <div class="mt-12 grid items-center gap-8 sm:mt-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
-      <!-- La carte actuelle : dense, légèrement de travers, un objet. -->
-      <figure revealOnScroll="60" class="v2-paper">
-        <figcaption class="mono mb-3 text-[0.625rem] uppercase tracking-[0.12em] text-ink-400">menu-restaurant.pdf</figcaption>
-        <div class="space-y-2.5">
-          @for (category of structuredPreview; track category.name) {
-            <div>
-              <p class="text-[0.8125rem] font-semibold text-ink-700">{{ category.name }}</p>
-              <div class="mt-0.5">
-                @for (item of category.items; track item.name) {
-                  <p class="flex justify-between gap-4 text-xs leading-relaxed text-ink-500">
-                    <span class="truncate">{{ item.name }}</span><span>{{ item.priceLabel }}</span>
-                  </p>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      </figure>
-
-      <!-- KartaAI : la transformation. -->
-      <div revealOnScroll="140" class="flex items-center justify-center gap-3 lg:flex-col lg:gap-4">
-        <span class="hidden h-px w-8 lg:block" style="background-color: var(--k-ink-300)" aria-hidden="true"></span>
-        <span class="flex items-center gap-2.5 lg:flex-col">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md" style="background-color: var(--k-persimmon); color: #fff">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" />
-            </svg>
-          </span>
-          <span class="mono text-[0.6875rem] font-semibold tracking-[0.02em] text-ink-500">KartaAI</span>
-        </span>
-        <span class="hidden h-px w-8 lg:block" style="background-color: var(--k-ink-300)" aria-hidden="true"></span>
-      </div>
-
-      <!-- Le menu Karta : structuré, aligné, respirant. -->
-      <div revealOnScroll="220" [revealScale]="true" class="card p-5 sm:p-6">
-        @for (category of structuredPreview; track category.name; let first = $first) {
-          <div
-            [class.mt-4]="!first"
-            [class.border-t]="!first"
-            [class.pt-4]="!first"
-            style="border-color: var(--k-hairline)"
-          >
-            <p class="text-[0.7rem] font-bold uppercase tracking-[0.08em]" style="color: var(--k-persimmon)">
-              {{ category.name }}
-            </p>
-            <div class="mt-2 space-y-1.5">
-              @for (item of category.items; track item.name) {
-                <div class="flex items-baseline justify-between gap-4 text-sm">
-                  <span class="truncate text-ink-800">{{ item.name }}</span>
-                  <span class="mono shrink-0 text-ink-900">{{ item.priceLabel }}</span>
-                </div>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- 03 · Review : une annotation, pas un écran. -->
-    <p revealOnScroll class="lead mt-10 max-w-xl text-ink-600">
-      <span class="mono text-[0.625rem] uppercase tracking-[0.12em] text-ink-400">Étape 03</span><br />
-      Vous relisez le résultat plat par plat. Rien n'est publié tant que vous ne
-      l'avez pas décidé.
+    <p revealOnScroll="40" class="lead mt-5 max-w-md">
+      Ni à la réimprimer, ni à remplacer celles qui traînent sur vos tables.
     </p>
 
-    <!-- Ruban de process : les 6 étapes, la colonne vertébrale du parcours.
-         Seule utilisation du motif gradué (.k-ticks / trait du ruban). -->
-    <ol revealOnScroll class="v2-ribbon mt-16 sm:mt-20">
-      @for (step of kartaAiWorkflow; track step.label; let i = $index) {
-        <li class="v2-ribbon-step">
-          <span class="v2-ribbon-dot" aria-hidden="true"></span>
-          <span class="v2-ribbon-num">0{{ i + 1 }}</span>
-          <span class="v2-ribbon-label">{{ step.label }}</span>
-          <span class="v2-ribbon-detail">{{ step.detail }}</span>
-        </li>
-      }
-    </ol>
+    <div class="mt-12 grid gap-10 sm:mt-16 lg:grid-cols-2 lg:gap-16">
+      <div revealOnScroll="60">
+        <p class="mono text-xs uppercase tracking-[0.14em] text-ink-400">Avant</p>
+        <ol class="mt-6 space-y-3.5">
+          <li class="flex items-baseline gap-3 text-lg text-ink-400"><span class="mono text-xs text-ink-300">1</span> Modifier</li>
+          <li class="flex items-baseline gap-3 text-lg text-ink-400"><span class="mono text-xs text-ink-300">2</span> Réimprimer</li>
+          <li class="flex items-baseline gap-3 text-lg text-ink-400"><span class="mono text-xs text-ink-300">3</span> Remplacer chaque carte</li>
+          <li class="flex items-baseline gap-3 text-lg font-semibold text-ink-500"><span class="mono text-xs text-ink-300">4</span> Jeter les anciennes</li>
+        </ol>
+      </div>
+
+      <div revealOnScroll="140" class="lg:border-l lg:pl-16" style="border-color: var(--k-hairline)">
+        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">Avec Karta</p>
+        <ol class="mt-6 space-y-3.5">
+          <li class="flex items-baseline gap-3 text-lg text-ink-900"><span class="mono text-xs text-ink-400">1</span> Modifier</li>
+          <li class="flex items-baseline gap-3 text-lg text-ink-900"><span class="mono text-xs text-ink-400">2</span> Publier</li>
+          <li class="flex items-center gap-3 text-lg font-semibold text-ink-900">
+            <svg class="h-5 w-5 shrink-0" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Terminé
+          </li>
+        </ol>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ── SHOWCASE ── Le téléphone est le héros. Les presets sont des contrôles. ── -->
-<section id="produit" class="section bg-canvas">
+<!-- ── 01 · VOTRE MENU ── Le cœur du funnel : le visiteur dépose sa carte, la voit
+     puis part la construire dans le parcours (`/karta-ai` → `/create/*`). La landing
+     ne rejoue pas la transformation : elle ouvre la porte. ───────────────────── -->
+<section id="menu" class="section bg-canvas">
+  <div class="container section-y">
+    <div revealOnScroll class="max-w-xl">
+      <p class="eyebrow">01 · Votre menu</p>
+      <h2 class="h2-marketing mt-3">Votre menu existe déjà.</h2>
+      <p class="lead mt-5 max-w-md">
+        Pas besoin de le refaire pour passer au digital. Déposez le PDF que vous
+        utilisez déjà : Karta en tire vos catégories, vos plats et vos prix. Rien à
+        ressaisir.
+      </p>
+    </div>
+
+    <div revealOnScroll="80" class="mt-12 sm:mt-16">
+      <landing-menu-import-dropzone />
+    </div>
+  </div>
+</section>
+
+<!-- ── 02 · VOUS CHOISISSEZ LE STYLE ── Le téléphone est le héros, les presets sont
+     des contrôles. Le choix fait ici se retrouve au chapitre 05. ────────────── -->
+<section id="produit" class="section bg-white">
   <div class="container section-y">
     <div class="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
       <div revealOnScroll class="lg:pt-4">
-        <h2 class="h2-marketing">
-          Un menu. Cinq identités.
-        </h2>
-        <p class="lead mt-4 max-w-sm">
-          Le contenu ne bouge pas : mêmes plats, mêmes prix. Seul le style change.
-          Choisissez, le téléphone se met à jour.
+        <p class="eyebrow">02 · Vous choisissez le style</p>
+        <h2 class="h2-marketing mt-3">Un menu. Cinq identités.</h2>
+        <p class="lead mt-5 max-w-sm">
+          Votre carte doit ressembler à votre restaurant, pas à un gabarit générique.
+          Le contenu ne bouge pas — mêmes plats, mêmes prix — seul le style change.
         </p>
         <ul class="mt-8 divide-y" style="border-color: var(--k-hairline)" role="radiogroup" aria-label="Style du menu">
           @for (preset of presets; track preset.id) {
@@ -140,53 +127,58 @@
   </div>
 </section>
 
-<!-- ── PREMIUM ── L'identité du restaurant. Dense : l'outil est la section. ──── -->
-<section id="premium" class="section bg-white">
+<!-- ── PREMIUM ── Prolongement du chapitre 02, pas un chapitre de plus : l'option
+     pour qui veut son identité. Dense — l'outil est la section. ─────────────── -->
+<section id="premium" class="section bg-canvas">
   <div class="container pt-20 sm:pt-28">
     <div revealOnScroll class="max-w-xl">
-      <h2 class="h2-marketing">
-        Et si le menu ressemblait à votre restaurant ?
-      </h2>
-      <p class="lead mt-4 max-w-md">
-        Preset, couleurs, nom, logo, image d'en-tête. Chaque changement s'affiche
-        dans le téléphone pendant que vous le faites.
+      <p class="eyebrow">02 · Option Premium</p>
+      <h2 class="h2-marketing mt-3">Et si le menu ressemblait à votre restaurant ?</h2>
+      <p class="lead mt-5 max-w-md">
+        Nom, logo, couleurs, image d'en-tête : votre carte devient votre identité, pas
+        seulement un style parmi cinq. Chaque changement s'affiche dans le téléphone
+        pendant que vous le faites.
       </p>
     </div>
   </div>
   <landing-premium-configurator />
   <div revealOnScroll class="container pb-20 sm:pb-28">
-    <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
+    <a routerLink="/login" class="btn btn-primary">Créer ma carte</a>
   </div>
 </section>
 
-<!-- ── PUBLICATION ── Respiration. Trois gestes. Beaucoup de vide. ──────────── -->
-<section class="border-t bg-canvas" style="border-color: var(--k-hairline)">
-  <div class="container section-y-lg">
-    <div revealOnScroll class="max-w-xl">
-      <p class="h2-marketing leading-[1.15]">
-        Vous vérifiez.<br />Vous choisissez.<br />Vous publiez.
-      </p>
-      <p class="mt-6 text-sm text-ink-500">
-        Votre menu est en ligne, accessible à chaque table par le QR.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ── QR PERMANENT ── Le différenciateur. Démo physique, fond sombre. ──────── -->
+<!-- ── 03 · PUBLICATION ── Le fichier devient une page. Le QR est la conséquence de
+     la publication, pas le produit. Démo physique, fond sombre. ─────────────── -->
 <section id="qr" class="section relative overflow-hidden bg-charcoal">
   <div class="k-crosshair pointer-events-none absolute inset-0 opacity-[0.06]" aria-hidden="true"></div>
   <div class="container section-y relative">
-    <h2 revealOnScroll class="h2-marketing max-w-xl text-white">
-      Un QR imprimé une seule fois.
+    <p revealOnScroll class="eyebrow on-dark-muted">03 · Publication</p>
+    <h2 revealOnScroll="40" class="h2-marketing mt-3 max-w-2xl text-white">
+      Votre carte n'est plus un fichier à envoyer.
     </h2>
-    <p revealOnScroll="80" class="lead on-dark-muted mt-4 max-w-md">
-      Vous le collez une fois sur vos tables. Il reste valide quand vous changez un
-      prix, retirez un plat ou refaites toute la carte.
+    <p revealOnScroll="80" class="lead on-dark-muted mt-5 max-w-md">
+      Elle devient une page, accessible à chaque table par le QR. Vous la modifiez quand
+      vous voulez : le QR, lui, ne change jamais.
     </p>
 
+    <!-- Les trois conséquences de la publication, rien de plus. -->
+    <ul revealOnScroll="120" class="mt-12 grid gap-6 sm:grid-cols-3 sm:gap-8">
+      <li class="border-t pt-4" style="border-color: var(--k-charcoal-line)">
+        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">Carte publiée</p>
+        <p class="on-dark-muted mt-2 text-sm">Votre menu est en ligne, à jour.</p>
+      </li>
+      <li class="border-t pt-4" style="border-color: var(--k-charcoal-line)">
+        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">QR permanent</p>
+        <p class="on-dark-muted mt-2 text-sm">Collé une seule fois sur vos tables.</p>
+      </li>
+      <li class="border-t pt-4" style="border-color: var(--k-charcoal-line)">
+        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">Sur mobile</p>
+        <p class="on-dark-muted mt-2 text-sm">Le client la consulte à table, ou avant d'arriver au comptoir.</p>
+      </li>
+    </ul>
+
     <div class="mt-14 grid gap-10 sm:mt-16 lg:grid-cols-[auto_1fr] lg:items-center lg:gap-16">
-      <figure revealOnScroll="120" class="mx-auto w-full max-w-[15rem] lg:mx-0">
+      <figure revealOnScroll="160" class="mx-auto w-full max-w-[15rem] lg:mx-0">
         <img
           src="/qr-demo.png"
           alt="QR code Karta pointant vers kartaqr.fr, généré par le système Karta"
@@ -199,90 +191,68 @@
         />
       </figure>
 
-      <div revealOnScroll="200" class="max-w-xs">
+      <div revealOnScroll="220" class="max-w-xs">
         <div class="flex items-baseline gap-3">
           <span class="text-lg text-white">Burger</span>
           <span class="mono text-lg text-white/50 line-through">12,50 €</span>
         </div>
         <div class="my-3 flex items-center gap-2">
-          <svg class="h-4 w-4 rotate-90 on-dark-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <svg class="on-dark-muted h-4 w-4 rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16m0 0l-6-6m6 6l-6 6" />
           </svg>
-          <span class="text-xs uppercase tracking-[0.12em] on-dark-muted">Vous modifiez</span>
+          <span class="on-dark-muted text-xs uppercase tracking-[0.12em]">Vous modifiez</span>
         </div>
         <div class="flex items-baseline gap-3">
           <span class="text-lg text-white">Burger</span>
           <span class="mono text-lg" style="color: var(--k-persimmon)">13,50 €</span>
         </div>
-        <p class="mono mt-9 text-sm font-semibold uppercase tracking-[0.14em] text-white">Même QR.</p>
+        <p class="mono mt-9 text-sm font-semibold uppercase tracking-[0.14em] text-white">Le QR ne bouge pas.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── AVANT / APRÈS ── Contraste visuel : 4 étapes grises vs 3 nettes. ─────── -->
-<section id="fonctionnalites" class="section bg-white">
-  <div class="container section-y">
-    <h2 revealOnScroll class="h2-marketing max-w-xl">
-      Changer un prix ne devrait pas prendre trois jours.
-    </h2>
-
-    <div class="mt-12 grid gap-10 sm:mt-16 lg:grid-cols-2 lg:gap-16">
-      <div revealOnScroll="60">
-        <p class="mono text-xs uppercase tracking-[0.14em] text-ink-400">Avant</p>
-        <ol class="mt-6 space-y-3.5">
-          <li class="flex items-baseline gap-3 text-lg text-ink-400"><span class="mono text-xs text-ink-300">1</span> Modifier</li>
-          <li class="flex items-baseline gap-3 text-lg text-ink-400"><span class="mono text-xs text-ink-300">2</span> Réimprimer</li>
-          <li class="flex items-baseline gap-3 text-lg text-ink-400"><span class="mono text-xs text-ink-300">3</span> Remplacer chaque carte</li>
-          <li class="flex items-baseline gap-3 text-lg font-semibold text-ink-500"><span class="mono text-xs text-ink-300">4</span> Jeter les anciennes</li>
-        </ol>
-      </div>
-
-      <div revealOnScroll="140" class="lg:border-l lg:pl-16" style="border-color: var(--k-hairline)">
-        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">Avec Karta</p>
-        <ol class="mt-6 space-y-3.5">
-          <li class="flex items-baseline gap-3 text-lg text-ink-900"><span class="mono text-xs text-ink-400">1</span> Modifier</li>
-          <li class="flex items-baseline gap-3 text-lg text-ink-900"><span class="mono text-xs text-ink-400">2</span> Publier</li>
-          <li class="flex items-center gap-3 text-lg font-semibold text-ink-900">
-            <svg class="h-5 w-5 shrink-0" style="color: var(--k-persimmon)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-            Terminé
-          </li>
-        </ol>
-      </div>
-    </div>
-
-    <div revealOnScroll class="mt-16 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
-      <a routerLink="/pricing" class="btn btn-ghost">Voir les tarifs</a>
-    </div>
-  </div>
-</section>
-
-<!-- ── PRICING ── Calme. PRO recommandé. Cartes détaillées (voir landing-pricing). ─ -->
+<!-- ── ABONNEMENT ── Après la démonstration, jamais avant. PRO recommandé.
+     Cartes détaillées : voir landing-pricing. ──────────────────────────────── -->
 <section id="offres" class="section bg-canvas">
-  <div class="container max-w-5xl section-y">
-    <h2 revealOnScroll class="h2-marketing max-w-xl">
-      Trois offres. PRO pour la plupart.
-    </h2>
+  <div class="container section-y">
+    <h2 revealOnScroll class="h2-marketing max-w-xl">Trois offres. PRO pour la plupart.</h2>
+    <p revealOnScroll="60" class="lead mt-5 max-w-md">
+      L'abonnement garde votre carte en ligne derrière votre QR, et vous laisse la
+      modifier sans jamais la réimprimer.
+    </p>
     <div class="mt-12 sm:mt-16">
       <landing-pricing />
     </div>
   </div>
 </section>
 
-<!-- ── CLÔTURE ── Éditorial. Un seul objectif. ─────────────────────────────── -->
-<section class="bg-charcoal">
-  <div revealOnScroll class="container-narrow py-24 sm:py-32">
-    <h2 class="h2-marketing max-w-xl text-white sm:text-5xl">
-      Votre menu est déjà prêt.
-    </h2>
-    <p class="lead on-dark-muted mt-5 max-w-md">
-      Importez votre carte, choisissez votre style, publiez quand vous êtes prêt.
+<!-- ── FAQ ── Extraite de /faq (FAQ_GROUPS), resserrée sur le parcours. ─────── -->
+<section id="faq" class="section bg-white">
+  <div class="container section-y">
+    <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+      <div revealOnScroll>
+        <h2 class="h2-marketing">Les questions qui reviennent.</h2>
+        <a routerLink="/faq" class="btn btn-ghost mt-6 hidden lg:inline-flex">Toutes les questions</a>
+      </div>
+      <div revealOnScroll="80" class="min-w-0">
+        <app-faq-accordion [items]="faq" />
+        <a routerLink="/faq" class="btn btn-ghost mt-6 lg:hidden">Toutes les questions</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CLÔTURE ── Le parcours en une phrase, un seul objectif. ─────────────── -->
+<section class="pub-cta">
+  <div revealOnScroll class="container">
+    <h2 class="pub-cta-title">Votre menu est déjà prêt.</h2>
+    <p class="pub-cta-note">
+      Importez votre carte, vérifiez, choisissez votre style, publiez.
     </p>
-    <div class="mt-8">
-      <a routerLink="/login" class="btn btn-primary">Créer mon menu</a>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+      <a routerLink="/login" class="btn btn-primary">Publier ma carte</a>
+      <a routerLink="/pricing" class="btn btn-ghost">Voir les tarifs</a>
     </div>
   </div>
 </section>

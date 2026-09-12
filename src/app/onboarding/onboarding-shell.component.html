@@ -1,0 +1,64 @@
+<div class="min-h-[100dvh] bg-canvas">
+  <a
+    href="#main"
+    class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-charcoal focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+  >
+    Aller au contenu
+  </a>
+
+  <header class="border-b border-hairline bg-white">
+    <div class="mx-auto flex h-14 max-w-content items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <karta-logo variant="dark" [size]="28" />
+
+      @if (restaurant(); as r) {
+        <span class="h-5 w-px shrink-0 bg-hairline" aria-hidden="true"></span>
+        <p class="min-w-0 flex-1 truncate text-sm font-medium text-ink-900">{{ r.name }}</p>
+      } @else {
+        <span class="flex-1"></span>
+      }
+
+      <button type="button" class="btn btn-ghost btn-sm shrink-0" (click)="logout()">
+        Se déconnecter
+      </button>
+    </div>
+
+    @if (showProgress()) {
+      <!-- Repère de progression, pas une navigation : on ne saute pas une étape en
+           cliquant dessus, l'état du menu ne le permettrait pas. -->
+      <nav
+        class="mx-auto max-w-content px-4 pb-3 sm:px-6 lg:px-8"
+        aria-label="Progression de la configuration"
+      >
+        <ol class="flex items-center gap-2 overflow-x-auto sm:gap-3">
+          @for (step of steps; track step.id; let i = $index) {
+            <li class="flex shrink-0 items-center gap-2">
+              <span
+                class="mono grid h-5 w-5 shrink-0 place-items-center rounded-full text-[0.625rem] font-semibold"
+                [class.bg-persimmon]="i <= currentIndex()"
+                [class.text-white]="i <= currentIndex()"
+                [class.bg-ink-100]="i > currentIndex()"
+                [class.text-ink-400]="i > currentIndex()"
+                aria-hidden="true"
+                >{{ i + 1 }}</span
+              >
+              <span
+                class="whitespace-nowrap text-xs font-medium"
+                [class.text-ink-900]="i === currentIndex()"
+                [class.text-ink-400]="i !== currentIndex()"
+                [attr.aria-current]="i === currentIndex() ? 'step' : null"
+                >{{ step.label }}</span
+              >
+              @if (i < steps.length - 1) {
+                <span class="h-px w-4 shrink-0 bg-hairline sm:w-8" aria-hidden="true"></span>
+              }
+            </li>
+          }
+        </ol>
+      </nav>
+    }
+  </header>
+
+  <main id="main" class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    <router-outlet></router-outlet>
+  </main>
+</div>

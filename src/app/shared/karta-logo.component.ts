@@ -11,7 +11,7 @@ import { Component, computed, input } from '@angular/core';
  * `light`, encre sur `dark`. Sa taille est proportionnelle à `size` pour conserver
  * les proportions de chaque emplacement existant.
  *
- * Assets : `public/karta-logo-{dark,light}.svg` — copiés tels quels dans
+ * Assets : `public/karta-logo-{dark,light}.png` — copiés tels quels dans
  * `dist/frontend/browser/` (voir angular.json → assets), donc servis à la racine
  * en dev comme en production.
  */
@@ -27,7 +27,7 @@ import { Component, computed, input } from '@angular/core';
   template: `
     <span class="flex items-center gap-2.5">
       <img
-        [src]="variant() === 'light' ? '/karta-logo-light.svg' : '/karta-logo-dark.svg'"
+        [src]="variant() === 'light' ? '/karta-logo-light.png' : '/karta-logo-dark.png'"
         alt=""
         class="block shrink-0"
         [style.width.px]="size()"

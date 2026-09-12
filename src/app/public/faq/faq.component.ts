@@ -25,7 +25,7 @@ export class FaqComponent {
     inject(SeoService).apply({
       title: 'FAQ',
       description:
-        'Questions fréquentes sur Karta : QR permanent, menu, import PDF avec KartaAI, personnalisation, statistiques et tarifs.',
+        'Questions fréquentes sur Karta : QR permanent, menu, import PDF avec KartaIA, personnalisation, statistiques et tarifs.',
       path: '/faq',
     });
   }

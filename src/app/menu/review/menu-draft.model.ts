@@ -1,5 +1,5 @@
 /**
- * Brouillon KartaAI : ce que l'IA a compris du PDF, avant toute écriture dans le menu.
+ * Brouillon KartaIA : ce que l'IA a compris du PDF, avant toute écriture dans le menu.
  *
  * Les métadonnées d'extraction (`needsReview`, `note`) servent uniquement à guider la
  * relecture. Elles disparaissent à la validation : le menu enregistré ne contient que

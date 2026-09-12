@@ -10,7 +10,7 @@ import { RestaurantOffer } from '../models/restaurant.model';
  * `MenuPreset.java`, `MenuDesignService`, package `kartaai`) :
  *
  *   - BASIC   = QR permanent → menu PDF. Pas de studio de design.
- *   - PRO     = QR permanent → menu HTML mobile structuré + 5 presets + éditeur + KartaAI.
+ *   - PRO     = QR permanent → menu HTML mobile structuré + 5 presets + éditeur + KartaIA.
  *   - PREMIUM = tout PRO + personnalisation visuelle (nom, logo, image d'en-tête,
  *               couleur principale, couleur secondaire).
  *   - Le paiement et le changement d'offre sont hors périmètre V1 → CTA « choisir une
@@ -47,7 +47,7 @@ export const FEATURE_GROUPS: readonly PublicFeatureGroup[] = [
         name: 'QR unique et permanent',
         description:
           "Vous le collez une fois sur vos tables. Il reste valide quand vous changez un prix, retirez un plat ou refaites toute la carte.",
-        benefit: 'Imprimé une seule fois. Jamais à refaire.',
+        benefit: 'Votre menu change. Votre QR reste le même.',
         tiers: ALL,
       },
     ],
@@ -93,13 +93,13 @@ export const FEATURE_GROUPS: readonly PublicFeatureGroup[] = [
     ],
   },
   {
-    id: 'kartaai',
-    title: 'KartaAI',
+    id: 'kartaia',
+    title: 'KartaIA',
     features: [
       {
-        name: 'KartaAI — import PDF assisté',
+        name: 'KartaIA — import PDF assisté',
         description:
-          "KartaAI transforme votre PDF en menu structuré. Vous relisez le résultat plat par plat ; rien n'est publié tant que vous ne l'avez pas validé.",
+          "KartaIA transforme votre PDF en menu structuré. Vous relisez le résultat plat par plat ; rien n'est publié tant que vous ne l'avez pas validé.",
         benefit: 'Des heures de saisie en une relecture.',
         tiers: PRO_UP,
       },
@@ -159,7 +159,7 @@ export const FAQ_GROUPS: readonly FaqGroup[] = [
     items: [
       {
         q: "Qu'est-ce que Karta ?",
-        a: "Le menu digital qui remplace la carte papier : un QR permanent, un menu à jour, une identité qui vous appartient.",
+        a: "Une carte digitale à partir du menu que vous avez déjà. Vous la modifiez quand vous voulez, elle reste accessible par le même QR — sans jamais réimprimer.",
       },
       {
         q: 'Comment accéder à Karta ?',
@@ -197,11 +197,11 @@ export const FAQ_GROUPS: readonly FaqGroup[] = [
   },
   {
     id: 'import',
-    title: 'Import & KartaAI',
+    title: 'Import & KartaIA',
     items: [
       {
-        q: "Qu'est-ce que KartaAI fait exactement ?",
-        a: "KartaAI transforme votre PDF en menu structuré. Il n'écrit pas de contenu à votre place et ne publie rien : vous relisez le résultat plat par plat, puis vous validez.",
+        q: "Qu'est-ce que KartaIA fait exactement ?",
+        a: "Elle évite de ressaisir votre menu à la main : KartaIA transforme votre PDF en menu structuré. Elle n'écrit pas de contenu à votre place et ne publie rien — vous relisez le résultat plat par plat, puis vous validez.",
       },
       {
         q: 'Que se passe-t-il si mon PDF est mal lu ?',

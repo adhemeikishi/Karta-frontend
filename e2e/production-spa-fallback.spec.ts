@@ -8,7 +8,8 @@ import { startCfPagesServer, type CfPagesServer } from './cf-pages-server';
  * Régression production (Cloudflare Pages). Le frontend est un build statique
  * (`outputMode: static`) :
  *   - 6 routes publiques PRÉRENDUES (un fichier HTML chacune) ;
- *   - `/login` et `/admin/**` rendues CÔTÉ CLIENT (coquille `index.csr.html`).
+ *   - `/login`, `/admin/**` et `/app/**` (Espace Restaurateur) rendues CÔTÉ CLIENT
+ *     (coquille `index.csr.html`).
  *
  * Historique des incidents que ce test verrouille :
  *   1. sans `_redirects` : `kartaqr.fr/login` → **404** (aucun fichier `/login`).
@@ -18,7 +19,8 @@ import { startCfPagesServer, type CfPagesServer } from './cf-pages-server';
  *      `*.html` (307) vers l'URL sans extension → `/index.csr.html` → `/index.csr`
  *      → règle `/*` → `/index.csr.html` → 307 → … boucle infinie.
  *
- * Correctif : règles `_redirects` SCOPÉES (`/login`, `/admin`, `/admin/*`) pointant
+ * Correctif : règles `_redirects` SCOPÉES (`/login`, `/admin`, `/admin/*`, `/app`,
+ * `/app/*`) pointant
  * vers le RÉPERTOIRE `/app-shell/` (copie de `index.csr.html`, sans extension `.html`)
  * + `404.html` pour les URL inconnues.
  *
@@ -74,12 +76,32 @@ test.describe('Cloudflare Pages — build de production', () => {
     // les routes client sont bien couvertes
     expect(lines.join('\n')).toMatch(/^\/login\s+\/app-shell\/\s+200$/m);
     expect(lines.join('\n')).toMatch(/^\/admin\/\*\s+\/app-shell\/\s+200$/m);
+    // Espace Restaurateur : sans ces règles, /app/... tomberait sur 404.html.
+    expect(lines.join('\n')).toMatch(/^\/app\s+\/app-shell\/\s+200$/m);
+    expect(lines.join('\n')).toMatch(/^\/app\/\*\s+\/app-shell\/\s+200$/m);
+    // Parcours de configuration : mêmes règles, sinon /onboarding/... tombe sur 404.html.
+    expect(lines.join('\n')).toMatch(/^\/onboarding\s+\/app-shell\/\s+200$/m);
+    expect(lines.join('\n')).toMatch(/^\/onboarding\/\*\s+\/app-shell\/\s+200$/m);
   });
 
   // ---------------------------------------------------------------- pas de boucle
 
   test('aucune route ne boucle (suivi des redirections jusqu’au bout)', async ({ request }) => {
-    for (const path of ['/', '/pricing', '/login', '/admin', '/admin/restaurants/42', '/inexistant']) {
+    for (const path of [
+      '/',
+      '/pricing',
+      '/login',
+      '/admin',
+      '/admin/restaurants/42',
+      '/app',
+      '/app/42/carte',
+      '/app/42/apparence',
+      '/app/42/carte/review',
+      '/onboarding',
+      '/onboarding/welcome',
+      '/onboarding/menu',
+      '/inexistant',
+    ]) {
       const res = await request.get(server.url + path, { maxRedirects: 20 });
       // request.get lève une erreur au-delà de maxRedirects → si on est ici, pas de boucle
       expect([200, 404], `${path} : statut inattendu`).toContain(res.status());
@@ -129,14 +151,50 @@ test.describe('Cloudflare Pages — build de production', () => {
   test('`/admin` répond 200 puis le guard renvoie vers `/login`', async ({ page }) => {
     const res = await page.goto(server.url + '/admin');
     expect(res?.status()).toBe(200);
-    await expect(page).toHaveURL(/\/login$/);
+    // Le guard transmet l'URL demandée (`?next=`) pour y ramener après connexion.
+    await expect(page).toHaveURL(/\/login(\?|$)/);
     await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
   });
 
   test('`/admin/restaurants/42` (route profonde) répond 200 et charge l’app', async ({ page }) => {
     const res = await page.goto(server.url + '/admin/restaurants/42');
     expect(res?.status()).toBe(200);
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login(\?|$)/);
+  });
+
+  // ---------------------------------------------------------------- /app (Espace Restaurateur)
+
+  test('`/app` et ses routes profondes répondent 200 puis renvoient vers `/login`', async ({
+    page,
+  }) => {
+    for (const path of ['/app', '/app/42/carte', '/app/42/apparence', '/app/42/carte/review']) {
+      const res = await page.goto(server.url + path);
+      expect(res?.status(), path).toBe(200);
+      await expect(page).toHaveURL(/\/login(\?|$)/);
+      await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
+    }
+  });
+
+  test('`/onboarding` répond 200 puis renvoie vers `/login`', async ({ page }) => {
+    for (const path of ['/onboarding', '/onboarding/welcome', '/onboarding/menu']) {
+      const res = await page.goto(server.url + path);
+      expect(res?.status(), path).toBe(200);
+      await expect(page).toHaveURL(/\/login(\?|$)/);
+      await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
+    }
+  });
+
+  test('le guard conserve la destination restaurateur demandée', async ({ page }) => {
+    // Sans cela, un restaurateur bloqué sur /app/... repartirait dans le back-office
+    // après connexion : il n'existe pas de session backend pour l'en distinguer.
+    await page.goto(server.url + '/app/42/carte');
+    await expect(page).toHaveURL(/next=%2Fapp%2F42%2Fcarte/);
+
+    await page.goto(server.url + '/app/42/apparence');
+    await expect(page).toHaveURL(/next=%2Fapp%2F42%2Fapparence/);
+
+    await page.goto(server.url + '/onboarding/menu');
+    await expect(page).toHaveURL(/next=%2Fonboarding%2Fmenu/);
   });
 
   // ---------------------------------------------------------------- URL inconnue

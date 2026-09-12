@@ -2,46 +2,56 @@
      inventée : pour souscrire / changer d'offre → Contact. ═══ -->
 
 <section class="section bg-white">
-  <div class="container-narrow section-y">
-    <p class="eyebrow">FAQ</p>
-    <h1 class="h2-marketing mt-3 max-w-2xl">Questions fréquentes</h1>
-    <p class="lead mt-4 max-w-xl">
-      Tout ce qui revient souvent, repris des explications de la page d'accueil.
-    </p>
+  <div class="container">
+    <header class="pub-head">
+      <h1 class="pub-title">Questions fréquentes</h1>
+      <p class="pub-lede">
+        Tout ce qui revient souvent, repris des explications de la page d'accueil.
+      </p>
+    </header>
 
-    <nav class="mt-8 flex flex-wrap gap-x-4 gap-y-2" aria-label="Catégories">
-      @for (group of groups; track group.id) {
-        <a
-          [href]="'#' + group.id"
-          (click)="scrollToAnchor(group.id, $event)"
-          class="text-sm text-ink-500 underline-offset-2 hover:text-ink-900 hover:underline"
-        >
-          {{ group.title }}
-        </a>
-      }
-    </nav>
+    <div class="pub-hr"></div>
 
-    @for (group of groups; track group.id) {
-      <div [id]="group.id" class="scroll-mt-24 pt-12">
-        <h2 revealOnScroll class="text-lg font-bold tracking-[-0.01em] text-ink-900">
-          {{ group.title }}
-        </h2>
-        <div revealOnScroll class="mt-2">
-          <app-faq-accordion [items]="group.items" />
-        </div>
+    <!-- Sommaire à gauche, réponses à droite : les catégories restent en vue
+         pendant la lecture au lieu d'être une rangée de liens qu'on remonte
+         chercher. La mesure des réponses reste bornée par `.pub-answer`. -->
+    <div class="pub-band pub-split">
+      <nav class="pub-split-aside" aria-label="Catégories">
+        <ul class="flex flex-wrap gap-x-5 gap-y-2 lg:flex-col lg:gap-y-3">
+          @for (group of groups; track group.id) {
+            <li>
+              <a
+                [href]="'#' + group.id"
+                (click)="scrollToAnchor(group.id, $event)"
+                class="text-sm font-medium text-ink-500 underline-offset-4 transition-colors duration-150 ease-karta hover:text-ink-900 hover:underline"
+              >
+                {{ group.title }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+
+      <div class="min-w-0">
+        @for (group of groups; track group.id; let first = $first) {
+          <section [id]="group.id" class="scroll-mt-28" [class.mt-14]="!first">
+            <h2 revealOnScroll class="pub-split-title text-[1.25rem]">{{ group.title }}</h2>
+            <div revealOnScroll class="mt-4">
+              <app-faq-accordion [items]="group.items" />
+            </div>
+          </section>
+        }
       </div>
-    }
+    </div>
   </div>
 </section>
 
 <!-- ── CTA clôture ── -->
-<section class="bg-charcoal">
-  <div revealOnScroll class="container-narrow py-24 sm:py-32">
-    <h2 class="h2-marketing max-w-xl text-white">Votre question n'y est pas ?</h2>
-    <p class="lead on-dark-muted mt-5 max-w-md">
-      Écrivez-nous, on répond vite.
-    </p>
-    <div class="mt-8">
+<section class="pub-cta">
+  <div revealOnScroll class="container">
+    <h2 class="pub-cta-title">Votre question n'y est pas ?</h2>
+    <p class="pub-cta-note">Écrivez-nous, on répond vite.</p>
+    <div class="mt-9">
       <a routerLink="/contact" class="btn btn-primary">Nous contacter</a>
     </div>
   </div>

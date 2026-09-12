@@ -6,7 +6,7 @@ import { Menu } from '../menu.model';
 import { EditableCategory, MenuDraft, toSaveRequest } from './menu-draft.model';
 
 /**
- * API KartaAI.
+ * API KartaIA.
  *
  * Trois routes seulement : produire un brouillon, le relire, l'abandonner. La validation
  * n'a volontairement pas d'endpoint dédié — elle passe par le `PUT .../menu` existant,

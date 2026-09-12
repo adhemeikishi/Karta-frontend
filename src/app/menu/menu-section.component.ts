@@ -6,7 +6,7 @@ import { RestaurantOffer } from '../models/restaurant.model';
 import { offerBadgeClass } from '../restaurants/offer-badge';
 import { MenuDesignStudioComponent } from './design/menu-design-studio.component';
 import { MenuEditorComponent } from './editor/menu-editor.component';
-import { MAX_PDF_BYTES, Menu, MenuStatus, formatPrice } from './menu.model';
+import { MAX_PDF_BYTES, Menu, MenuStatus, formatPrice, hasStructuredContent } from './menu.model';
 import { MenuService } from './menu.service';
 import { MenuDraftService } from './review/menu-draft.service';
 
@@ -55,32 +55,12 @@ export class MenuSectionComponent implements OnInit {
    */
   readonly sourcePdf = computed(() => this.menu()?.pdf ?? null);
 
-  /**
-   * Un contenu structuré a réellement été enregistré au moins une fois pour ce client
-   * (édition manuelle ou validation KartaAI) — qu'il soit aujourd'hui vide ou non.
-   *
-   * Le seuil est `version > 1`, PAS `version > 0` : une ligne `menus` peut exister sans
-   * qu'aucun contenu n'ait jamais été écrit — le studio de style (`PUT .../menu/design`)
-   * crée la ligne dès le premier choix de preset, à `version = 1`, sans jamais
-   * l'incrémenter (vérifié : `Menu.bumpVersion()` n'a qu'un seul appelant dans tout le
-   * backend, `MenuService.saveStructure()`). Le tout premier enregistrement de contenu
-   * réel — via l'éditeur ou via la Review KartaAI validée, les deux passant par le même
-   * `PUT .../menu` — crée la ligne à `version = 1` PUIS l'incrémente dans le même appel,
-   * donc `version = 2` dès ce premier enregistrement. `version = 1` seul ne prouve donc
-   * qu'une chose : quelqu'un a choisi un style, jamais qu'un menu a été créé.
-   *
-   * Volontairement PAS déduit du nombre de catégories/plats non plus : un menu structuré
-   * peut exister et être vide après une édition qui a tout supprimé — il doit alors
-   * continuer à afficher l'éditeur, pas repasser par l'état initial.
-   */
-  readonly hasStructuredMenu = computed(() => {
-    const menu = this.menu();
-    return menu !== null && menu.type === 'STRUCTURED' && menu.version > 1;
-  });
+  /** Voir {@link hasStructuredContent} — règle partagée avec l'Espace Restaurateur. */
+  readonly hasStructuredMenu = computed(() => hasStructuredContent(this.menu()));
 
   /**
    * Le client a explicitement choisi de créer son menu à la main, sans passer par
-   * KartaAI. Purement local : dès le premier enregistrement, `hasStructuredMenu`
+   * KartaIA. Purement local : dès le premier enregistrement, `hasStructuredMenu`
    * devient vrai et prend le relais — ce signal n'a alors plus d'effet.
    */
   readonly manualCreationStarted = signal(false);
@@ -89,7 +69,7 @@ export class MenuSectionComponent implements OnInit {
     this.manualCreationStarted.set(true);
   }
 
-  /** Éditeur affiché : menu déjà créé (KartaAI ou manuel), ou création manuelle en cours. */
+  /** Éditeur affiché : menu déjà créé (KartaIA ou manuel), ou création manuelle en cours. */
   readonly showEditor = computed(() => this.hasStructuredMenu() || this.manualCreationStarted());
 
   /** Une carte PDF existe, mais le menu structuré n'a pas encore été créé. */
@@ -98,7 +78,7 @@ export class MenuSectionComponent implements OnInit {
   );
 
   /**
-   * Point d'entrée du parcours KartaAI (PDF source → extraction → Review).
+   * Point d'entrée du parcours KartaIA (PDF source → extraction → Review).
    *
    * L'analyse n'écrit rien dans le menu : elle produit un brouillon que le restaurateur
    * relit sur un écran dédié. La carte publiée, s'il y en a une, reste intacte.
@@ -110,7 +90,7 @@ export class MenuSectionComponent implements OnInit {
   readonly transforming = signal(false);
   readonly transformError = signal<string | null>(null);
 
-  startKartaAiTransform(): void {
+  startKartaIaTransform(): void {
     if (this.transforming()) {
       return;
     }

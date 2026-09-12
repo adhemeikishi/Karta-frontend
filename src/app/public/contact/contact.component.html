@@ -1,16 +1,25 @@
 <!-- ═══ /contact ═══ Formulaire simple, DS existant. TODO backend : POST /api/contact. ═══ -->
 
-<section class="section bg-white">
-  <div class="container-narrow section-y">
-    <p class="eyebrow">Contact</p>
-    <h1 class="h2-marketing mt-3 max-w-2xl">Parlons de votre carte.</h1>
-    <p class="lead mt-4 max-w-xl">
-      Une question, une offre à mettre en place, un doute technique : écrivez-nous,
-      on répond vite.
-    </p>
+<section class="section bg-canvas">
+  <div class="container">
+    <!-- Titre à gauche, formulaire à droite : la page occupait 45 % de l'écran avec
+         un vide à droite, et le pied de page remontait dans le cadre. -->
+    <div class="pub-split pub-split-even pb-20 pt-16 sm:pb-28 sm:pt-24">
+      <div class="pub-split-aside">
+        <h1 class="pub-title text-[1.875rem] sm:text-[2.5rem]">Parlons de votre carte.</h1>
+        <p class="pub-lede mt-5">
+          Une question, une offre à mettre en place, un doute technique : écrivez-nous,
+          on répond vite.
+        </p>
+        <p class="pub-split-note mt-6">
+          Vous avez déjà un accès ?
+          <a routerLink="/login" class="text-ink-900 underline underline-offset-4">Se connecter</a>.
+        </p>
+      </div>
 
+      <div class="min-w-0">
     @if (state() === 'success') {
-      <div class="mt-10 max-w-xl rounded-lg border p-6" role="status" style="border-color: var(--k-hairline); background-color: var(--k-canvas)">
+      <div class="pub-panel" role="status">
         <p class="text-base font-semibold text-ink-900">Message envoyé.</p>
         <p class="lead mt-2">
           Merci — nous revenons vers vous rapidement. En attendant, la
@@ -19,7 +28,7 @@
         </p>
       </div>
     } @else {
-      <form [formGroup]="form" (ngSubmit)="submit()" class="mt-10 max-w-xl" novalidate>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="pub-panel" novalidate>
         <div class="grid gap-5 sm:grid-cols-2">
           <div>
             <label class="field-label" for="c-name">Nom</label>
@@ -103,17 +112,20 @@
           </div>
         }
 
-        <button type="submit" class="btn btn-primary mt-6" [disabled]="state() === 'loading'">
-          @if (state() === 'loading') {
-            <span class="spinner"></span> Envoi…
-          } @else {
-            Envoyer
-          }
-        </button>
-        <p class="field-hint mt-3">
-          Vous préférez le back-office ? <a routerLink="/login" class="text-ink-700 underline underline-offset-2">Se connecter</a>.
-        </p>
+        <!-- Le rappel « déjà un accès ? » vit désormais dans la colonne de gauche :
+             le pied du formulaire garde une seule action. -->
+        <div class="mt-7 border-t pt-6" style="border-color: var(--k-hairline)">
+          <button type="submit" class="btn btn-primary" [disabled]="state() === 'loading'">
+            @if (state() === 'loading') {
+              <span class="spinner"></span> Envoi…
+            } @else {
+              Envoyer
+            }
+          </button>
+        </div>
       </form>
     }
+      </div>
+    </div>
   </div>
 </section>

@@ -1,0 +1,69 @@
+<header class="app-head">
+  <div class="min-w-0">
+    <h1 class="app-title">Apparence</h1>
+    <p class="app-lede">
+      L'habillage de votre carte. Vos catégories, vos plats et vos prix ne changent pas —
+      seule la présentation évolue.
+    </p>
+  </div>
+  <div class="app-head-actions">
+    <a routerLink="../carte" class="btn btn-ghost btn-sm">Contenu de la carte</a>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18.5rem]">
+    <p class="sr-only" aria-live="polite">Chargement de l'apparence…</p>
+    <div class="space-y-4">
+      <div class="skeleton h-4 w-32"></div>
+      <div class="skeleton h-40 w-full"></div>
+      <div class="skeleton h-24 w-full"></div>
+    </div>
+    <div class="skeleton mx-auto h-[520px] w-[17.5rem] rounded-[2.5rem]"></div>
+  </div>
+} @else if (loadError()) {
+  <div class="app-panel app-panel-pad">
+    <p class="alert-error">{{ loadError() }}</p>
+    <button type="button" class="btn btn-outline btn-sm mt-4" (click)="load()">Réessayer</button>
+  </div>
+} @else if (isBasic()) {
+  <!-- Le backend refuse d'enregistrer une apparence pour une offre BASIC (carte PDF) :
+       on l'annonce plutôt que de laisser découvrir l'échec au clic sur « Enregistrer ». -->
+  <div class="app-empty">
+    <span
+      class="grid h-11 w-11 place-items-center rounded-lg"
+      style="background-color: var(--k-ink-100)"
+      aria-hidden="true"
+    >
+      <svg
+        class="h-5 w-5 text-ink-500"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+        />
+      </svg>
+    </span>
+    <p class="app-empty-title">Votre carte est diffusée en PDF</p>
+    <p class="app-empty-text">
+      L'habillage — les cinq styles, vos couleurs, votre logo — s'applique aux cartes
+      numériques. Votre PDF est affiché tel que vous l'avez importé.
+    </p>
+    <a routerLink="../carte" class="btn btn-outline btn-sm mt-5">Revenir à ma carte</a>
+  </div>
+} @else if (ready()) {
+  <!-- Le studio du back-office, monté tel quel : mêmes presets, même aperçu, même
+       séparation Enregistrer / Publier. Seul le vocabulaire change (input `space`). -->
+  <app-menu-design-studio
+    space="restaurateur"
+    [restaurantId]="restaurantId"
+    [offer]="restaurant()!.offer"
+    [menu]="menu()!"
+    (menuChange)="onMenuChange($event)"
+  />
+}

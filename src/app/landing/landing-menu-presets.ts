@@ -171,6 +171,15 @@ export interface LandingMenuContent {
   categories: readonly LandingMenuCategory[];
 }
 
+/**
+ * Carte complète d'un restaurant fictif — c'est elle que l'aperçu téléphone, le
+ * configurateur PREMIUM et l'expérience d'import affichent.
+ *
+ * Sa taille n'est pas décorative : l'expérience d'import (`menu-import-experience`)
+ * annonce des catégories, des articles, des prix et des descriptions **comptés sur ce
+ * contenu** (`countMenu`). Ajouter ou retirer un plat ici change donc les chiffres
+ * affichés pendant l'analyse — et c'est voulu : aucun chiffre n'est écrit en dur.
+ */
 export const LANDING_MENU_CONTENT: LandingMenuContent = {
   restaurantName: 'Le Petit Persil',
   categories: [
@@ -179,24 +188,101 @@ export const LANDING_MENU_CONTENT: LandingMenuContent = {
       items: [
         { name: 'Burrata crémeuse', description: 'Tomates confites, basilic', priceLabel: '9,50 €', available: true },
         { name: 'Carpaccio de bœuf', priceLabel: '11,00 €', available: true },
-        { name: 'Velouté de saison', priceLabel: '8,00 €', available: true },
+        { name: 'Velouté de saison', description: 'Légumes du marché, huile de noisette', priceLabel: '8,00 €', available: true },
+        { name: 'Œuf parfait', description: 'Crème de champignons, lard croustillant', priceLabel: '9,00 €', available: true },
+        { name: 'Planche de charcuterie', description: 'Sélection du jour, pain de campagne', priceLabel: '13,50 €', available: true },
+      ],
+    },
+    {
+      name: 'Burgers',
+      items: [
+        { name: 'Classic Smash Burger', description: 'Cheddar, pickles, sauce maison', priceLabel: '12,50 €', available: true },
+        { name: 'Double Cheese', description: 'Deux steaks, double cheddar', priceLabel: '15,00 €', available: true },
+        { name: 'Chicken Crispy', description: 'Poulet pané, coleslaw', priceLabel: '13,50 €', available: true },
+        { name: 'Veggie Halloumi', description: 'Halloumi grillé, aubergine', priceLabel: '13,00 €', available: true },
+        { name: 'Bacon BBQ', priceLabel: '14,50 €', available: true },
+        { name: 'Burger du moment', description: 'Ardoise du jour', priceLabel: '15,50 €', available: true },
       ],
     },
     {
       name: 'Plats',
       items: [
-        { name: 'Classic Smash Burger', description: 'Cheddar, pickles, sauce maison', priceLabel: '12,50 €', available: true },
-        { name: 'Pasta Truffe', priceLabel: '16,50 €', available: true },
         { name: 'Poulet Teriyaki', priceLabel: '14,00 €', available: true },
         { name: 'Saumon grillé', description: 'Légumes de saison', priceLabel: '21,00 €', available: true },
+        { name: 'Entrecôte 300 g', description: 'Beurre maître d’hôtel, frites maison', priceLabel: '24,00 €', available: true },
+        { name: 'Suprême de volaille', description: 'Jus corsé, purée maison', priceLabel: '18,50 €', available: true },
+        { name: 'Risotto aux champignons', description: 'Parmesan affiné 24 mois', priceLabel: '17,00 €', available: true },
+        { name: 'Fish & chips', priceLabel: '16,00 €', available: true },
+      ],
+    },
+    {
+      name: 'Pâtes',
+      items: [
+        { name: 'Pasta Truffe', description: 'Crème de truffe, parmesan', priceLabel: '16,50 €', available: true },
+        { name: 'Linguine vongole', description: 'Palourdes, ail, persil plat', priceLabel: '18,00 €', available: true },
+        { name: 'Rigatoni tomate basilic', priceLabel: '14,00 €', available: true },
+        { name: 'Tagliatelles carbonara', description: 'Guanciale, pecorino', priceLabel: '15,50 €', available: true },
+      ],
+    },
+    {
+      name: 'Accompagnements',
+      items: [
+        { name: 'Frites maison', priceLabel: '4,50 €', available: true },
+        { name: 'Frites de patate douce', priceLabel: '5,50 €', available: true },
+        { name: 'Salade verte', priceLabel: '4,00 €', available: true },
+        { name: 'Légumes de saison', priceLabel: '5,00 €', available: true },
+        { name: 'Purée maison', priceLabel: '4,50 €', available: true },
       ],
     },
     {
       name: 'Desserts',
       items: [
         { name: 'Tiramisu', priceLabel: '7,00 €', available: true },
-        { name: 'Cheesecake', priceLabel: '7,50 €', available: true },
+        { name: 'Cheesecake', description: 'Coulis de fruits rouges', priceLabel: '7,50 €', available: true },
+        { name: 'Fondant chocolat', description: 'Cœur coulant, glace vanille', priceLabel: '8,00 €', available: true },
+        { name: 'Café gourmand', description: 'Trois mignardises du jour', priceLabel: '8,50 €', available: true },
+        { name: 'Glaces artisanales', priceLabel: '6,00 €', available: true },
+      ],
+    },
+    {
+      name: 'Boissons',
+      items: [
+        { name: 'Eau plate 50 cl', priceLabel: '3,00 €', available: true },
+        { name: 'Eau pétillante 50 cl', priceLabel: '3,50 €', available: true },
+        { name: 'Sodas', priceLabel: '3,50 €', available: true },
+        { name: 'Limonade artisanale', description: 'Citron, gingembre', priceLabel: '4,50 €', available: true },
+        { name: 'Jus pressé', priceLabel: '4,50 €', available: true },
+        { name: 'Café', priceLabel: '2,20 €', available: true },
+        { name: 'Thé et infusions', priceLabel: '3,00 €', available: true },
+      ],
+    },
+    {
+      name: 'Vins',
+      items: [
+        { name: 'Côtes-du-Rhône', description: 'Rouge, 75 cl', priceLabel: '24,00 €', available: true },
+        { name: 'Chablis', description: 'Blanc, 75 cl', priceLabel: '32,00 €', available: true },
+        { name: 'Sancerre', priceLabel: '34,00 €', available: true },
+        { name: 'Bordeaux supérieur', description: 'Rouge, 75 cl', priceLabel: '28,00 €', available: true },
+        { name: 'Rosé de Provence', priceLabel: '22,00 €', available: true },
       ],
     },
   ],
 };
+
+/** Ce que contient réellement une carte — compté, jamais annoncé. */
+export interface MenuCounts {
+  categories: number;
+  items: number;
+  prices: number;
+  descriptions: number;
+}
+
+export function countMenu(menu: LandingMenuContent): MenuCounts {
+  const items = menu.categories.flatMap((category) => category.items);
+  return {
+    categories: menu.categories.length,
+    items: items.length,
+    prices: items.filter((item) => item.priceLabel.trim().length > 0).length,
+    descriptions: items.filter((item) => (item.description ?? '').trim().length > 0).length,
+  };
+}

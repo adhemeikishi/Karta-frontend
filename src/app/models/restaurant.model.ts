@@ -7,6 +7,15 @@ export interface Restaurant {
   id: string;
   name: string;
   offer: RestaurantOffer;
+  /**
+   * Date de fin d'onboarding, `null` s'il reste à faire.
+   *
+   * Posée côté serveur à la première publication du menu, et jamais retirée ensuite
+   * (voir `Restaurant.completeOnboarding` côté backend). C'est ce champ — et lui seul —
+   * qui décide si le restaurateur ouvre son espace ou son parcours de configuration :
+   * rien n'est mémorisé dans le navigateur, donc changer d'appareil ne change rien.
+   */
+  onboardingCompletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

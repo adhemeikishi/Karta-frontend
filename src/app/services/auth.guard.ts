@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -18,7 +18,11 @@ export const authGuard: CanActivateFn = () => {
       if (success) {
         return true;
       }
-      router.navigate(['/login']);
+      // L'URL demandée est transmise à l'écran de connexion pour l'y ramener ensuite :
+      // c'est le seul moyen, sans notion de session côté backend, qu'un restaurateur
+      // arrivé sur /app/... n'atterrisse pas dans le back-office après s'être connecté.
+      // La valeur est revalidée par LoginComponent (voir safeNextUrl).
+      router.navigate(['/login'], { queryParams: { next: state.url } });
       return false;
     })
   );

@@ -1,0 +1,121 @@
+<header class="app-head">
+  <div class="min-w-0">
+    <h1 class="app-title">Mon QR code</h1>
+    <p class="app-lede">
+      Imprimez-le et posez-le sur vos tables. Il ne change jamais, même quand vous modifiez
+      votre carte.
+    </p>
+  </div>
+</header>
+
+<div class="grid items-start gap-10 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-14">
+  <!-- ---------- Le QR, pièce centrale ---------- -->
+  <div class="mx-auto w-full max-w-xs lg:mx-0">
+    <div class="app-panel grid aspect-square place-items-center p-6">
+      @if (loading()) {
+        <div class="skeleton h-full w-full rounded-md"></div>
+      } @else {
+        <!-- `as` n'est autorisé que sur un `@if` primaire : bloc imbriqué plutôt
+             qu'un `@else if`. -->
+        @if (image(); as src) {
+          <img
+            [src]="src"
+            [alt]="'QR code de ' + (restaurant()?.name || 'votre restaurant')"
+            class="h-full w-full object-contain"
+          />
+        } @else {
+          <div class="text-center">
+            <p class="text-sm text-ink-500">Le QR code n'a pas pu être chargé.</p>
+            <button type="button" class="btn btn-outline btn-sm mt-4" (click)="load()">
+              Réessayer
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- ---------- Ce qu'il fait, ce qu'on peut en faire ---------- -->
+  <div class="min-w-0">
+    <section class="app-section">
+      <div class="app-section-head">
+        <h2 class="app-section-title">Où il mène</h2>
+      </div>
+
+      @if (menuUrl(); as url) {
+        <p class="mono break-all text-sm text-ink-900">{{ url }}</p>
+        <p class="mt-2 max-w-[52ch] text-sm leading-relaxed text-ink-500">
+          Cette adresse est figée. Elle affichera toujours la dernière version publiée de
+          votre carte — vous n'aurez jamais à réimprimer.
+        </p>
+        <button type="button" class="btn btn-ghost btn-sm mt-4 -ml-2.5" (click)="openMenu()">
+          Ouvrir ma carte
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+            />
+          </svg>
+        </button>
+      } @else if (!loading()) {
+        <p class="text-sm text-ink-500">Aucun QR code n'est encore rattaché à ce restaurant.</p>
+      }
+    </section>
+
+    <section class="app-section mt-8 sm:mt-10">
+      <div class="app-section-head">
+        <h2 class="app-section-title">Récupérer le QR code</h2>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          [disabled]="!image() || downloading() !== null"
+          (click)="download('png')"
+        >
+          @if (downloading() === 'png') {
+            <span class="spinner"></span>
+          }
+          Télécharger en PNG
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          [disabled]="!image() || downloading() !== null"
+          (click)="download('svg')"
+        >
+          @if (downloading() === 'svg') {
+            <span class="spinner"></span>
+          }
+          Télécharger en SVG
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm"
+          [disabled]="!image()"
+          (click)="print()"
+        >
+          Imprimer
+        </button>
+      </div>
+
+      <p class="field-hint max-w-[52ch]">
+        PNG pour une impression courante, SVG pour un imprimeur — le vectoriel garde sa
+        netteté à n'importe quelle taille.
+      </p>
+
+      @if (downloadError()) {
+        <p class="alert-error mt-4">{{ downloadError() }}</p>
+      }
+    </section>
+  </div>
+</div>

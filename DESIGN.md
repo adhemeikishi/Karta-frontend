@@ -417,6 +417,11 @@ jamais faire défiler horizontalement une table de gestion sur mobile.
 `.preset-grid`/`.preset-card` : sélecteur des 5 presets avec swatch fidèle aux couleurs
 réelles du renderer (jamais une couleur décorative qui mentirait sur le rendu). Voir §13.
 
+`.preset-card-active` marque le preset retenu — bordure `ink-900` + pastille persimmon
+sur le libellé. L'absence d'état visible était auparavant assumée (« l'aperçu reflète
+déjà le preset actif ») ; cet argument ne tient pas sous `lg`, où l'aperçu passe sous le
+sélecteur, ni au clavier. Un contrôle sélectionné se voit.
+
 ---
 
 ## 12. Menu Karta : contenu ≠ présentation
@@ -657,8 +662,88 @@ n'utilise pas `.section`/`.container`.
 
 ---
 
+## 21. Espace Restaurateur (`/app`) — primitives `.app-*`
+
+Le produit vu par le restaurateur a son propre jeu de primitives, préfixées `.app-`,
+dans une section dédiée de `styles.css`. **Aucun token n'y est ajouté ni redéfini**, et
+aucune classe partagée n'y est modifiée : le back-office et le site public ne sont pas
+concernés.
+
+Deux règles portent cette section :
+
+1. **La navigation vit sur une surface distincte du contenu.** Colonne charcoal
+   (`--k-charcoal`), contenu sur `--k-canvas`. Une interface entièrement blanche oblige
+   la bordure à porter à la fois la structure et la hiérarchie ; le charcoal est déjà la
+   surface d'identité Karta (tuile du logo, footer, sidebar du back-office).
+2. **Une page n'est pas une pile de cartes.** Le rythme vient de l'espace et d'un filet
+   (`.app-section`), pas d'une boîte autour de chaque bloc. `.app-panel` est le seul
+   conteneur encadré, réservé à ce qui doit se détacher du flux (aperçu, QR, état vide).
+
+| Classe | Rôle |
+|---|---|
+| `.app-shell` | Racine de l'espace. Porte aussi `::selection` teinté persimmon. |
+| `.app-nav`, `.app-nav-open` | Colonne de navigation. Tiroir sous `lg`, fixe au-delà. La translation est en CSS, jamais en utilitaire conditionnelle (une `-translate-x-full` posée depuis le template l'emporterait sur `lg:translate-x-0`). |
+| `.app-nav-head` / `-name` / `-group` / `-body` / `-foot` | Identité du restaurant, groupes (mono, capitales), liste, pied. |
+| `.app-nav-link`, `.app-nav-link-active` | Lien de navigation. L'état actif se lit à trois signaux faibles cumulés — rail persimmon de 2px, surface `rgba(255,255,255,.07)`, encre blanche — jamais à un bloc plein. |
+| `.app-topbar` | Barre mobile (ouvrir le tiroir + rappel du restaurant). `lg:hidden`. |
+| `.app-main`, `.app-main-wide` | Colonne de contenu, 68rem — 82rem pour les pages à aperçu latéral. |
+| `.app-head`, `.app-title`, `.app-lede`, `.app-head-actions` | En-tête de page. **Pas de sur-titre** : le nom du restaurant est porté par la navigation. |
+| `.app-section`, `-head`, `-title`, `-note` | Bloc de page séparé par un filet, pas par un cadre. |
+| `.app-panel`, `.app-panel-pad` | Le seul conteneur encadré. Jamais imbriqué. |
+| `.app-facts`, `.app-fact-label`, `.app-fact-value` | Faits d'une carte — des libellés, pas des tuiles KPI. |
+| `.app-status`, `-dot`, `-live`, `-ready` | État de publication : point + libellé, couleur portée par le point. |
+| `.app-metric-label`, `-value`, `-note` | Une mesure. Geist Mono, `tabular-nums`, aucun fond teinté. |
+| `.app-row` | Ligne de contenu (fichier source, entrée de liste) — pas une carte. |
+| `.app-empty`, `-title`, `-text` | État vide : contexte, explication, action. Bordure pointillée `--k-ink-200`. |
+| `.app-menu`, `.app-menu-item` | Menu flottant (`k-pop`, `--k-shadow-pop`). |
+
+**Échelle typographique.** `.app-title` (1.6rem → 1.875rem, tracking `-0.025em`) comble
+le palier absent entre `.page-title` (back-office) et `.section-title` : sur un écran
+large, un titre de page à 1.5rem ne tenait pas la colonne. `.app-lede` borne la mesure à
+`46ch`.
+
+**Destinations réelles uniquement.** Aucune entrée de navigation « bientôt » : un élément
+non cliquable est une promesse, pas une navigation. Les quatre destinations
+(`carte`, `apparence`, `qr`, `statistiques`) s'appuient toutes sur un endpoint existant
+et autorisé au compte restaurateur.
+
+---
+
 ## Changelog design system
 
+- **Landing — expérience d'import** : le chapitre `01` devient interactif
+  (`landing/import-experience/`) — dépôt du PDF, séquence de traitement en six étapes
+  (~15 s : lecture, extraction, structure, normalisation, génération, finalisation),
+  carte construite dans le vrai aperçu (`menu-render` + `phone-frame`, preset `Modern`),
+  puis verrouillée → `/pricing`. Les trois chapitres statiques qu'elle remplace
+  (transformation, vérification, carte prête) sont supprimés : elle les montre au lieu
+  de les décrire. **C'est une démonstration et elle le dit** — aucun appel réseau, le
+  fichier ne quitte pas l'appareil, la mention est à l'écran dans chaque état ; seuls le
+  nom et la taille du fichier sont réels, et **tous les compteurs annoncés sont comptés**
+  sur `LANDING_MENU_CONTENT` (`countMenu`), jamais écrits en dur. Le contenu de démo est
+  étendu à une carte complète pour que ces chiffres aient du sens. Vocabulaire de moteur
+  documentaire, pas d'assistant : ni robot, ni étoiles, ni « IA magique ». Styles portés
+  par le composant (`ViewEncapsulation.None`) plutôt que par `styles.css` — ils ne
+  servent qu'ici et ne doivent pas peser sur le bundle initial ; `.v2-paper` et
+  `.feature-card`, devenus morts, sont retirés.
+- **Landing — funnel de conversion** : la page est réorganisée autour du parcours réel
+  (hero → problème → `01` votre menu → `02` Karta le transforme → `03` vous vérifiez →
+  `04` le style, + option Premium → `05` votre carte est prête → `06` publication →
+  abonnement → FAQ → CTA). Repères de chapitre en `.eyebrow` (« 01 · Votre menu »), la
+  même numérotation que l'onboarding. Le libellé du CTA suit l'étape (« Importer mon
+  menu » → « Créer ma carte » → « Publier ma carte »), les tarifs n'arrivent qu'après la
+  démonstration. Le ruban `.v2-ribbon` (timeline 01→06) est supprimé : ses six étapes
+  sont devenues les six chapitres de la page — CSS mort retiré, aucun token ajouté. La
+  section `05` peint la carte « après » avec le thème résolu du preset choisi en `04`
+  (`resolveLandingTheme`), aucune couleur inventée ; la FAQ de la landing est extraite de
+  `FAQ_GROUPS` (source de `/faq`).
+- **Espace Restaurateur** : section `.app-*` (§21) — colonne de navigation charcoal,
+  en-tête de page, sections au filet, `.app-panel` comme seul cadre, mesures en mono.
+  Deux correctifs au passage, tous deux préexistants : `.chart-bar-empty` reprenait la
+  couleur d'accent au repos alors que son commentaire annonçait un trait neutre (visible
+  aussi dans le back-office), et l'éditeur de menu affichait « catégorie(s) » au lieu du
+  pluriel réel. Locale `fr-FR` enregistrée (`app.config.ts`) : le pipe `date` s'aligne
+  sur `formatPrice`, qui utilisait déjà Intl en français.
 - **Fondation DS** : extraction des primitives marketing (§20) depuis la landing ;
   suppression des tokens d'accent morts `--k-slate` / `--k-teal` ; libellés d'offre
   passés en texte simple (`.badge-offer`, plus de traitement métallique — ex-§2/§11) ;

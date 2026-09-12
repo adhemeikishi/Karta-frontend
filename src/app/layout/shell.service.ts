@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, effect, inject, signal } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 export interface Breadcrumb {
   label: string;
@@ -13,7 +14,18 @@ export interface Breadcrumb {
  */
 @Injectable({ providedIn: 'root' })
 export class ShellService {
+  private readonly auth = inject(AuthService);
+
   readonly breadcrumbs = signal<Breadcrumb[]>([]);
+
+  constructor() {
+    // Le fil d'Ariane nomme des clients : il ne doit pas survivre au compte qui l'a posé.
+    effect(() => {
+      if (!this.auth.isAuthenticated()) {
+        this.breadcrumbs.set([]);
+      }
+    });
+  }
 
   setBreadcrumbs(crumbs: Breadcrumb[]): void {
     this.breadcrumbs.set(crumbs);

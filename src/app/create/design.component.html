@@ -1,0 +1,142 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     /create/design — la carte prend son style.
+
+     Composition inverse de la vérification : deux colonnes, le téléphone à droite
+     et fixe pendant qu'on fait défiler les réglages. Le sujet de l'écran est le
+     rendu, pas le formulaire.
+     Les réglages arrivent par paliers (style, identité, couleurs) : on n'ouvre pas
+     quinze contrôles à quelqu'un qui vient de relire sa carte.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div class="cf-design">
+  <!-- ── LES RÉGLAGES ─────────────────────────────────────────────────────── -->
+  <div class="min-w-0">
+    <p class="eyebrow">03 · Style</p>
+    <h1 class="h2-marketing mt-3">Donnez-lui votre style.</h1>
+    <p class="lead mt-4 max-w-md">
+      Le contenu ne bouge pas : mêmes plats, mêmes prix. Seule la présentation change.
+      Le téléphone se met à jour pendant que vous choisissez.
+    </p>
+
+    <!-- 01 · Style — le choix essentiel, ouvert d'emblée. -->
+    <section class="cf-block">
+      <p class="cf-block-title"><span class="cf-block-num">01</span> Style</p>
+      <div class="preset-grid mt-4" role="group" aria-label="Style de la carte">
+        @for (preset of presets; track preset.id) {
+          <button
+            type="button"
+            class="preset-card"
+            [class.preset-card-active]="presetId() === preset.id"
+            [attr.aria-pressed]="presetId() === preset.id"
+            (click)="selectPreset(preset.id)"
+          >
+            <span class="preset-swatch" [style.background-color]="preset.background" [style.border-color]="preset.text">
+              <span class="preset-swatch-line" [style.background-color]="preset.text"></span>
+              <span class="preset-swatch-line preset-swatch-line-short" [style.background-color]="preset.text"></span>
+              <span class="preset-swatch-dot" [style.background-color]="preset.accent"></span>
+            </span>
+            <span class="preset-label">{{ preset.label }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <!-- 02 · Identité — une seule ligne, le nom que le client lit en haut de la carte. -->
+    <section class="cf-block">
+      <p class="cf-block-title"><span class="cf-block-num">02</span> Nom affiché</p>
+      <label class="sr-only" for="brand-name">Nom affiché en haut de votre carte</label>
+      <input
+        id="brand-name"
+        type="text"
+        class="input mt-4 max-w-sm"
+        maxlength="120"
+        [ngModel]="brandName()"
+        (ngModelChange)="setBrandName($event)"
+      />
+      <p class="field-hint">Ce que vos clients lisent en haut de la carte.</p>
+    </section>
+
+    <!-- 03 · Couleurs — repliées : c'est une option, pas une étape obligatoire. -->
+    <details class="cf-block cf-details">
+      <summary class="cf-details-summary">
+        <span class="cf-block-title"><span class="cf-block-num">03</span> Couleurs</span>
+        <span class="badge-offer">Premium</span>
+        <svg class="cf-details-chevron h-4 w-4 shrink-0 text-ink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
+        </svg>
+      </summary>
+
+      <div class="mt-5 grid gap-5 sm:grid-cols-2">
+        <div>
+          <label class="field-label" for="color-primary">Couleur principale</label>
+          <div class="color-field">
+            <input
+              id="color-primary"
+              type="color"
+              class="color-input"
+              [value]="colorFor('primary')"
+              (input)="setColor('primary', $any($event.target).value)"
+            />
+            <span class="mono text-sm text-ink-700">{{ colorFor('primary') }}</span>
+            <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="setColor('primary', null)">
+              Réinitialiser
+            </button>
+          </div>
+          <p class="field-hint">Prix, filets et détails.</p>
+        </div>
+
+        <div>
+          <label class="field-label" for="color-secondary">Couleur secondaire</label>
+          <div class="color-field">
+            <input
+              id="color-secondary"
+              type="color"
+              class="color-input"
+              [value]="colorFor('secondary')"
+              (input)="setColor('secondary', $any($event.target).value)"
+            />
+            <span class="mono text-sm text-ink-700">{{ colorFor('secondary') }}</span>
+            <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="setColor('secondary', null)">
+              Réinitialiser
+            </button>
+          </div>
+          <p class="field-hint">Fond de la page. Le texte s'adapte pour rester lisible.</p>
+        </div>
+      </div>
+
+      <p class="field-hint mt-5">
+        Logo et image d'en-tête se déposent depuis votre espace, une fois votre compte
+        ouvert : ils demandent un envoi de fichier.
+      </p>
+    </details>
+
+    <!-- Le moment de conversion : le résultat, pas le logiciel. -->
+    <div class="cf-block">
+      <p class="text-lg font-bold tracking-[-0.015em] text-ink-900">Votre carte est prête.</p>
+      @if (counts(); as totals) {
+        <p class="lead mt-2">
+          <span class="mono tnum">{{ totals.items }}</span> plats,
+          <span class="mono tnum">{{ totals.categories }}</span> catégories, style
+          <span class="mono">{{ theme().presetLabel }}</span>.
+        </p>
+      }
+      <button type="button" class="btn btn-primary mt-6" (click)="getQrCode()">
+        Obtenir mon QR code
+      </button>
+    </div>
+  </div>
+
+  <!-- ── L'APERÇU ── le vrai rendu, appliqué au brouillon en cours ─────────── -->
+  <div class="cf-design-preview">
+    <div class="imp-phone-wrap phone-hover-lift">
+      <app-phone-frame [screenColor]="theme().background">
+        @if (menu(); as previewMenu) {
+          <menu-render [theme]="theme()" [menu]="previewMenu" />
+        }
+      </app-phone-frame>
+    </div>
+    <p class="imp-demo mt-6 max-w-[16rem]">
+      Aperçu réel : c'est le rendu que vos clients verront en scannant le QR.
+    </p>
+  </div>
+</div>

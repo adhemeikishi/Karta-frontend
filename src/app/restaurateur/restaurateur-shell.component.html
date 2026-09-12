@@ -1,0 +1,114 @@
+<div class="app-shell">
+  <a
+    href="#main"
+    class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-charcoal focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+  >
+    Aller au contenu
+  </a>
+
+  @if (navOpen()) {
+    <div
+      class="fixed inset-0 z-30 bg-charcoal/50 backdrop-blur-[1px] lg:hidden"
+      (click)="closeNav()"
+      aria-hidden="true"
+    ></div>
+  }
+
+  <!-- ===================== Navigation ===================== -->
+  <aside class="app-nav" [class.app-nav-open]="navOpen()">
+    <div class="app-nav-head">
+      <karta-logo variant="light" [size]="26" />
+
+      <div class="min-w-0">
+        @if (restaurant(); as r) {
+          <p class="app-nav-name">{{ r.name }}</p>
+        } @else if (loading()) {
+          <span class="skeleton block h-4 w-28" style="background-color: var(--k-charcoal-line)"></span>
+        }
+      </div>
+    </div>
+
+    <nav class="app-nav-body" aria-label="Espace restaurateur">
+      @for (group of navigation; track group.label) {
+        <p class="app-nav-group">{{ group.label }}</p>
+        @for (item of group.items; track item.label) {
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="app-nav-link-active"
+            class="app-nav-link"
+            (click)="closeNav()"
+          >
+            <svg
+              class="h-[17px] w-[17px] shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="item.icon" />
+            </svg>
+            {{ item.label }}
+          </a>
+        }
+      }
+    </nav>
+
+    <div class="app-nav-foot">
+      <button type="button" class="app-nav-link w-full" (click)="logout()">
+        <svg
+          class="h-[17px] w-[17px] shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+          />
+        </svg>
+        Se déconnecter
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===================== Contenu ===================== -->
+  <div class="lg:pl-[15.5rem]">
+    <!-- Barre mobile : ouvrir la navigation, rappeler où l'on est. -->
+    <div class="app-topbar">
+      <button
+        type="button"
+        class="btn-icon shrink-0"
+        [attr.aria-expanded]="navOpen()"
+        aria-label="Ouvrir la navigation"
+        (click)="toggleNav()"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+      <p class="min-w-0 truncate text-sm font-semibold text-ink-900">
+        {{ restaurant()?.name }}
+      </p>
+    </div>
+
+    <main id="main" class="app-main" [class.app-main-wide]="wideLayout()">
+      @if (error()) {
+        <div class="app-panel app-panel-pad">
+          <p class="alert-error">{{ error() }}</p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline btn-sm" (click)="retry()">
+              Réessayer
+            </button>
+            <a routerLink="/app" class="btn btn-ghost btn-sm">Choisir un restaurant</a>
+          </div>
+        </div>
+      } @else {
+        <router-outlet></router-outlet>
+      }
+    </main>
+  </div>
+</div>

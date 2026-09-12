@@ -19,7 +19,7 @@ export const LANDING_CAPABILITIES = [
   'QR unique et permanent',
   'Statistiques de scans',
   'Menu structuré (éditeur + 5 styles)',
-  'KartaAI — import PDF assisté',
+  'KartaIA — import PDF assisté',
   'Personnalisation visuelle complète',
 ] as const;
 
@@ -77,7 +77,7 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
     quote: 'Votre menu devient digital.',
     featuresLead: 'Tout de Basic, plus :',
     features: [
-      'KartaAI',
+      'KartaIA',
       'Menu structuré',
       '5 presets',
       'Éditeur',

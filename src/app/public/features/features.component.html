@@ -2,78 +2,85 @@
      5 presets réels. Vocabulaire et bénéfices repris de `/`. ═══ -->
 
 <section class="section bg-white">
-  <div class="container section-y">
-    <p class="eyebrow">Fonctionnalités</p>
-    <h1 class="h2-marketing mt-3 max-w-2xl">
-      Ce que Karta fait, concrètement.
-    </h1>
-    <p class="lead mt-4 max-w-xl">
-      Chaque fonctionnalité règle un moment précis du service : changer un prix,
-      importer une carte, savoir si elle est lue. Rien de plus.
-    </p>
+  <div class="container">
+    <header class="pub-head">
+      <h1 class="pub-title">Ce que Karta fait, concrètement.</h1>
+      <p class="pub-lede">
+        Chaque fonctionnalité règle un moment précis du service : changer un prix,
+        importer une carte, savoir si elle est lue. Rien de plus.
+      </p>
+    </header>
+  </div>
+
+  <!-- Un seul fond, des groupes séparés par un filet : l'alternance de bandes
+       blanches et ivoire découpait la page en blocs sans que le contenu le demande. -->
+  <div class="container">
+    @for (group of groups; track group.id) {
+      <div class="pub-hr"></div>
+
+      <div class="pub-band pub-split">
+        <div class="pub-split-aside">
+          <h2 revealOnScroll class="pub-split-title">{{ group.title }}</h2>
+        </div>
+
+        <div>
+          @for (feature of group.features; track feature.name) {
+            <article revealOnScroll class="pub-feature">
+              <div>
+                <h3 class="pub-feature-name">{{ feature.name }}</h3>
+                <p class="pub-feature-tiers">
+                  @for (tier of feature.tiers; track tier) {
+                    <span class="pub-feature-tier">{{ tier }}</span>
+                  }
+                </p>
+              </div>
+              <div>
+                <p class="pub-feature-body">{{ feature.description }}</p>
+                <p class="pub-feature-benefit">{{ feature.benefit }}</p>
+              </div>
+            </article>
+          }
+
+          <!-- Les 5 presets réels — affichés dans le groupe « Personnalisation ». -->
+          @if (group.id === 'personnalisation') {
+            <div revealOnScroll class="pub-feature">
+              <div>
+                <h3 class="pub-feature-name">Les cinq styles</h3>
+              </div>
+              <div>
+                <ul class="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 lg:grid-cols-5">
+                  @for (preset of presets; track preset.id) {
+                    <li>
+                      <div class="pub-swatch" [style.background-color]="preset.background">
+                        <span
+                          class="pub-swatch-dot"
+                          [style.background-color]="preset.accent"
+                        ></span>
+                      </div>
+                      <p class="pub-swatch-label">{{ preset.label }}</p>
+                    </li>
+                  }
+                </ul>
+                <p class="pub-feature-benefit">
+                  Le contenu ne bouge pas : mêmes plats, mêmes prix. Seul le style change.
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
   </div>
 </section>
 
-@for (group of groups; track group.id; let odd = $odd) {
-  <section
-    class="section border-t"
-    [class.bg-white]="!odd"
-    [class.bg-canvas]="odd"
-    style="border-color: var(--k-hairline)"
-  >
-    <div class="container section-y">
-      <h2 revealOnScroll class="h2-marketing max-w-xl">{{ group.title }}</h2>
-
-      <div class="mt-10 grid gap-8 sm:mt-12 lg:grid-cols-2 lg:gap-x-14 lg:gap-y-12">
-        @for (feature of group.features; track feature.name) {
-          <div revealOnScroll>
-            <div class="flex flex-wrap items-center gap-2">
-              <h3 class="text-base font-semibold text-ink-900">{{ feature.name }}</h3>
-              <span class="flex gap-1">
-                @for (tier of feature.tiers; track tier) {
-                  <span class="badge-offer !text-[0.625rem]">{{ tier }}</span>
-                }
-              </span>
-            </div>
-            <p class="lead mt-2">{{ feature.description }}</p>
-            <p class="mt-3 text-sm font-medium" style="color: var(--k-persimmon)">
-              {{ feature.benefit }}
-            </p>
-          </div>
-        }
-      </div>
-
-      <!-- Les 5 presets réels — affichés dans le groupe « Personnalisation ». -->
-      @if (group.id === 'personnalisation') {
-        <div revealOnScroll class="mt-12">
-          <p class="eyebrow">Les 5 styles</p>
-          <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            @for (preset of presets; track preset.id) {
-              <li class="card overflow-hidden">
-                <div class="flex h-16" [style.background-color]="preset.background">
-                  <span class="m-auto h-3 w-3 rounded-full" [style.background-color]="preset.accent"></span>
-                </div>
-                <p class="px-3 py-2 text-xs font-semibold text-ink-900">{{ preset.label }}</p>
-              </li>
-            }
-          </ul>
-          <p class="lead mt-4 max-w-xl">
-            Le contenu ne bouge pas : mêmes plats, mêmes prix. Seul le style change.
-          </p>
-        </div>
-      }
-    </div>
-  </section>
-}
-
 <!-- ── CTA clôture ── -->
-<section class="bg-charcoal">
-  <div revealOnScroll class="container-narrow py-24 sm:py-32">
-    <h2 class="h2-marketing max-w-xl text-white">Votre menu est déjà prêt.</h2>
-    <p class="lead on-dark-muted mt-5 max-w-md">
+<section class="pub-cta">
+  <div revealOnScroll class="container">
+    <h2 class="pub-cta-title">Votre menu est déjà prêt.</h2>
+    <p class="pub-cta-note">
       Importez votre carte, choisissez votre style, publiez quand vous êtes prêt.
     </p>
-    <div class="mt-8">
+    <div class="mt-9">
       <a routerLink="/pricing" class="btn btn-primary">Voir les tarifs</a>
     </div>
   </div>

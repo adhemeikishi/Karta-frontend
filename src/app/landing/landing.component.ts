@@ -16,9 +16,9 @@ import { SeoService } from '../shared/seo.service';
 export class LandingComponent {
   constructor() {
     inject(SeoService).apply({
-      title: 'Le menu digital par QR code',
+      title: 'Carte digitale pour restaurant, sans réimpression',
       description:
-        "Un QR permanent, un menu à jour, publié en quelques secondes. Réimprimer sa carte à chaque changement de prix, c'est fini.",
+        "Karta transforme la carte de votre restaurant en menu digital, toujours à jour. Modifiez vos plats et vos prix sans réimprimer : votre QR code reste le même.",
       path: '/',
     });
   }

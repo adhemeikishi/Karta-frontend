@@ -53,4 +53,27 @@ export class QrCodeService {
   imageSvg(id: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/qr-codes/${id}/image.svg`, { responseType: 'blob' });
   }
+
+  /**
+   * Image du QR adressée par le restaurant plutôt que par le QR.
+   *
+   * Les routes ci-dessus désignent le QR par son propre identifiant : rien dans le chemin
+   * ne dit à quel restaurant il appartient, et le backend les refuse donc à un compte
+   * restaurateur (`RestaurateurScopeFilter`). Ces deux-là portent le restaurant dans
+   * l'URL, ce qui rend la vérification possible côté serveur — c'est la seule voie
+   * ouverte au restaurateur, et elle sert son écran de fin de configuration.
+   *
+   * Règle produit V1 : 1 restaurant = 1 QR, il n'y a donc rien à choisir.
+   */
+  restaurantImagePng(restaurantId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/restaurants/${restaurantId}/qr-code/image.png`, {
+      responseType: 'blob',
+    });
+  }
+
+  restaurantImageSvg(restaurantId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/restaurants/${restaurantId}/qr-code/image.svg`, {
+      responseType: 'blob',
+    });
+  }
 }

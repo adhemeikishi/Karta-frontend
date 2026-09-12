@@ -1,0 +1,142 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     /karta-ai — le document devient une carte.
+
+     Écran plein, sans navigation : rien d'autre à faire que regarder la carte se
+     construire. Le filet de progression est collé en haut de la fenêtre (repère
+     technique, pas décor) ; le document occupe la colonne principale et se change
+     en téléphone à l'étape 05 ; la colonne de droite est la console.
+
+     La mention de démonstration reste visible : le fichier déposé n'est pas lu.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div class="cf-page">
+  <!-- Progression de l'analyse, en haut de la fenêtre. -->
+  <div class="cf-topline" aria-hidden="true">
+    <span class="cf-topline-fill" [style.width.%]="progress()"></span>
+  </div>
+
+  <header class="cf-head">
+    <a routerLink="/" aria-label="Karta — accueil"><karta-logo variant="dark" [size]="28" /></a>
+    <p class="cf-head-file">
+      <span class="truncate">{{ fileName() }}</span>
+      <span class="cf-head-size">{{ fileSize() }}</span>
+    </p>
+  </header>
+
+  <div class="container cf-body">
+    <div class="imp-stage">
+      <!-- ── L'ARTEFACT ── document scanné, puis carte construite ───────────── -->
+      <div>
+        <div class="imp-morph">
+          <figure class="imp-doc" [class.imp-doc-out]="showPreview()" aria-hidden="true">
+            <div class="imp-doc-sheet">
+              @for (category of drafts.draft()?.categories ?? []; track category.uid) {
+                <p class="imp-doc-cat">{{ category.name }}</p>
+                @for (item of category.items; track item.uid) {
+                  <p class="imp-doc-line">
+                    <span class="truncate">{{ item.name }}</span>
+                    <span class="imp-dots"></span>
+                    <span>{{ item.priceEuros === null ? '--' : item.priceEuros.toFixed(2).replace('.', ',') }}</span>
+                  </p>
+                }
+              }
+            </div>
+            @if (!showPreview()) {
+              <span class="imp-scan"></span>
+            }
+          </figure>
+
+          <div class="imp-preview" [class.imp-preview-in]="showPreview()">
+            <div class="imp-phone-wrap">
+              <app-phone-frame [screenColor]="theme().background">
+                <div class="imp-build" [style.--build]="buildPercent() + '%'">
+                  @if (menu(); as previewMenu) {
+                    <menu-render [theme]="theme()" [menu]="previewMenu" />
+                  }
+                </div>
+              </app-phone-frame>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LA CONSOLE ── ce que Karta est en train de faire ───────────────── -->
+      <div class="imp-console">
+        <div class="flex items-baseline justify-between gap-4">
+          <p class="eyebrow">Karta AI</p>
+          <p class="mono tnum text-[0.6875rem] tracking-[0.12em] text-ink-400">
+            0{{ stepIndex() + 1 }} / 0{{ steps.length }}
+          </p>
+        </div>
+
+        <h1 class="imp-console-title mt-3" role="status" aria-live="polite">
+          @if (done()) {
+            Votre carte est prête.
+          } @else {
+            {{ steps[stepIndex()].label }}
+          }
+        </h1>
+
+        @if (!done()) {
+          <p class="lead mt-3">Votre menu est en cours de transformation.</p>
+        }
+
+        <dl class="imp-readout mt-8">
+          <div class="imp-readout-row">
+            <dt>Catégories</dt>
+            <dd class="mono tnum">{{ detected().categories }}</dd>
+          </div>
+          <div class="imp-readout-row">
+            <dt>Plats</dt>
+            <dd class="mono tnum">{{ detected().items }}</dd>
+          </div>
+          <div class="imp-readout-row">
+            <dt>Prix</dt>
+            <dd class="mono tnum">{{ detected().prices }}</dd>
+          </div>
+          <div class="imp-readout-row">
+            <dt>Descriptions</dt>
+            <dd class="mono tnum">{{ detected().descriptions }}</dd>
+          </div>
+        </dl>
+
+        @if (visibleCategories().length) {
+          <ul class="imp-cats mt-6">
+            @for (name of visibleCategories(); track name) {
+              <li class="imp-cat">{{ name }}</li>
+            }
+          </ul>
+        }
+
+        @if (checksDone() > 0) {
+          <ul class="imp-checks mt-6">
+            @for (check of checks; track check; let i = $index) {
+              @if (i < checksDone()) {
+                <li class="imp-check">
+                  <span>{{ check }}</span>
+                  <span class="imp-dots"></span>
+                  <span class="imp-check-ok">OK</span>
+                </li>
+              }
+            }
+          </ul>
+        }
+
+        @if (done()) {
+          <div class="imp-outcome mt-8">
+            <p class="lead">
+              Relisez ce que Karta a compris de votre document. Rien n'est publié tant que
+              vous ne l'avez pas décidé.
+            </p>
+            <a routerLink="/create/review" class="btn btn-primary mt-6">Vérifier ma carte</a>
+          </div>
+        }
+
+        <p class="imp-demo mt-8">
+          Démonstration : votre fichier n'est ni envoyé ni analysé, et la carte affichée est
+          un menu d'exemple. L'extraction de votre PDF arrive prochainement.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

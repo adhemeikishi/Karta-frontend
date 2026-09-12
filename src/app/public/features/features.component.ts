@@ -24,7 +24,7 @@ export class FeaturesComponent {
     inject(SeoService).apply({
       title: 'Fonctionnalités',
       description:
-        'QR permanent, menu structuré, KartaAI pour importer votre PDF, 5 styles, personnalisation visuelle et statistiques de scans.',
+        'QR permanent, menu structuré, KartaIA pour importer votre PDF, 5 styles, personnalisation visuelle et statistiques de scans.',
       path: '/features',
     });
   }

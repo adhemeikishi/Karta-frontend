@@ -1,0 +1,121 @@
+<header class="app-head">
+  <div class="min-w-0">
+    <h1 class="app-title">Statistiques</h1>
+    <p class="app-lede">
+      Combien de fois votre carte a été ouverte depuis un scan de votre QR code.
+    </p>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="space-y-8">
+    <div class="flex gap-12">
+      <div class="skeleton h-14 w-24"></div>
+      <div class="skeleton h-14 w-24"></div>
+      <div class="skeleton h-14 w-24"></div>
+    </div>
+    <div class="skeleton h-48 w-full"></div>
+  </div>
+} @else if (loadError()) {
+  <div class="app-panel app-panel-pad">
+    <p class="alert-error">Impossible de charger vos statistiques.</p>
+    <button type="button" class="btn btn-outline btn-sm mt-4" (click)="load()">Réessayer</button>
+  </div>
+} @else {
+  <!-- `as` n'est autorisé que sur un `@if` primaire : bloc imbriqué plutôt qu'un
+       `@else if`. `stats()` est null tant qu'on charge ou qu'on a échoué. -->
+  @if (stats(); as s) {
+  @if (hasScans()) {
+    <!-- ---------- Les trois mesures qui comptent ---------- -->
+    <section class="app-section">
+      <dl class="grid gap-x-12 gap-y-8 sm:grid-cols-3">
+        <div>
+          <dt class="app-metric-label">Aujourd'hui</dt>
+          <dd class="app-metric-value">{{ formatCount(s.today) }}</dd>
+          <dd class="app-metric-note">ouvertures de votre carte</dd>
+        </div>
+        <div>
+          <dt class="app-metric-label">7 derniers jours</dt>
+          <dd class="app-metric-value">{{ formatCount(s.last7Days) }}</dd>
+          <dd class="app-metric-note">
+            @if (weekTrend(); as trend) {
+              <span
+                class="mono font-semibold"
+                [style.color]="trend >= 0 ? 'var(--k-success)' : 'var(--k-danger)'"
+                >{{ formatTrend(trend) }}</span
+              >
+              face aux 7 jours précédents
+            } @else {
+              face à une semaine sans scan
+            }
+          </dd>
+        </div>
+        <div>
+          <dt class="app-metric-label">Depuis le début</dt>
+          <dd class="app-metric-value">{{ formatCount(s.total) }}</dd>
+          <dd class="app-metric-note">
+            dont {{ formatCount(s.last30Days) }} sur les 30 derniers jours
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- ---------- La série quotidienne ---------- -->
+    <section class="app-section mt-10 sm:mt-12">
+      <div class="app-section-head">
+        <h2 class="app-section-title">30 derniers jours</h2>
+        <span class="k-coord">
+          maximum {{ plural(chartMax(), 'scan', 'scans') }} par jour
+        </span>
+      </div>
+
+      <div class="chart">
+        <div class="chart-bars" role="img" aria-label="Scans quotidiens sur 30 jours">
+          @for (bar of bars(); track bar.date) {
+            <div class="chart-col" [title]="bar.label">
+              <div
+                class="chart-bar"
+                [class.chart-bar-empty]="bar.scans === 0"
+                [style.--k-h]="bar.ratio"
+              ></div>
+            </div>
+          }
+        </div>
+        <div class="chart-axis">
+          <span class="k-coord">{{ firstDay() }}</span>
+          <span class="k-coord">{{ lastDay() }}</span>
+        </div>
+      </div>
+    </section>
+  } @else {
+    <!-- ---------- Aucun scan : expliquer, pas constater ---------- -->
+    <div class="app-empty">
+      <span
+        class="grid h-11 w-11 place-items-center rounded-lg"
+        style="background-color: var(--k-ink-100)"
+        aria-hidden="true"
+      >
+        <svg
+          class="h-5 w-5 text-ink-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 13.125L7.5 9l3.75 3.375L20.25 4.5M20.25 4.5h-4.5m4.5 0v4.5M3.75 19.5h16.5"
+          />
+        </svg>
+      </span>
+      <p class="app-empty-title">Aucun scan pour l'instant</p>
+      <p class="app-empty-text">
+        Chaque fois qu'un client scannera votre QR code, la visite apparaîtra ici. Imprimez
+        votre QR et posez-le sur vos tables pour commencer.
+      </p>
+      <a routerLink="../qr" class="btn btn-outline btn-sm mt-5">Voir mon QR code</a>
+    </div>
+  }
+}
+}

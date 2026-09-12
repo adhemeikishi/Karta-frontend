@@ -1,0 +1,150 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     /create/review — vérifier avant de continuer.
+
+     Composition en colonne unique et dense : c'est un écran de lecture, pas une
+     vitrine. Le décompte est en tête, les catégories se suivent sans cadre, et la
+     seule chose qui se détache est ce qui demande une correction.
+     Vocabulaire visuel de l'éditeur réel (`.mx-*`) : la ligne s'ouvre sur place.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div class="mx-auto w-full max-w-3xl">
+  <header>
+    <p class="eyebrow">02 · Vérification</p>
+    <h1 class="h2-marketing mt-3">Vérifiez votre carte.</h1>
+    <p class="lead mt-4 max-w-md">
+      Relisez ce que Karta a compris de votre document. Corrigez un nom, un prix, une
+      description. Décochez ce qui ne doit pas apparaître.
+    </p>
+
+    @if (counts(); as totals) {
+      <dl class="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-t pt-6" style="border-color: var(--k-hairline)">
+        <div>
+          <dt class="eyebrow">Catégories</dt>
+          <dd class="mono tnum mt-1 text-xl font-semibold text-ink-900">{{ totals.categories }}</dd>
+        </div>
+        <div>
+          <dt class="eyebrow">Plats retenus</dt>
+          <dd class="mono tnum mt-1 text-xl font-semibold text-ink-900">{{ totals.items }}</dd>
+        </div>
+        @if (missingPrices() > 0) {
+          <div>
+            <dt class="eyebrow" style="color: var(--k-warning)">Prix à compléter</dt>
+            <dd class="mono tnum mt-1 text-xl font-semibold" style="color: var(--k-warning)">
+              {{ missingPrices() }}
+            </dd>
+          </div>
+        }
+      </dl>
+    }
+  </header>
+
+  <div class="mt-10">
+    @for (category of categories(); track category.uid; let ci = $index) {
+      <section class="mx-category">
+        <div class="mx-cat-head">
+          <span class="mx-cat-num" aria-hidden="true">{{ ci + 1 | number: '2.0-0' }}</span>
+          <p class="mx-cat-name">{{ category.name }}</p>
+        </div>
+
+        <hr class="mx-rule" />
+
+        <div class="mt-2">
+          @for (item of category.items; track item.uid) {
+            @if (isEditing(item)) {
+              <!-- Surface d'édition : le seul cadre de l'écran, le temps d'un plat. -->
+              <div class="mx-edit my-2">
+                <div class="mx-edit-grid">
+                  <div>
+                    <label class="field-label" [attr.for]="'name-' + item.uid">Nom du plat</label>
+                    <input
+                      [id]="'name-' + item.uid"
+                      type="text"
+                      class="input"
+                      maxlength="160"
+                      [(ngModel)]="item.name"
+                      (ngModelChange)="commit()"
+                    />
+                  </div>
+                  <div>
+                    <label class="field-label" [attr.for]="'price-' + item.uid">Prix (€)</label>
+                    <input
+                      [id]="'price-' + item.uid"
+                      type="text"
+                      inputmode="decimal"
+                      class="input mono tnum"
+                      placeholder="0,00"
+                      [ngModel]="priceInputValue(item)"
+                      (ngModelChange)="onPriceInput(item, $event)"
+                      (blur)="commit()"
+                    />
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <label class="field-label" [attr.for]="'desc-' + item.uid">Description</label>
+                  <textarea
+                    [id]="'desc-' + item.uid"
+                    class="input resize-y"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="Facultative — ce que le client lit sous le nom du plat."
+                    [(ngModel)]="item.description"
+                    (ngModelChange)="commit()"
+                  ></textarea>
+                </div>
+
+                @if (item.note) {
+                  <p class="field-hint" style="color: var(--k-warning)">{{ item.note }}</p>
+                }
+
+                <div class="mx-edit-foot">
+                  <button type="button" class="btn btn-ghost btn-sm -ml-2.5" (click)="toggle(item)">
+                    {{ included(item) ? 'Retirer de ma carte' : 'Remettre sur ma carte' }}
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="closeEdit()">
+                    Terminer
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <!-- Ligne de plat : ce que le client lira, tel qu'il le lira. -->
+              <div class="mx-item cf-review-item" [class.mx-item-off]="!included(item)">
+                <label class="cf-check">
+                  <input
+                    type="checkbox"
+                    [checked]="included(item)"
+                    (change)="toggle(item)"
+                    [attr.aria-label]="'Garder ' + (item.name || 'ce plat') + ' sur ma carte'"
+                  />
+                </label>
+
+                <button type="button" class="mx-item-open" (click)="startEdit(item)">
+                  <span class="mx-item-name">
+                    {{ item.name }}
+                    @if (item.needsReview) {
+                      <span class="badge badge-draft ml-2">À vérifier</span>
+                    }
+                  </span>
+                  @if (item.description.trim()) {
+                    <span class="mx-item-desc">{{ item.description }}</span>
+                  }
+                </button>
+
+                <span class="mx-item-price" [class.mx-item-price-missing]="item.priceEuros === null">
+                  {{ displayPrice(item) }}
+                </span>
+              </div>
+            }
+          }
+        </div>
+      </section>
+    }
+  </div>
+
+  <div class="mt-12 flex flex-wrap items-center gap-x-5 gap-y-3 border-t pt-8" style="border-color: var(--k-hairline)">
+    <button type="button" class="btn btn-primary" (click)="validate()">Valider ma carte</button>
+    <p class="lead">
+      Rien n'est publié : vous choisissez le style à l'étape suivante.
+    </p>
+  </div>
+</div>

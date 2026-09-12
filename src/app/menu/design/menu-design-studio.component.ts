@@ -32,6 +32,12 @@ import { PhoneFrameComponent } from './phone-frame.component';
  *
  * L'aperçu est le HTML du renderer backend, celui-là même qui sert la page publique :
  * pas de menu reconstruit en Angular, qui finirait fatalement par en diverger.
+ *
+ * <strong>Un seul studio pour deux espaces.</strong> Le back-office et l'Espace
+ * Restaurateur pilotent le même design, les mêmes presets et le même aperçu ; en
+ * dupliquer un second garantirait qu'ils divergent. Seul le vocabulaire change — le
+ * back-office parle « du client », le restaurateur parle de « votre restaurant » —
+ * décidé par l'input {@link space}. Aucun comportement, aucun appel réseau n'en dépend.
  */
 @Component({
     selector: 'app-menu-design-studio',
@@ -46,6 +52,11 @@ export class MenuDesignStudioComponent implements OnInit, OnDestroy {
   readonly restaurantId = input.required<string>();
   readonly offer = input.required<RestaurantOffer>();
   readonly menu = input.required<Menu>();
+
+  /** Espace hôte. Voir la documentation de classe : n'affecte que les libellés. */
+  readonly space = input<'admin' | 'restaurateur'>('admin');
+
+  readonly isRestaurateur = computed(() => this.space() === 'restaurateur');
 
   /** Remonte le menu au parent après publication : le statut affiché reste juste. */
   readonly menuChange = output<Menu>();

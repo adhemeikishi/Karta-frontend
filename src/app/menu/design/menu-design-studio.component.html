@@ -44,6 +44,7 @@
               <button
                 type="button"
                 class="preset-card"
+                [class.preset-card-active]="d.preset === preset.id"
                 [attr.aria-pressed]="d.preset === preset.id"
                 (click)="selectPreset(preset.id)"
               >
@@ -74,13 +75,21 @@
           </div>
 
           @if (!customizable()) {
-            <p class="mt-1 text-sm text-ink-500">
-              L'offre {{ offer() }} donne accès aux cinq styles. Passez ce client en Premium pour
-              poser son nom, son logo, ses couleurs et sa photo d'en-tête.
-            </p>
+            @if (isRestaurateur()) {
+              <p class="mt-1 text-sm text-ink-500">
+                Votre offre {{ offer() }} donne accès aux cinq styles. Passez en Premium pour
+                poser votre nom, votre logo, vos couleurs et votre photo d'en-tête.
+              </p>
+            } @else {
+              <p class="mt-1 text-sm text-ink-500">
+                L'offre {{ offer() }} donne accès aux cinq styles. Passez ce client en Premium pour
+                poser son nom, son logo, ses couleurs et sa photo d'en-tête.
+              </p>
+            }
           } @else {
             <p class="mt-1 text-sm text-ink-500">
-              L'identité du restaurant. Chaque changement apparaît immédiatement dans l'aperçu.
+              {{ isRestaurateur() ? 'Votre identité.' : "L'identité du restaurant." }}
+              Chaque changement apparaît immédiatement dans l'aperçu.
             </p>
 
             <div class="mt-4 space-y-4">
@@ -92,7 +101,7 @@
                   type="text"
                   class="input"
                   maxlength="120"
-                  placeholder="Le nom du client par défaut"
+                  [placeholder]="isRestaurateur() ? 'Le nom de votre restaurant' : 'Le nom du client par défaut'"
                   [ngModel]="d.brandName"
                   (ngModelChange)="setBrandName($event)"
                 />
@@ -147,7 +156,7 @@
                   <span class="field-label">Logo</span>
                   <div class="media-slot">
                     @if (d.logoUrl) {
-                      <img [src]="d.logoUrl" alt="Logo du client" class="media-thumb media-thumb-contain" />
+                      <img [src]="d.logoUrl" alt="Logo" class="media-thumb media-thumb-contain" />
                     } @else {
                       <span class="media-placeholder">Aucun</span>
                     }
@@ -242,7 +251,7 @@
             @if (menu().published) {
               <button
                 type="button"
-                class="btn btn-outline"
+                class="btn btn-ghost"
                 [disabled]="publishing()"
                 (click)="unpublish()"
               >
@@ -294,7 +303,10 @@
       <aside class="studio-preview">
         <div class="mb-3 flex items-baseline justify-between gap-3">
           <h3 class="section-title">Aperçu</h3>
-          <span class="k-coord">{{ categoryCount() }} cat. · {{ itemCount() }} prod.</span>
+          <span class="k-coord">
+            {{ categoryCount() }} {{ categoryCount() > 1 ? 'catégories' : 'catégorie' }} ·
+            {{ itemCount() }} {{ itemCount() > 1 ? 'plats' : 'plat' }}
+          </span>
         </div>
 
         <app-phone-frame [busy]="previewBusy()" [screenColor]="screenBackground()">

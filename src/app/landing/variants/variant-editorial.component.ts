@@ -11,24 +11,31 @@ import { LandingPricingComponent } from '../landing-pricing.component';
 import { MenuRenderComponent } from '../menu-render.component';
 import { PhoneFrameComponent } from '../../menu/design/phone-frame.component';
 import { PremiumConfiguratorComponent } from '../premium-configurator.component';
+import { MenuImportDropzoneComponent } from '../import-experience/menu-import-dropzone.component';
 import { RevealOnScrollDirective } from '../reveal-on-scroll.directive';
+import { FaqAccordionComponent } from '../../public/faq-accordion.component';
+import { FAQ_GROUPS } from '../../public/public-content';
 
-interface LandingWorkflowStep {
-  label: string;
-  detail: string;
-}
+/** Groupes de la FAQ reportés sur la landing, dans l'ordre du parcours. */
+const LANDING_FAQ_GROUP_IDS = ['import', 'menu', 'qr', 'tarifs'] as const;
 
 /**
- * Landing Karta — V2 Art Direction.
+ * Landing Karta — le funnel EST la page.
  *
- * Chaque section a une composition distincte (manifeste, transformation, showcase
- * produit, configurateur, respiration, démo QR, avant/après, pricing, clôture) :
- * la cohérence vient de la typographie, de l'air et du traitement du produit, jamais
- * de la répétition d'un gabarit. Signature graphique rationnée : `.k-ticks` = le
- * ruban de process (une fois), `.k-crosshair` = la section QR (une fois).
+ * Trois chapitres numérotés portent le parcours réel du restaurateur : `01` son menu
+ * — le dépôt du PDF, qui ouvre le parcours de création
+ * ({@link MenuImportDropzoneComponent} puis `/karta-ai`) —, `02` le style, `03` la publication.
+ * Puis l'abonnement, une fois la valeur démontrée. Les repères `01 · …`
+ * (`.eyebrow`, Geist Mono) sont les mêmes que ceux de l'onboarding réel
+ * (`import.component.html`, `publish.component.ts`).
  *
- * Aucune donnée produit inventée : presets, prix et contenu de menu viennent des
- * sources de vérité existantes (`landing-menu-presets.ts`, `landing-offers.ts`).
+ * Chaque chapitre garde sa composition propre (expérience interactive, sélecteur +
+ * téléphone, démo QR sur charcoal) : la cohérence vient de la typographie, de l'air
+ * et du traitement du produit — jamais d'un gabarit répété.
+ *
+ * Aucune donnée produit inventée : presets, prix, contenu de menu, compteurs et FAQ
+ * viennent des sources de vérité existantes (`landing-menu-presets.ts`,
+ * `landing-offers.ts`, `public-content.ts`).
  */
 @Component({
     selector: 'landing-variant-editorial',
@@ -38,7 +45,9 @@ interface LandingWorkflowStep {
         MenuRenderComponent,
         PhoneFrameComponent,
         PremiumConfiguratorComponent,
+        MenuImportDropzoneComponent,
         LandingPricingComponent,
+        FaqAccordionComponent,
         RevealOnScrollDirective,
     ],
     templateUrl: './variant-editorial.component.html'
@@ -49,8 +58,8 @@ export class VariantEditorialComponent {
   /** Contenu de démonstration — forme identique à PublicMenuDtos.PublicMenu. */
   readonly content = LANDING_MENU_CONTENT;
 
-  /** Preset choisi dans le showcase (#produit) — reflété par le téléphone du hero
-   *  ET celui du showcase. Le configurateur #premium a son propre état, indépendant. */
+  /** Preset choisi au chapitre 02 — reflété par le téléphone du sélecteur. Le
+   *  configurateur PREMIUM a son propre état, indépendant. */
   readonly activePresetId = signal<LandingMenuPresetId>('modern');
 
   selectPreset(id: LandingMenuPresetId): void {
@@ -67,21 +76,8 @@ export class VariantEditorialComponent {
     ),
   );
 
-  /** Aperçu « menu structuré » (section Transformation) : 2 lignes par catégorie,
-   *  dérivé de LANDING_MENU_CONTENT — jamais un contenu inventé. */
-  readonly structuredPreview = LANDING_MENU_CONTENT.categories.map((category) => ({
-    name: category.name,
-    items: category.items.slice(0, 2),
-  }));
-
-  /** Parcours réel : PDF → extraction → Review manuelle → preset → aperçu →
-   *  publication explicite. Aligné sur le pipeline backend (kartaai, menu_drafts). */
-  readonly kartaAiWorkflow: readonly LandingWorkflowStep[] = [
-    { label: 'PDF', detail: 'Votre menu actuel' },
-    { label: 'KartaAI', detail: 'Extraction et structuration' },
-    { label: 'Review', detail: 'Vous validez chaque plat' },
-    { label: 'Preset', detail: 'Vous choisissez le style' },
-    { label: 'Aperçu', detail: 'Le rendu, avant publication' },
-    { label: 'Publication', detail: 'En ligne, accessible par QR' },
-  ];
+  /** FAQ de la landing — extraite de `FAQ_GROUPS` (source de `/faq`), pas réécrite. */
+  readonly faq = LANDING_FAQ_GROUP_IDS.flatMap(
+    (id) => FAQ_GROUPS.find((group) => group.id === id)?.items ?? [],
+  );
 }

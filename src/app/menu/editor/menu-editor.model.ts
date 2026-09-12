@@ -9,7 +9,7 @@ export { formatPriceInput, parsePriceInput };
 /**
  * État d'édition local d'un produit.
  *
- * À la différence du brouillon KartaAI ({@link EditableItem} de `review/`), un plat ici
+ * À la différence du brouillon KartaIA ({@link EditableItem} de `review/`), un plat ici
  * peut déjà exister en base : `id` est donc préservé quand il est présent, pour que
  * l'enregistrement mette à jour en place plutôt que de recréer (voir
  * `docs/MENU_STRUCTURED.md` §3 — l'identité d'un produit n'est pas cosmétique, une

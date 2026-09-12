@@ -87,9 +87,19 @@ body {
   height: 100%;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* Pas de `scroll-behavior: smooth` global.
+ *
+ * Il rendait ANIMÉ le retour en haut effectué par le Router à chaque changement de
+ * page : en quittant le bas de `/` (7 700 px), la nouvelle page glissait vers le haut
+ * pendant près d'une seconde au lieu de s'ouvrir en haut. Idem pour la restauration
+ * de position sur précédent/suivant.
+ *
+ * Les deux défilements qui doivent être doux le demandent explicitement — voir
+ * `scroll-to-anchor.ts` (ancres internes) et `menu-render.component.ts` (aperçu du
+ * menu), tous deux en `behavior: 'smooth'` et tous deux respectant
+ * `prefers-reduced-motion`. Aucun autre code ne dépend de cette règle : plus aucune
+ * ancre ne provoque de saut natif, elles annulent toutes le comportement par défaut.
+ */
 
 body {
   margin: 0;
@@ -150,7 +160,11 @@ body {
   }
 
   /* --- Surfaces ------------------------------------------------------------ */
+  /* Une barre collante montée dans une card doit prendre le fond de la card
+     (voir .mx-bar) : sans cela, le contenu défilerait derrière une bande d'une
+     autre teinte. */
   .card {
+    --mx-bar-bg: var(--k-white);
     background-color: var(--k-white);
     border: 1px solid var(--k-hairline);
     border-radius: var(--k-r-lg);
@@ -220,9 +234,6 @@ body {
   .section-y {
     @apply py-20 sm:py-28;
   }
-  .section-y-lg {
-    @apply py-28 sm:py-40;
-  }
   /* Titre de section marketing — capitales fortes, tracking serré, éditorial.
      Distinct de .page-title (back-office, 1.35rem). Sur fond sombre : ajouter
      `text-white` en utilitaire. */
@@ -240,8 +251,19 @@ body {
 
   /* Accordéon FAQ — <details>/<summary> natifs (app-faq-accordion). */
   .faq-summary {
-    @apply flex cursor-pointer list-none items-center justify-between gap-4 py-5 pr-1;
+    @apply relative flex cursor-pointer list-none items-center justify-between gap-4 py-5 pr-1;
     -webkit-tap-highlight-color: transparent;
+    transition: color var(--k-t-fast) var(--k-ease);
+  }
+  .faq-summary:hover .faq-chevron {
+    color: var(--k-ink-700);
+  }
+  /* Question ouverte : filet d'accent court dans la marge. Un fond teinté sur une
+     liste de dix questions ferait dix blocs de couleur. */
+  .faq-item[open] > .faq-summary::before {
+    content: "";
+    @apply absolute -left-4 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r-sm;
+    background-color: var(--k-persimmon);
   }
   .faq-summary::-webkit-details-marker {
     display: none;
@@ -478,9 +500,6 @@ body {
     @apply mt-1.5 text-xs text-ink-400;
   }
 
-  .stat-row {
-    @apply flex items-center gap-3;
-  }
   .stat-track {
     @apply h-2 flex-1 overflow-hidden rounded-full;
     background-color: var(--k-ink-100);
@@ -541,6 +560,7 @@ body {
      sans jamais suggérer un scan qui n'a pas eu lieu. */
   .chart-bar-empty {
     transform: scaleY(0.0125);
+    background-color: var(--k-ink-200);
   }
   .chart-col:hover .chart-bar-empty {
     background-color: var(--k-ink-200);
@@ -685,9 +705,23 @@ body {
     border-color: var(--k-persimmon);
     box-shadow: 0 0 0 3px var(--k-persimmon-ring);
   }
-  /* Pas de traitement visuel pour le preset sélectionné (choix produit) :
-     l'aperçu à droite reflète déjà le preset actif. aria-pressed reste posé
-     sur le bouton pour les lecteurs d'écran. */
+  /* Le preset actif doit se voir. L'argument d'origine — « l'aperçu à droite reflète
+     déjà le preset actif » — ne tient pas sous `lg`, où l'aperçu passe SOUS le
+     sélecteur, ni au clavier en parcourant le groupe. Un contrôle sélectionné sans
+     état visible est un défaut d'utilisabilité, pas une option de style.
+     Traitement volontairement retenu : bordure encre + pastille d'accent sur le
+     libellé, jamais un bloc plein qui écraserait les miniatures. */
+  .preset-card-active {
+    border-color: var(--k-ink-900);
+  }
+  .preset-card-active .preset-label {
+    @apply flex items-center gap-1.5 font-semibold;
+  }
+  .preset-card-active .preset-label::before {
+    content: "";
+    @apply h-1.5 w-1.5 shrink-0 rounded-full;
+    background-color: var(--k-persimmon);
+  }
   /* Miniature du rendu : fond, texte et accent réels du preset, jamais des couleurs
      décoratives — la pastille ne doit pas mentir sur ce que produira le renderer. */
   .preset-swatch {
@@ -991,17 +1025,6 @@ body {
   }
   /* Cartes fonctionnalités (landing) : même principe que .btn:active plus haut —
      un déplacement minime, jamais un zoom. */
-  .feature-card {
-    transition:
-      transform var(--k-t-base) var(--k-ease),
-      box-shadow var(--k-t-base) var(--k-ease),
-      border-color var(--k-t-base) var(--k-ease);
-  }
-  .feature-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--k-shadow-sm);
-    border-color: var(--k-ink-200);
-  }
   /* Configurateur PREMIUM (landing #premium) : contrôles + téléphone.
      Mobile : téléphone en premier (DOM), collé en haut pendant le défilement des
      contrôles. Desktop : contrôles à gauche, téléphone à droite, également sticky. */
@@ -1165,109 +1188,10 @@ body {
   }
 
   /* ── Landing V2 — art direction ────────────────────────────────────────────
-     Trois éléments seulement : la carte « papier » (section Transformation), le
-     ruban de process (unique réutilisation du motif gradué), la liste de presets
-     (section Showcase). Aucun nouveau token. */
+     Deux éléments seulement : la carte « papier » (chapitre 01), la liste de
+     presets (chapitre 04). Aucun nouveau token. */
 
-  /* La carte actuelle du restaurateur, avant Karta : dense, légèrement de
-     travers — un objet physique posé sur la table, pas une capture d'écran. */
-  .v2-paper {
-    @apply rounded-md p-5 sm:p-6;
-    background-color: var(--k-ivory);
-    border: 1px solid var(--k-hairline);
-    transform: rotate(-1.2deg);
-  }
-  @media (max-width: 1023px) {
-    .v2-paper {
-      transform: none;
-    }
-  }
-
-  /* Ruban de process 01 → 06 : la colonne vertébrale du parcours. Le trait reprend
-     exactement le motif gradué de .k-ticks (repeating-linear-gradient, --k-ink-200) —
-     seule réutilisation de la signature en dehors de la section QR. */
-  .v2-ribbon {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    column-gap: 1rem;
-  }
-  .v2-ribbon::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0.22rem;
-    height: 2px;
-    background-image: repeating-linear-gradient(
-      to right,
-      var(--k-ink-200) 0,
-      var(--k-ink-200) 1px,
-      transparent 1px,
-      transparent 8px
-    );
-  }
-  .v2-ribbon-step {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
-  }
-  .v2-ribbon-dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: var(--k-r-full);
-    background-color: var(--k-persimmon);
-  }
-  .v2-ribbon-num {
-    font-family: var(--k-font-mono);
-    font-size: 0.6875rem;
-    line-height: 1;
-    color: var(--k-ink-400);
-  }
-  .v2-ribbon-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--k-ink-900);
-  }
-  .v2-ribbon-detail {
-    font-size: 0.75rem;
-    line-height: 1.35;
-    color: var(--k-ink-500);
-  }
-  @media (max-width: 767px) {
-    .v2-ribbon {
-      grid-template-columns: 1fr;
-      row-gap: 1.4rem;
-      column-gap: 0;
-    }
-    .v2-ribbon::before {
-      top: 0;
-      bottom: 0;
-      left: 0.22rem;
-      right: auto;
-      width: 2px;
-      height: auto;
-      background-image: repeating-linear-gradient(
-        to bottom,
-        var(--k-ink-200) 0,
-        var(--k-ink-200) 1px,
-        transparent 1px,
-        transparent 8px
-      );
-    }
-    .v2-ribbon-step {
-      padding-left: 1.5rem;
-    }
-    .v2-ribbon-dot {
-      position: absolute;
-      left: 0.05rem;
-      top: 0.1rem;
-    }
-  }
-
-  /* Sélecteur de style (section Showcase) : les 5 noms en liste typographique.
+  /* Sélecteur de style (chapitre 02) : les 5 noms en liste typographique.
      L'actif passe en ink-900 et son filet persimmon s'étend. Le téléphone à côté
      reflète déjà le choix : pas de swatch, pas de carte. */
   .v2-preset-row {
@@ -1309,8 +1233,11 @@ body {
      — plancher craft) et le fond. Fonts et couleurs = tokens du projet. */
   .hero-caps {
     font-family: var(--k-font-sans);
-    /* min 2rem : « L'INTERFACE. » tient sur une ligne dès 320px. */
-    font-size: clamp(2rem, 8.5vw, 5.5rem);
+    /* Le plancher tient « L'INTERFACE. » sur une ligne dès 320 px ; la pente est
+       relevée pour que le titre garde sa présence sur téléphone (8.5vw donnait
+       33 px à 390 px, soit un hero simplement rétréci). Le plafond ne bouge pas :
+       88 px à 1440 px, la composition desktop est inchangée. */
+    font-size: clamp(2rem, 10vw, 5.5rem);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.04em;
@@ -1372,7 +1299,7 @@ body {
   }
 
   /* Pas de fondu vers la section claire suivante : coupe nette entre le hero
-     sombre et #kartaai (blanc). Le bas du hero est ramené à un #0C0C0C plein
+     sombre et #kartaia (blanc). Le bas du hero est ramené à un #0C0C0C plein
      via .hero-d-scrim pour que l'arête soit charcoal → blanc, jamais photo → blanc. */
 
   .hero-d-photo,
@@ -1401,9 +1328,9 @@ body {
         95deg,
         rgba(12, 12, 12, 0.96) 0%,
         rgba(12, 12, 12, 0.9) 34%,
-        rgba(12, 12, 12, 0.79) 62%,
-        rgba(12, 12, 12, 0.58) 84%,
-        rgba(12, 12, 12, 0.48) 100%
+        rgba(12, 12, 12, 0.8) 62%,
+        rgba(12, 12, 12, 0.66) 84%,
+        rgba(12, 12, 12, 0.6) 100%
       ),
       linear-gradient(
         180deg,
@@ -1455,6 +1382,1013 @@ body {
 /* ==========================================================================
    Animations
    ========================================================================== */
+/* ==========================================================================
+   ESPACE RESTAURATEUR (/app)
+   --------------------------------------------------------------------------
+   Primitives propres au produit vu par le restaurateur. Le back-office (/admin)
+   et le site public ne les utilisent pas : rien ici ne modifie une classe
+   partagée, et aucun token n'est ajouté ni redéfini — tout vient de `:root`.
+
+   Deux principes portent cette section :
+
+   1. La navigation vit sur une SURFACE distincte du contenu (charcoal), le
+      contenu sur `--k-canvas`. Sans cette séparation, une interface entièrement
+      blanche oblige la bordure à porter à la fois la structure et la hiérarchie.
+      Le charcoal est déjà la surface d'identité Karta (tuile du logo, footer).
+
+   2. Une page n'est pas une pile de cartes. Le rythme vient de l'espace et d'un
+      filet, pas d'une boîte autour de chaque bloc — une carte ne s'emploie que
+      lorsqu'un contenu doit réellement être détaché (l'aperçu, l'éditeur).
+   ========================================================================== */
+@layer components {
+  /* --- Châssis ---------------------------------------------------------- */
+  .app-shell {
+    @apply min-h-[100dvh] bg-canvas;
+  }
+
+  /* Colonne de navigation. Hors-écran sous `lg`, ouverte en tiroir.
+     La translation est portée par ces règles et non par une utilitaire conditionnelle :
+     une classe `-translate-x-full` posée depuis le template vit dans la couche
+     `utilities` et l'emporterait sur le `lg:translate-x-0` d'un `@apply`, laissant la
+     colonne hors-écran sur desktop. */
+  .app-nav {
+    @apply fixed inset-y-0 left-0 z-40 flex w-[15.5rem] flex-col
+           transition-transform duration-200 ease-karta;
+    background-color: var(--k-charcoal);
+    transform: translateX(-100%);
+  }
+  .app-nav-open {
+    transform: none;
+  }
+  @media (min-width: 1024px) {
+    .app-nav {
+      transform: none;
+    }
+  }
+
+  .app-nav-head {
+    @apply flex flex-col gap-3 px-5 pb-5 pt-5;
+    border-bottom: 1px solid var(--k-charcoal-line);
+  }
+
+  /* Identité du restaurant : le nom est le titre de l'espace, pas un sous-titre. */
+  .app-nav-name {
+    @apply truncate text-[0.9375rem] font-semibold leading-snug tracking-[-0.01em] text-white;
+  }
+
+  .app-nav-body {
+    @apply flex-1 overflow-y-auto px-3 py-4;
+  }
+
+  .app-nav-group {
+    @apply px-2 pb-1.5 pt-4 text-[0.625rem] font-semibold uppercase tracking-[0.16em];
+    color: var(--k-charcoal-muted);
+    font-family: var(--k-font-mono);
+  }
+  .app-nav-group:first-child {
+    @apply pt-0;
+  }
+
+  /* Un lien de navigation, trois états. L'état actif se lit à trois signaux
+     faibles cumulés (rail, surface, encre) plutôt qu'à un bloc plein : la
+     navigation doit rester le décor du contenu, jamais son concurrent. */
+  .app-nav-link {
+    @apply relative flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium
+           transition-colors duration-150 ease-karta
+           focus-visible:outline-none focus-visible:ring-2;
+    color: var(--k-ink-300);
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .app-nav-link:hover {
+    color: var(--k-white);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  .app-nav-link-active {
+    color: var(--k-white);
+    background-color: rgba(255, 255, 255, 0.07);
+  }
+  .app-nav-link-active::before {
+    content: "";
+    @apply absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r-sm;
+    background-color: var(--k-persimmon);
+  }
+  .app-nav-foot {
+    @apply px-3 py-3;
+    border-top: 1px solid var(--k-charcoal-line);
+  }
+
+  /* --- Barre mobile ------------------------------------------------------ */
+  .app-topbar {
+    @apply sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-white px-4 lg:hidden;
+    border-color: var(--k-hairline);
+  }
+
+  /* --- Colonne de contenu ------------------------------------------------ */
+  .app-main {
+    @apply mx-auto w-full px-5 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12;
+    max-width: 68rem;
+  }
+  /* Les pages à aperçu latéral ont besoin de toute la largeur utile. */
+  .app-main-wide {
+    max-width: 82rem;
+  }
+
+  /* --- En-tête de page --------------------------------------------------- */
+  /* Titre, phrase de contexte, statut, action principale. Pas de sur-titre :
+     le nom du restaurant est déjà porté par la navigation, le répéter ici
+     ajouterait une ligne sans information. */
+  .app-head {
+    @apply mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-start sm:justify-between sm:gap-8;
+  }
+  .app-title {
+    @apply text-[1.6rem] font-bold leading-[1.15] tracking-[-0.025em] text-ink-900 sm:text-[1.875rem];
+  }
+  .app-lede {
+    @apply mt-2 max-w-[46ch] text-sm leading-relaxed text-ink-500;
+  }
+  .app-head-actions {
+    @apply flex shrink-0 flex-wrap items-center gap-2;
+  }
+
+  /* --- Section de page ---------------------------------------------------- */
+  /* Le séparateur est un filet, pas une boîte : les blocs se suivent dans une
+     seule colonne continue au lieu de flotter chacun dans son cadre. */
+  .app-section {
+    @apply pt-8 sm:pt-10;
+    border-top: 1px solid var(--k-hairline);
+  }
+  .app-section:first-of-type {
+    @apply border-t-0 pt-0;
+  }
+  .app-section-head {
+    @apply mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1;
+  }
+  .app-section-title {
+    @apply text-[0.9375rem] font-semibold tracking-[-0.005em] text-ink-900;
+  }
+
+  /* --- Surface détachée --------------------------------------------------- */
+  /* Le seul conteneur encadré de l'espace. Réservé à ce qui doit se détacher
+     du flux : l'aperçu, l'éditeur, un état vide. Jamais imbriqué. */
+  .app-panel {
+    @apply rounded-lg border bg-white;
+    border-color: var(--k-hairline);
+  }
+  .app-panel-pad {
+    @apply p-5 sm:p-6;
+  }
+
+  /* --- Ligne de faits ----------------------------------------------------- */
+  /* Remplace la rangée de tuiles KPI : les faits d'une carte (format, contenu,
+     mise en ligne) sont des libellés, pas des indicateurs à mettre en scène. */
+  .app-facts {
+    @apply grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3;
+  }
+  .app-fact-label {
+    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+  .app-fact-value {
+    @apply mt-1.5 text-sm text-ink-900;
+  }
+
+  /* --- État de publication ------------------------------------------------ */
+  .app-status {
+    @apply inline-flex items-center gap-2 text-sm font-medium text-ink-700;
+  }
+  .app-status-dot {
+    @apply inline-block h-[7px] w-[7px] shrink-0 rounded-full;
+    background-color: var(--k-ink-300);
+  }
+  .app-status-live .app-status-dot {
+    background-color: var(--k-success);
+  }
+  .app-status-ready .app-status-dot {
+    background-color: var(--k-persimmon);
+  }
+
+  /* --- Chiffre ------------------------------------------------------------ */
+  /* Une mesure se lit d'abord comme un nombre : chiffres tabulaires, tracking
+     resserré, libellé discret au-dessus. Pas de tuile, pas de fond teinté. */
+  .app-metric-label {
+    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+  .app-metric-value {
+    @apply mt-2 text-[1.75rem] font-semibold leading-none tracking-[-0.02em] text-ink-900;
+    font-family: var(--k-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .app-metric-note {
+    @apply mt-2 text-xs text-ink-400;
+  }
+
+  /* --- Ligne de contenu --------------------------------------------------- */
+  /* Fichier source, entrée de liste : une ligne, pas une carte. */
+  .app-row {
+    @apply flex flex-wrap items-center justify-between gap-4 rounded-md px-3 py-2.5
+           transition-colors duration-150 ease-karta;
+    background-color: var(--k-ink-100);
+  }
+
+  /* --- État vide ---------------------------------------------------------- */
+  .app-empty {
+    @apply flex flex-col items-center rounded-lg border border-dashed px-6 py-12 text-center;
+    border-color: var(--k-ink-200);
+    background-color: rgba(255, 255, 255, 0.6);
+  }
+  .app-empty-title {
+    @apply mt-4 text-[0.9375rem] font-semibold text-ink-900;
+  }
+  .app-empty-text {
+    @apply mt-1.5 max-w-[38ch] text-sm leading-relaxed text-ink-500;
+  }
+
+  /* --- Menu du compte ----------------------------------------------------- */
+  .app-menu {
+    @apply absolute z-30 min-w-[13rem] rounded-lg border bg-white p-1;
+    border-color: var(--k-hairline);
+    box-shadow: var(--k-shadow-pop);
+    animation: k-pop var(--k-t-fast) var(--k-ease) both;
+  }
+
+  /* --- Surfaces du navigateur -------------------------------------------- */
+  /* Sélection et barres de défilement portent les couleurs Karta plutôt que les
+     défauts du navigateur : ce sont des surfaces du produit, pas du chrome. */
+  .app-shell ::selection {
+    background-color: var(--k-persimmon-soft);
+    color: var(--k-ink-900);
+  }
+  .app-nav ::selection {
+    background-color: rgba(240, 90, 0, 0.35);
+    color: var(--k-white);
+  }
+  .app-nav-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--k-charcoal-line) transparent;
+  }
+}
+
+/* ==========================================================================
+   ÉDITEUR DE CARTE (`.mx-*`)
+   --------------------------------------------------------------------------
+   Partagé par le back-office et l'Espace Restaurateur — les deux éditent la
+   même carte, avec le même composant.
+
+   L'éditeur était une pile de cadres imbriqués : une boîte par catégorie,
+   une boîte par plat, une boîte pour l'enregistrement. Trois niveaux de
+   bordure pour une seule information — et chaque plat s'y lisait comme un
+   formulaire, jamais comme un plat.
+
+   Ce qui structure ici : le retrait, le filet, l'espace et la casse. Une
+   catégorie est un titre suivi d'un trait ; un plat est une ligne. Le seul
+   moment où une surface apparaît, c'est l'édition d'un plat — parce qu'il
+   faut alors distinguer ce qu'on modifie du reste de la carte.
+   ========================================================================== */
+@layer components {
+  /* --- Catégorie --------------------------------------------------------- */
+  .mx-category + .mx-category {
+    @apply mt-10;
+  }
+
+  .mx-cat-head {
+    @apply flex items-center gap-3;
+  }
+
+  /* Le rang de la catégorie : un repère, pas une donnée. Discret, en mono. */
+  .mx-cat-num {
+    @apply shrink-0 text-[0.6875rem] font-semibold tracking-[0.1em] text-ink-300;
+    font-family: var(--k-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Le nom se saisit là où il se lit : le champ EST le titre. Pas de cadre au
+     repos, un fond et un filet à la saisie — l'affordance apparaît au survol. */
+  .mx-cat-name {
+    @apply min-w-0 flex-1 rounded-sm border border-transparent bg-transparent px-2 py-1
+           text-[1.0625rem] font-semibold tracking-[-0.015em] text-ink-900
+           transition-colors duration-150 ease-karta
+           placeholder:font-normal placeholder:text-ink-300
+           focus:outline-none focus:ring-2;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .mx-cat-name:hover {
+    background-color: var(--k-ink-100);
+  }
+  .mx-cat-name:focus {
+    background-color: var(--k-white);
+    border-color: var(--k-persimmon);
+  }
+
+  .mx-cat-actions {
+    @apply flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-150 ease-karta;
+  }
+  .mx-cat-head:hover .mx-cat-actions,
+  .mx-cat-head:focus-within .mx-cat-actions {
+    @apply opacity-100;
+  }
+  @media (hover: none) {
+    .mx-cat-actions {
+      @apply opacity-100;
+    }
+  }
+
+  .mx-rule {
+    @apply mt-2.5 h-px w-full border-0;
+    background-color: var(--k-hairline);
+  }
+
+  /* --- Ligne de plat ------------------------------------------------------ */
+  /* Un plat se lit comme il se lit sur une carte : nom, description, prix
+     aligné à droite. Les actions n'apparaissent qu'au survol ou au clavier —
+     sinon quatre icônes par ligne domineraient le contenu. */
+  .mx-item {
+    @apply grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 rounded-sm
+           px-2 py-2.5 transition-colors duration-150 ease-karta
+           sm:grid-cols-[minmax(0,1fr)_auto_auto];
+  }
+  .mx-item:hover {
+    background-color: var(--k-ink-100);
+  }
+
+  /* Ouvre l'édition. Toute la zone nom + description est cliquable. */
+  .mx-item-open {
+    @apply min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:rounded-sm;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .mx-item-name {
+    @apply block truncate text-sm font-medium text-ink-900;
+  }
+  .mx-item-desc {
+    @apply mt-0.5 block truncate text-[0.8125rem] leading-relaxed text-ink-500;
+  }
+  .mx-item-untitled {
+    @apply italic text-ink-400;
+  }
+
+  .mx-item-price {
+    @apply shrink-0 text-sm text-ink-900;
+    font-family: var(--k-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .mx-item-price-missing {
+    color: var(--k-warning);
+  }
+
+  /* Plat retiré de la carte : encre atténuée, jamais masqué. */
+  .mx-item-off .mx-item-name,
+  .mx-item-off .mx-item-price {
+    @apply text-ink-400;
+  }
+
+  .mx-item-actions {
+    @apply hidden shrink-0 items-center justify-end gap-0.5 opacity-0
+           transition-opacity duration-150 ease-karta sm:flex;
+  }
+  .mx-item:hover .mx-item-actions,
+  .mx-item:focus-within .mx-item-actions {
+    @apply opacity-100;
+  }
+  /* Sur écran tactile il n'y a pas de survol : les actions restent visibles. */
+  @media (hover: none) {
+    .mx-item-actions {
+      @apply opacity-100;
+    }
+  }
+
+  .mx-icon-btn {
+    @apply grid h-7 w-7 shrink-0 place-items-center rounded-sm text-ink-400
+           transition-colors duration-150 ease-karta
+           hover:bg-white hover:text-ink-900
+           focus-visible:outline-none focus-visible:ring-2
+           disabled:pointer-events-none disabled:opacity-30;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+  .mx-icon-btn-danger:hover {
+    color: var(--k-danger);
+  }
+
+  /* --- Surface d'édition -------------------------------------------------- */
+  /* Le seul cadre de l'éditeur, et il ne dure que le temps d'une modification :
+     le plat en cours d'édition doit se distinguer des autres. Retrait à gauche
+     plutôt qu'une boîte flottante — la ligne reste à sa place dans la carte. */
+  .mx-edit {
+    @apply rounded-md p-4 sm:p-5;
+    background-color: var(--k-ivory);
+    box-shadow: inset 2px 0 0 var(--k-persimmon);
+    animation: k-pop var(--k-t-fast) var(--k-ease) both;
+  }
+  .mx-edit-grid {
+    @apply grid gap-4 sm:grid-cols-[minmax(0,1fr)_8rem];
+  }
+  .mx-edit-foot {
+    @apply mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4;
+    border-color: var(--k-ink-200);
+  }
+  /* Les icônes de la surface d'édition sont sur fond ivoire : le survol doit y rester
+     lisible, donc blanc plutôt que la même teinte que le fond. */
+  .mx-edit .mx-icon-btn:hover {
+    background-color: var(--k-white);
+  }
+
+  /* --- Ajout -------------------------------------------------------------- */
+  .mx-add {
+    @apply -ml-2 mt-1 inline-flex items-center gap-1.5 rounded-sm px-2 py-1.5 text-sm
+           font-medium text-ink-500 transition-colors duration-150 ease-karta
+           hover:bg-ink-100 hover:text-ink-900
+           focus-visible:outline-none focus-visible:ring-2
+           disabled:pointer-events-none disabled:opacity-50;
+    --tw-ring-color: var(--k-persimmon-ring);
+  }
+
+  /* --- Barre d'enregistrement --------------------------------------------- */
+  /* Collée au bas de la colonne : l'action principale reste atteignable sans
+     remonter, sur une carte de soixante lignes comme sur une de trois. */
+  /* La barre doit disparaître dans la surface qui la porte : `--k-canvas` dans
+     l'Espace Restaurateur, blanc quand le back-office monte l'éditeur dans une
+     `.card`. La variable est posée par la surface, pas devinée ici. */
+  .mx-bar {
+    @apply sticky bottom-0 z-10 mt-10 flex flex-wrap items-center justify-between gap-3
+           border-t py-3.5;
+    background-color: var(--mx-bar-bg, var(--k-canvas));
+    border-color: var(--k-hairline);
+  }
+  .mx-bar-state {
+    @apply flex min-w-0 items-center gap-2 text-sm text-ink-500;
+  }
+}
+
+/* ==========================================================================
+   SITE PUBLIC (`.pub-*`)
+   --------------------------------------------------------------------------
+   Primitives communes à `/`, `/features`, `/pricing`, `/faq`, `/contact`.
+   Elles existent pour une raison précise : les cinq pages posaient chacune leur
+   propre en-tête, leur propre largeur de colonne et leur propre rythme vertical.
+   Trois bords gauches différents cohabitaient sur une même page (`.container`
+   72 rem, `.container-narrow` 56 rem, plus les CTA). Rien ne trahit plus vite
+   cinq pages assemblées qu'un titre qui se déplace quand on navigue.
+
+   Trois règles :
+
+   1. **Un seul bord gauche.** `.container` partout, y compris les CTA de clôture.
+      La largeur de LECTURE se règle sur le texte (`max-w-[…ch]`), jamais en
+      rétrécissant la colonne — sinon la page entière se décale.
+
+   2. **Titre à gauche, contenu à droite.** `.pub-split` remplace les blocs
+      centrés sur 45 % de l'écran. Le titre reste visible pendant qu'on parcourt
+      la section : c'est ce qui donne le rythme éditorial, et ça occupe enfin la
+      largeur disponible.
+
+   3. **Le persimmon n'est pas une couleur de texte.** Il marquait chaque
+      bénéfice de `/features` — dix occurrences par page. Il revient aux actions,
+      à l'offre recommandée et aux repères d'état.
+   ========================================================================== */
+@layer components {
+  /* --- En-tête de page ---------------------------------------------------- */
+  /* Pas de sur-titre : le nom de la page est déjà dans la navigation, et le
+     titre porte sa propre voix. */
+  .pub-head {
+    @apply pb-14 pt-16 sm:pb-20 sm:pt-24;
+  }
+  .pub-title {
+    @apply text-[2rem] font-extrabold leading-[1.06] tracking-[-0.035em] text-ink-900
+           sm:text-[2.75rem];
+    max-width: 18ch;
+  }
+  .pub-lede {
+    @apply mt-5 text-[0.9375rem] leading-relaxed text-ink-600;
+    max-width: 58ch;
+  }
+
+  /* --- Rythme vertical ---------------------------------------------------- */
+  /* Deux valeurs, pas cinq : une section normale et une section dense. */
+  .pub-band {
+    @apply py-14 sm:py-20;
+  }
+  .pub-hr {
+    @apply h-px w-full border-0;
+    background-color: var(--k-hairline);
+  }
+
+  /* --- Composition en deux colonnes --------------------------------------- */
+  /* Le titre tient sa colonne et reste en vue ; le contenu déroule à côté. */
+  .pub-split {
+    @apply grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] lg:gap-x-16;
+  }
+  .pub-split-aside {
+    @apply lg:sticky lg:top-28 lg:self-start;
+  }
+  .pub-split-title {
+    @apply text-[1.375rem] font-bold leading-[1.2] tracking-[-0.025em] text-ink-900;
+  }
+  .pub-split-note {
+    @apply mt-3 text-sm leading-relaxed text-ink-500;
+    max-width: 34ch;
+  }
+
+  /* --- Entrée de fonctionnalité ------------------------------------------- */
+  /* Une liste séparée par des filets, pas une grille de cartes. Le bénéfice se
+     lit en premier parce qu'il porte la promesse ; l'explication suit. */
+  .pub-feature {
+    @apply grid gap-x-10 gap-y-2 py-7 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)];
+    border-top: 1px solid var(--k-hairline);
+  }
+  .pub-feature:first-child {
+    @apply pt-0;
+    border-top: 0;
+  }
+  .pub-feature-name {
+    @apply text-[0.9375rem] font-semibold leading-snug tracking-[-0.01em] text-ink-900;
+  }
+  .pub-feature-tiers {
+    @apply mt-2 flex flex-wrap gap-x-2 gap-y-1;
+  }
+  .pub-feature-tier {
+    @apply text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+  .pub-feature-body {
+    @apply text-sm leading-relaxed text-ink-500;
+    max-width: 62ch;
+  }
+  .pub-feature-benefit {
+    @apply mt-2 text-sm font-medium text-ink-900;
+  }
+
+  /* --- Bandeau de clôture -------------------------------------------------- */
+  /* Même bande sombre que le pied de page, sans filet entre les deux : la page
+     se referme sur une seule surface. */
+  .pub-cta {
+    @apply py-20 sm:py-28;
+    background-color: var(--k-charcoal);
+  }
+  .pub-cta-title {
+    @apply text-[1.75rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.25rem];
+    max-width: 16ch;
+  }
+  .pub-cta-note {
+    @apply mt-4 text-[0.9375rem] leading-relaxed;
+    color: var(--k-charcoal-muted);
+    max-width: 46ch;
+  }
+
+  /* Deux colonnes égales — utilisé par /contact, dont le contenu ne justifie pas
+     un rail étroit suivi d'une surface trop large. */
+  .pub-split-even {
+    @apply lg:grid-cols-2 lg:gap-x-20;
+  }
+
+  /* --- Surface de formulaire ---------------------------------------------- */
+  .pub-panel {
+    @apply rounded-lg border bg-white p-6 sm:p-8;
+    border-color: var(--k-hairline);
+  }
+
+  /* --- Navigation ---------------------------------------------------------- */
+  /* La page courante se marquait par une simple nuance d'encre, quasi illisible
+     entre `ink-600` et `ink-900`. Un filet sous le libellé la nomme vraiment. */
+  .pub-nav-link {
+    @apply relative py-1 text-sm font-medium text-ink-600
+           transition-colors duration-150 ease-karta hover:text-ink-900;
+  }
+  .pub-nav-link-active {
+    @apply text-ink-900;
+  }
+  .pub-nav-link-active::after {
+    content: "";
+    @apply absolute inset-x-0 -bottom-0.5 h-px;
+    background-color: var(--k-persimmon);
+  }
+  .nav-on-dark .pub-nav-link {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .nav-on-dark .pub-nav-link:hover,
+  .nav-on-dark .pub-nav-link-active {
+    color: var(--k-white);
+  }
+
+  /* --- Nuancier des styles -------------------------------------------------- */
+  /* Les cinq presets réels : la pastille montre les couleurs du renderer, pas des
+     couleurs décoratives. Sans cadre — la couleur se suffit. */
+  /* Deux des cinq presets ont un fond blanc (Modern, Minimal) : sans filet, leur
+     pastille disparaissait purement et simplement sur la page. La bordure est
+     structurelle, pas décorative. */
+  .pub-swatch {
+    @apply flex h-16 items-center justify-center rounded-md border;
+    border-color: var(--k-hairline);
+  }
+  .pub-swatch-dot {
+    @apply h-3 w-3 rounded-full;
+  }
+  .pub-swatch-label {
+    @apply mt-2 text-xs font-medium text-ink-700;
+  }
+  /* ── Zone de dépôt de la landing ──────────────────────────────────────────────
+     Ces règles voyagent avec le composant plutôt que dans `styles.css` : elles ne
+     servent qu'à cet écran. Aucun token nouveau. */
+
+  .imp-drop-demo-wrap {
+    @apply relative;
+  }
+  .imp-drop {
+    @apply relative flex min-h-[24rem] items-center justify-center overflow-hidden rounded-md p-6 text-center sm:min-h-[26rem];
+    border: 1px dashed var(--k-ink-200);
+    background-color: var(--k-white);
+    transition:
+      border-color var(--k-t-base) var(--k-ease),
+      background-color var(--k-t-base) var(--k-ease);
+  }
+  /* La classe vit sur .imp-drop-demo-wrap (voir composant) : le tracé/l'icône démo
+     doivent pouvoir déborder au-dessus de `.imp-drop`, qui garde son overflow-hidden
+     propre pour le fond quadrillé. */
+  .imp-drop-demo-wrap.imp-drop-active .imp-drop {
+    border-color: var(--k-persimmon);
+    background-color: var(--k-persimmon-soft);
+  }
+  /* Repère cartographique Karta, très en retrait : la grille situe la zone de
+     mesure, elle ne la décore pas (voir DESIGN.md §1). */
+  .imp-drop-grid {
+    @apply pointer-events-none absolute inset-0;
+    opacity: 0.5;
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
+    mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
+  }
+  .imp-drop-body {
+    @apply relative flex flex-col items-center;
+  }
+  .imp-drop-arrow {
+    @apply mt-7 h-8 w-8;
+    color: var(--k-ink-300);
+  }
+  .imp-drop-title {
+    @apply mt-5 text-lg font-semibold tracking-[-0.01em] text-ink-900;
+  }
+  .imp-drop-note {
+    @apply mt-1 text-sm text-ink-500;
+  }
+  /* Le fichier retenu : Geist Mono, comme toute donnée technique. */
+  .imp-drop-file {
+    @apply mt-4 max-w-full truncate text-base font-semibold text-ink-900;
+    font-family: var(--k-font-mono);
+  }
+  .imp-drop-change {
+    @apply text-xs font-semibold text-ink-500 underline underline-offset-4;
+  }
+  .imp-drop-change:hover {
+    color: var(--k-ink-900);
+  }
+
+  /* Indice visuel passif (voir menu-import-dropzone.component.html) : un PDF entre
+     depuis l'EXTÉRIEUR de la zone (au-dessus de son bord, hors de `.imp-drop`).
+     Décoratif uniquement — ne simule jamais un dépôt réel. Invisible par défaut
+     (opacity 0) : l'animation ne s'exécute que sous
+     prefers-reduced-motion:no-preference ET quand la zone est en idle
+     (.imp-drop-idle-demo, posé sur le wrapper quand aucun fichier n'est retenu) ET
+     hors survol réel (:hover/:focus-within/dragging) — `animation: none` restaure
+     alors le rendu statique sans jamais entrer en concurrence avec
+     .imp-drop-active. z-index au-dessus de `.imp-drop` : reste visible même une
+     fois « entré » dans la boîte. */
+  .imp-drop-demo {
+    @apply pointer-events-none absolute left-1/2 z-10 flex flex-col items-center gap-1.5;
+    top: -60px;
+    opacity: 0;
+    color: var(--k-ink-300);
+  }
+  .imp-drop-demo-icon {
+    @apply h-7 w-7;
+  }
+  .imp-drop-demo-label {
+    @apply text-[11px] font-medium text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .imp-drop-idle-demo .imp-drop {
+      animation: imp-demo-border 6s ease-in-out infinite;
+    }
+    .imp-drop-idle-demo .imp-drop-demo {
+      animation: imp-demo-slide 6s ease-in-out infinite;
+    }
+    .imp-drop-idle-demo:hover .imp-drop,
+    .imp-drop-idle-demo:focus-within .imp-drop,
+    .imp-drop-idle-demo.imp-drop-active .imp-drop {
+      animation: none;
+    }
+    .imp-drop-idle-demo:hover .imp-drop-demo,
+    .imp-drop-idle-demo:focus-within .imp-drop-demo,
+    .imp-drop-idle-demo.imp-drop-active .imp-drop-demo {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  /* Trajectoire : part au-dessus-gauche du bord de la zone (hors de `.imp-drop`),
+     glisse en courbe vers l'intérieur, s'arrête un instant sur la bordure (snap),
+     puis s'efface. */
+  @keyframes imp-demo-slide {
+    0%, 6% { opacity: 0; transform: translate(calc(-50% - 4rem), 0) scale(0.9); }
+    16%, 46% { opacity: 1; transform: translate(calc(-50% - 4rem), 0) scale(1); }
+    68% { opacity: 1; transform: translate(-50%, 108px) scale(0.88); }
+    78%, 100% { opacity: 0; transform: translate(-50%, 116px) scale(0.8); }
+  }
+
+  @keyframes imp-demo-border {
+    0%, 55% { border-color: var(--k-ink-200); }
+    68% { border-color: var(--k-persimmon); }
+    82%, 100% { border-color: var(--k-ink-200); }
+  }
+
+  /* ── Parcours de création Karta ───────────────────────────────────────────────
+     Feuille partagée par les écrans du parcours (`/karta-ai`, `/create/*`). Elle
+     voyage avec eux plutôt que dans `styles.css` : ces règles ne servent qu'ici et
+     n'ont pas à peser sur le bundle initial de tout le produit.
+
+     Deux familles :
+       .cf-*   le châssis du parcours (page, filet de progression, en-tête, étapes)
+       .imp-*  l'artefact et la console (document scanné, aperçu, compteurs)
+
+     Aucun token nouveau. L'apparition réutilise `k-pop` de styles.css. */
+
+  /* --- Châssis ----------------------------------------------------------- */
+  .cf-page {
+    @apply relative flex min-h-[100dvh] flex-col;
+    background-color: var(--k-canvas);
+  }
+  /* Progression collée au bord haut de la fenêtre : un repère de traitement, pas
+     une barre décorative posée dans la page. */
+  .cf-topline {
+    @apply fixed inset-x-0 top-0 z-30 h-[2px];
+    background-color: var(--k-ink-200);
+  }
+  .cf-topline-fill {
+    @apply block h-full;
+    background-color: var(--k-persimmon);
+    transition: width 120ms linear;
+  }
+  .cf-head {
+    @apply mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-5 sm:px-6;
+  }
+  .cf-head-file {
+    @apply flex min-w-0 items-baseline gap-3 text-sm text-ink-900;
+    font-family: var(--k-font-mono);
+  }
+  .cf-head-size {
+    @apply shrink-0 text-xs text-ink-400;
+    font-variant-numeric: tabular-nums;
+  }
+  .cf-body {
+    @apply flex flex-1 flex-col justify-center py-10 sm:py-14;
+  }
+
+  /* Étapes du parcours : une ligne de repères, jamais un fil d'Ariane décoratif.
+     L'étape courante est la seule en encre pleine. */
+  .cf-steps {
+    @apply flex flex-wrap items-center gap-x-5 gap-y-2;
+  }
+  .cf-step {
+    @apply flex items-baseline gap-2 text-xs text-ink-400;
+    font-family: var(--k-font-mono);
+  }
+  .cf-step-num {
+    @apply text-[0.625rem] text-ink-300;
+  }
+  .cf-step-current {
+    color: var(--k-ink-900);
+    font-weight: 600;
+  }
+  .cf-step-done {
+    color: var(--k-ink-500);
+  }
+  .cf-quit {
+    @apply text-xs font-semibold text-ink-400 underline underline-offset-4;
+  }
+  .cf-quit:hover {
+    color: var(--k-ink-900);
+  }
+
+  /* --- Artefact et console ------------------------------------------------ */
+  .imp-stage {
+    --imp-h: 30rem;
+    @apply grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start lg:gap-14;
+  }
+  @media (min-width: 640px) {
+    .imp-stage {
+      --imp-h: 33rem;
+    }
+  }
+  .imp-morph {
+    @apply relative;
+    height: var(--imp-h);
+  }
+  .imp-morph > * {
+    @apply absolute inset-0;
+  }
+  .imp-doc {
+    @apply overflow-hidden rounded-md;
+    border: 1px solid var(--k-hairline);
+    background-color: var(--k-ivory);
+    transition:
+      opacity var(--k-t-swap) var(--k-ease),
+      transform var(--k-t-swap) var(--k-ease);
+  }
+  .imp-doc-out {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  /* La page : dense, fondue en bas. On regarde un document, pas une liste. */
+  .imp-doc-sheet {
+    @apply px-6 pt-6;
+    -webkit-mask-image: linear-gradient(to bottom, #000 68%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 68%, transparent 100%);
+  }
+  .imp-doc-cat {
+    @apply mt-4 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-ink-700;
+  }
+  .imp-doc-cat:first-child {
+    @apply mt-0;
+  }
+  .imp-doc-line {
+    @apply mt-1 flex items-baseline gap-2 text-[0.6875rem] text-ink-500;
+  }
+  .imp-doc-line span:last-child {
+    font-family: var(--k-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .imp-dots {
+    @apply min-w-4 flex-1 translate-y-[-0.2rem] self-center;
+    border-bottom: 1px dotted var(--k-ink-300);
+  }
+  /* Ligne de lecture qui descend sur le document. Neutralisée par la règle globale
+     `prefers-reduced-motion` : l'état, lui, continue d'avancer. */
+  .imp-scan {
+    @apply pointer-events-none absolute inset-x-0 top-0 h-16;
+    background: linear-gradient(to bottom, transparent, rgba(240, 90, 0, 0.09) 72%, rgba(240, 90, 0, 0.2));
+    border-bottom: 1px solid var(--k-persimmon);
+    animation: imp-scan 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  .imp-preview {
+    @apply flex items-center justify-center;
+    opacity: 0;
+    transform: scale(0.98);
+    transition:
+      opacity var(--k-t-swap) var(--k-ease),
+      transform var(--k-t-swap) var(--k-ease);
+  }
+  .imp-preview-in {
+    opacity: 1;
+    transform: none;
+  }
+  .imp-phone-wrap {
+    @apply relative;
+  }
+  /* Le téléphone est calé sur la hauteur du stade, pas sur la fenêtre. */
+  .imp-phone-wrap .phone {
+    --k-phone-max: 13rem;
+  }
+  @media (min-width: 640px) {
+    .imp-phone-wrap .phone {
+      --k-phone-max: 14.5rem;
+    }
+  }
+  /* Construction de la carte : le masque la découvre du haut vers le bas. */
+  .imp-build {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 var(--build, 100%),
+      transparent calc(var(--build, 100%) + 6%)
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 var(--build, 100%),
+      transparent calc(var(--build, 100%) + 6%)
+    );
+  }
+
+  .imp-console {
+    @apply min-w-0;
+  }
+  .imp-console-title {
+    @apply text-xl font-bold leading-snug tracking-[-0.02em] text-ink-900 sm:text-2xl;
+  }
+  .imp-readout {
+    @apply border-t;
+    border-color: var(--k-hairline);
+  }
+  .imp-readout-row {
+    @apply flex items-baseline justify-between gap-4 border-b py-2 text-[0.8125rem];
+    border-color: var(--k-hairline);
+  }
+  .imp-readout-row dt {
+    @apply text-ink-500;
+  }
+  .imp-readout-row dd {
+    @apply font-semibold text-ink-900;
+  }
+  .imp-cats {
+    @apply flex flex-wrap gap-2;
+  }
+  .imp-cat {
+    @apply rounded-xs px-2 py-1 text-[0.6875rem] uppercase tracking-[0.1em] text-ink-700;
+    font-family: var(--k-font-mono);
+    border: 1px solid var(--k-ink-200);
+    animation: k-pop 240ms var(--k-ease) both;
+  }
+  .imp-checks {
+    @apply space-y-1.5;
+  }
+  .imp-check {
+    @apply flex items-baseline gap-2 text-[0.75rem] text-ink-500;
+    font-family: var(--k-font-mono);
+    animation: k-pop 240ms var(--k-ease) both;
+  }
+  .imp-check-ok {
+    color: var(--k-success);
+    font-weight: 600;
+  }
+  .imp-outcome {
+    @apply border-t pt-6;
+    border-color: var(--k-hairline);
+  }
+  /* La mention de démonstration reste visible partout dans le parcours : le fichier
+     déposé n'est ni envoyé ni analysé, et la carte est un exemple. */
+  .imp-demo {
+    @apply border-t pt-3 text-[0.6875rem] leading-relaxed text-ink-400;
+    border-color: var(--k-hairline);
+  }
+
+  /* --- Écran de style : réglages à gauche, rendu à droite ------------------ */
+  .cf-design {
+    @apply grid gap-12 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-16;
+  }
+  /* L'aperçu reste en vue pendant qu'on fait défiler les réglages : c'est la raison
+     d'être de l'écran. Sous `lg`, il passe simplement au-dessus. */
+  .cf-design-preview {
+    @apply order-first flex flex-col items-center lg:order-last lg:sticky lg:top-8;
+  }
+  .cf-design-preview .phone {
+    --k-phone-max: 15rem;
+  }
+
+  /* Palier de réglage : séparé par un filet, jamais par un cadre. */
+  .cf-block {
+    @apply mt-10 border-t pt-7;
+    border-color: var(--k-hairline);
+  }
+  .cf-block-title {
+    @apply flex items-center gap-3 text-sm font-semibold text-ink-900;
+  }
+  .cf-block-num {
+    @apply text-[0.6875rem] text-ink-300;
+    font-family: var(--k-font-mono);
+  }
+  .cf-details > summary {
+    @apply flex cursor-pointer list-none items-center gap-3;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cf-details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .cf-details > summary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--k-persimmon-ring);
+    border-radius: var(--k-r-xs);
+  }
+  .cf-details-summary .badge-offer {
+    @apply ml-auto;
+  }
+  .cf-details-chevron {
+    transition: transform var(--k-t-base) var(--k-ease);
+  }
+  .cf-details[open] .cf-details-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* La vérification ajoute une colonne à la ligne de plat : la case précède le nom.
+     Sans cela, la case prendrait la colonne souple et rejetterait le nom à droite. */
+  .cf-review-item {
+    @apply grid-cols-[auto_minmax(0,1fr)_auto] sm:grid-cols-[auto_minmax(0,1fr)_auto];
+  }
+  /* Case à cocher de la vérification : le seul contrôle de la ligne. */
+  .cf-check {
+    @apply flex shrink-0 cursor-pointer items-center self-start pt-[0.15rem];
+  }
+  .cf-check input {
+    @apply h-4 w-4 cursor-pointer rounded-xs;
+    accent-color: var(--k-persimmon);
+  }
+
+}
+
+@keyframes imp-scan {
+  from {
+    transform: translateY(-4rem);
+  }
+  to {
+    transform: translateY(var(--imp-h));
+  }
+}
+
 @keyframes k-fade {
   from {
     opacity: 0;

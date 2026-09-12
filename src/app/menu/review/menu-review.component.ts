@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Restaurant } from '../../models/restaurant.model';
+import { AuthService } from '../../services/auth.service';
 import { RestaurantService } from '../../services/restaurant.service';
 import { ShellService } from '../../layout/shell.service';
 import {
@@ -18,7 +19,7 @@ import {
 import { MenuDraftService } from './menu-draft.service';
 
 /**
- * Écran de Review : « voici ce que KartaAI a compris de votre menu, vérifiez avant de
+ * Écran de Review : « voici ce que KartaIA a compris de votre menu, vérifiez avant de
  * publier ».
  *
  * Écran plein, pas une modale : relire une carte entière est un travail qu'on interrompt
@@ -27,6 +28,13 @@ import { MenuDraftService } from './menu-draft.service';
  * Rien n'est écrit dans le menu tant que « Valider le menu » n'a pas été cliqué, et
  * valider ne publie pas : le menu passe en « prêt à publier », la mise en ligne reste
  * une action distincte depuis le studio.
+ *
+ * <strong>Un seul écran pour trois hôtes.</strong> Le back-office, l'Espace Restaurateur
+ * et le parcours de configuration relisent le même brouillon, avec la même validation et
+ * le même `PUT .../menu` : dupliquer cet écran garantirait qu'ils divergent. Seuls le
+ * vocabulaire et les portes de sortie changent, décidés par `data.space` sur la route
+ * (`'restaurateur'`, `'onboarding'`, ou `'admin'` par défaut).
+ * Le fil d'Ariane n'existe que dans le châssis du back-office : il n'est posé que là.
  */
 @Component({
     selector: 'app-menu-review',
@@ -40,7 +48,29 @@ export class MenuReviewComponent implements OnInit {
   private readonly restaurantService = inject(RestaurantService);
   private readonly shell = inject(ShellService);
 
-  readonly restaurantId = this.route.snapshot.paramMap.get('id') ?? '';
+  /**
+   * `restaurantId` dans l'Espace Restaurateur (`/app/:restaurantId/carte/review`),
+   * `id` dans le back-office (`/admin/restaurants/:id/menu/review`) — les deux routes
+   * nomment le même identifiant différemment, et aucune n'est à renommer pour l'autre.
+   */
+  readonly restaurantId =
+    this.route.snapshot.paramMap.get('restaurantId') ??
+    this.route.snapshot.paramMap.get('id') ??
+    // Parcours de configuration : l'URL ne porte pas de restaurant, il vient de
+    // l'identité du compte — la seule source qui fasse foi de toute façon.
+    inject(AuthService).identity()?.restaurantId ??
+    '';
+
+  /** Hôte d'où l'écran est ouvert. Voir la documentation de classe. */
+  private readonly space: 'admin' | 'restaurateur' | 'onboarding' = readSpace(
+    this.route.snapshot.data['space'],
+  );
+
+  readonly isRestaurateur = this.space !== 'admin';
+  readonly isOnboarding = this.space === 'onboarding';
+
+  /** Libellé du bouton de retour, cohérent avec l'écran qu'il rouvre. */
+  readonly backLabel = this.isRestaurateur ? 'Retour à ma carte' : 'Retour au client';
 
   readonly restaurant = signal<Restaurant | null>(null);
   readonly draft = signal<MenuDraft | null>(null);
@@ -119,13 +149,37 @@ export class MenuReviewComponent implements OnInit {
     return this.blockers.length === 0 && !this.saving();
   }
 
-  readonly detailLink = computed(() => ['/admin/restaurants', this.restaurantId]);
+  /** Écran de retour — jamais `/admin` depuis `/app`. */
+  readonly detailLink = computed(() =>
+    this.space === 'restaurateur'
+      ? ['/app', this.restaurantId, 'carte']
+      : ['/admin/restaurants', this.restaurantId],
+  );
+
+  /**
+   * Où l'on va une fois la carte validée.
+   *
+   * Dans le parcours de configuration, valider n'est pas une fin : l'étape suivante est
+   * le choix du style. Ailleurs, on revient à l'écran d'où l'on venait.
+   */
+  readonly savedLink = computed(() =>
+    this.isOnboarding ? ['/onboarding', 'style'] : this.detailLink(),
+  );
+
+  /** Abandonner l'analyse ramène à l'import pendant la configuration, sinon à l'écran d'origine. */
+  readonly discardLink = computed(() =>
+    this.isOnboarding ? ['/onboarding', 'menu'] : this.detailLink(),
+  );
 
   ngOnInit(): void {
-    this.shell.setBreadcrumbs([
-      { label: 'Clients', link: '/admin/restaurants' },
-      { label: 'Vérification du menu' },
-    ]);
+    // Le fil d'Ariane appartient au châssis du back-office ; le châssis restaurateur
+    // n'en a pas. Le renseigner depuis `/app` polluerait l'écran suivant du back-office.
+    if (!this.isRestaurateur) {
+      this.shell.setBreadcrumbs([
+        { label: 'Clients', link: '/admin/restaurants' },
+        { label: 'Vérification du menu' },
+      ]);
+    }
     this.load();
   }
 
@@ -147,7 +201,7 @@ export class MenuReviewComponent implements OnInit {
       error: (err) => {
         this.loadError.set(
           err?.status === 404
-            ? "Aucune analyse en attente. Lancez KartaAI depuis la fiche du client."
+            ? "Aucune analyse en attente. Lancez KartaIA depuis la fiche du client."
             : "Le brouillon n'a pas pu être chargé.",
         );
         this.loading.set(false);
@@ -232,7 +286,7 @@ export class MenuReviewComponent implements OnInit {
         // Le brouillon est consommé côté serveur, dans la même transaction que
         // l'écriture du menu : rien à nettoyer ici.
         this.saving.set(false);
-        this.router.navigate(this.detailLink());
+        this.router.navigate(this.savedLink());
       },
       error: (err) => {
         this.saving.set(false);
@@ -244,7 +298,7 @@ export class MenuReviewComponent implements OnInit {
   discard(): void {
     this.discarding.set(true);
     this.draftService.discard(this.restaurantId).subscribe({
-      next: () => this.router.navigate(this.detailLink()),
+      next: () => this.router.navigate(this.discardLink()),
       error: () => {
         this.discarding.set(false);
         this.confirmingDiscard.set(false);
@@ -256,4 +310,9 @@ export class MenuReviewComponent implements OnInit {
   private allItems(): EditableItem[] {
     return this.categories().flatMap((c) => c.items);
   }
+}
+
+/** `data.space` est une donnée de route : on ne fait confiance qu'aux valeurs connues. */
+function readSpace(value: unknown): 'admin' | 'restaurateur' | 'onboarding' {
+  return value === 'restaurateur' || value === 'onboarding' ? value : 'admin';
 }

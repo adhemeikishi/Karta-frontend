@@ -1,0 +1,295 @@
+<header class="app-head">
+  <div class="min-w-0">
+    <h1 class="app-title">Ma carte</h1>
+    <p class="app-lede">
+      Ce que vos clients lisent en scannant votre QR code. Importez votre carte, laissez
+      KartaIA la mettre en forme, puis vérifiez-la.
+    </p>
+  </div>
+
+  @if (menu(); as m) {
+    <div class="app-head-actions">
+      <span [class]="statusClass(m.status)">
+        <span class="app-status-dot" aria-hidden="true"></span>
+        {{ statusLabel(m.status) }}
+      </span>
+      <a routerLink="../apparence" class="btn btn-outline btn-sm">Apparence</a>
+    </div>
+  }
+</header>
+
+@if (loading()) {
+  <div class="space-y-4">
+    <div class="skeleton h-4 w-40"></div>
+    <div class="skeleton h-28 w-full"></div>
+    <div class="skeleton h-28 w-full"></div>
+  </div>
+} @else if (loadError()) {
+  <div class="app-panel app-panel-pad">
+    <p class="alert-error">{{ loadError() }}</p>
+    <button type="button" class="btn btn-outline btn-sm mt-4" (click)="load()">Réessayer</button>
+  </div>
+}
+
+<!-- `as` n'est autorisé que sur un `@if` primaire : bloc séparé plutôt qu'un
+     `@else if`. `menu()` est null tant qu'on charge ou qu'on a échoué — les trois
+     états restent donc exclusifs. -->
+@if (menu(); as m) {
+  @if (isReady()) {
+    <p class="alert-info mb-8">
+      <span>
+        <strong>Votre carte est prête.</strong> Elle est enregistrée mais pas encore en ligne —
+        la mise en ligne restera toujours une action séparée.
+      </span>
+    </p>
+  }
+
+  <!-- ============ Contenu à gauche, rendu réel à droite ============ -->
+  <div [class]="layoutClass()">
+    <div class="min-w-0">
+      <!-- ---------- Ce qu'est la carte aujourd'hui ---------- -->
+      <section class="app-section">
+        <div class="app-section-head">
+          <h2 class="app-section-title">En bref</h2>
+        </div>
+
+        <dl class="app-facts">
+          <div>
+            <dt class="app-fact-label">Format</dt>
+            <dd class="app-fact-value">
+              {{ m.type === 'STRUCTURED' ? 'Carte numérique' : 'Carte PDF' }}
+            </dd>
+          </div>
+          <div>
+            <dt class="app-fact-label">Contenu</dt>
+            <dd class="app-fact-value">
+              @if (hasStructure()) {
+                {{ plural(categoryCount(), 'catégorie', 'catégories') }} ·
+                {{ plural(itemCount(), 'plat', 'plats') }}
+              } @else {
+                Pas encore de carte numérique
+              }
+            </dd>
+          </div>
+          <div>
+            <dt class="app-fact-label">Mise en ligne</dt>
+            <dd class="app-fact-value">
+              @if (m.publishedAt) {
+                <span class="mono tnum text-ink-700">{{
+                  m.publishedAt | date: 'd MMM y, HH:mm'
+                }}</span>
+              } @else {
+                Pas encore en ligne
+              }
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ---------- Le PDF d'origine ---------- -->
+      <section class="app-section mt-8 sm:mt-10">
+        <div class="app-section-head">
+          <h2 class="app-section-title">Carte PDF d'origine</h2>
+          @if (pdfBusy()) {
+            <span class="save-hint text-ink-500"><span class="spinner"></span>En cours…</span>
+          }
+        </div>
+
+        @if (pdf(); as file) {
+          <div class="app-row">
+            <div class="flex min-w-0 items-center gap-3">
+              <svg
+                class="h-[18px] w-[18px] shrink-0 text-ink-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                />
+              </svg>
+              <span class="min-w-0">
+                <span class="mono block truncate text-sm text-ink-900">{{
+                  file.originalFilename || 'carte.pdf'
+                }}</span>
+                <span class="k-coord mt-0.5 block">
+                  {{ formatSize(file.sizeBytes) }} · importée le
+                  {{ file.uploadedAt | date: 'd MMM y' }}
+                </span>
+              </span>
+            </div>
+
+            <div class="flex shrink-0 flex-wrap items-center gap-1">
+              <button type="button" class="btn btn-ghost btn-sm" (click)="openPdf()">Voir</button>
+              <label class="btn btn-ghost btn-sm" [class.opacity-50]="pdfBusy()">
+                Remplacer
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  class="sr-only"
+                  [disabled]="pdfBusy()"
+                  (change)="onFileSelected($event)"
+                />
+              </label>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm text-ink-500 hover:text-ink-900"
+                [disabled]="pdfBusy()"
+                (click)="deletePdf()"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="app-empty">
+            <span
+              class="grid h-11 w-11 place-items-center rounded-lg"
+              style="background-color: var(--k-persimmon-soft)"
+              aria-hidden="true"
+            >
+              <svg
+                class="h-5 w-5"
+                style="color: var(--k-persimmon)"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-.41-8.98 4.5 4.5 0 018.4-2.51 5.25 5.25 0 016.15 6.99A4.5 4.5 0 0117.25 19.5H6.75z"
+                />
+              </svg>
+            </span>
+            <p class="app-empty-title">Importez votre carte au format PDF</p>
+            <p class="app-empty-text">
+              C'est le point de départ : KartaIA lira ce fichier pour en tirer vos catégories,
+              vos plats et vos prix. PDF uniquement, 10 Mo maximum.
+            </p>
+            <label class="btn btn-primary mt-5" [class.opacity-50]="pdfBusy()">
+              @if (pdfBusy()) {
+                <span class="spinner"></span>
+              }
+              Choisir un fichier PDF
+              <input
+                type="file"
+                accept="application/pdf"
+                class="sr-only"
+                [disabled]="pdfBusy()"
+                (change)="onFileSelected($event)"
+              />
+            </label>
+          </div>
+        }
+
+        @if (pdfError()) {
+          <p class="alert-error mt-3">{{ pdfError() }}</p>
+        }
+      </section>
+
+      <!-- ---------- KartaIA ---------- -->
+      @if (canAnalyze()) {
+        <section class="app-section mt-8 sm:mt-10">
+          <div class="app-section-head">
+            <h2 class="app-section-title">Mettre en forme avec KartaIA</h2>
+          </div>
+
+          <p class="max-w-[52ch] text-sm leading-relaxed text-ink-500">
+            KartaIA lit votre PDF et en tire vos catégories, vos plats et vos prix. Rien n'est
+            enregistré à cette étape : vous relisez tout, et vous corrigez ce qui doit l'être
+            avant de valider.
+          </p>
+
+          <div class="mt-5 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="analyzing()"
+              (click)="analyze()"
+            >
+              @if (analyzing()) {
+                <span class="spinner"></span>
+              }
+              Importer avec KartaIA
+            </button>
+
+            @if (analyzing()) {
+              <p class="save-hint text-ink-500" aria-live="polite">
+                Analyse en cours — cela peut prendre jusqu'à une minute. Ne fermez pas cette page.
+              </p>
+            } @else if (!showEditor()) {
+              <button type="button" class="btn btn-ghost btn-sm" (click)="startManual()">
+                Ou saisir ma carte à la main
+              </button>
+            }
+          </div>
+
+          @if (analyzeError()) {
+            <p class="alert-error mt-4">{{ analyzeError() }}</p>
+          }
+        </section>
+      }
+
+      <!-- ---------- Le contenu lui-même ---------- -->
+      @if (showEditor()) {
+        <section class="app-section mt-8 sm:mt-10">
+          <div class="app-section-head">
+            <h2 class="app-section-title">Catégories et plats</h2>
+          </div>
+
+          <app-menu-editor
+            [restaurantId]="restaurantId"
+            [menu]="m"
+            (menuChange)="onEditorSaved($event)"
+          />
+        </section>
+      } @else if (!pdf()) {
+        <section class="app-section mt-8 sm:mt-10">
+          <p class="text-sm text-ink-500">
+            Pas de PDF sous la main ?
+            <button type="button" class="btn btn-ghost btn-sm" (click)="startManual()">
+              Saisir ma carte à la main
+            </button>
+          </p>
+        </section>
+      }
+    </div>
+
+    <!-- ---------- Aperçu réel ---------- -->
+    @if (showPreview()) {
+      <aside class="hidden xl:sticky xl:top-8 xl:block xl:self-start">
+        <div class="app-section-head">
+          <h2 class="app-section-title">Aperçu</h2>
+          <a routerLink="../apparence" class="text-sm font-medium text-ink-500 hover:text-ink-900"
+            >Changer de style</a
+          >
+        </div>
+
+        <app-phone-frame [busy]="previewBusy()">
+          @if (previewUrl()) {
+            <iframe
+              [src]="previewUrl()"
+              title="Aperçu de votre carte"
+              class="phone-iframe"
+              referrerpolicy="no-referrer"
+            ></iframe>
+          }
+        </app-phone-frame>
+
+        @if (previewError()) {
+          <p class="mt-3 text-center text-xs text-ink-400">L'aperçu n'a pas pu être chargé.</p>
+        } @else {
+          <p class="mt-3 text-center text-xs leading-relaxed text-ink-400">
+            Le rendu réel, tel que vos clients le voient après un scan.
+          </p>
+        }
+      </aside>
+    }
+  </div>
+}
