@@ -1,3 +1,11 @@
+<input
+  #logoInput
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  class="hidden"
+  (change)="onLogoSelected($event)"
+/>
+
 <header class="app-head">
   <div class="min-w-0">
     <h1 class="app-title">Mon QR code</h1>
@@ -10,8 +18,8 @@
 
 <div class="grid items-start gap-10 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-14">
   <!-- ---------- Le QR, pièce centrale ---------- -->
-  <div class="mx-auto w-full max-w-xs lg:mx-0">
-    <div class="app-panel grid aspect-square place-items-center p-6">
+  <div class="mx-auto w-full max-w-xs lg:sticky lg:top-6 lg:mx-0">
+    <div class="app-panel relative grid aspect-square place-items-center p-6">
       @if (loading()) {
         <div class="skeleton h-full w-full rounded-md"></div>
       } @else {
@@ -21,7 +29,8 @@
           <img
             [src]="src"
             [alt]="'QR code de ' + (restaurant()?.name || 'votre restaurant')"
-            class="h-full w-full object-contain"
+            class="h-full w-full object-contain transition-opacity duration-150"
+            [class.opacity-60]="previewBusy()"
           />
         } @else {
           <div class="text-center">
@@ -33,6 +42,11 @@
         }
       }
     </div>
+    @if (canDesign() && dirty()) {
+      <p class="mt-3 flex items-center justify-center gap-2 text-sm text-ink-500">
+        <span class="studio-dot studio-dot-pending"></span> Aperçu — réglages non enregistrés
+      </p>
+    }
   </div>
 
   <!-- ---------- Ce qu'il fait, ce qu'on peut en faire ---------- -->
@@ -67,6 +81,202 @@
         </button>
       } @else if (!loading()) {
         <p class="text-sm text-ink-500">Aucun QR code n'est encore rattaché à ce restaurant.</p>
+      }
+    </section>
+
+    <!-- ---------- Apparence (Premium) ---------- -->
+    <section class="app-section mt-8 sm:mt-10">
+      <div class="app-section-head">
+        <h2 class="app-section-title">Apparence</h2>
+      </div>
+
+      @if (!canDesign()) {
+        <app-premium-lock
+          label="QR code personnalisable"
+          description="Adaptez votre QR code aux couleurs et à l'identité de votre restaurant."
+        />
+      } @else {
+      <!-- `as` n'est autorisé que sur un `@if` primaire : bloc imbriqué. -->
+      @if (draft(); as d) {
+        <p class="max-w-[52ch] text-sm leading-relaxed text-ink-500">
+          Vos couleurs, vos formes, votre logo. Le QR reste lisible : les modules doivent
+          rester nettement plus foncés que le fond.
+        </p>
+
+        <div class="mt-5 space-y-5">
+          <!-- Couleurs -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="field-label" for="qr-fg">Couleur des modules</label>
+              <div class="color-field">
+                <input
+                  id="qr-fg"
+                  type="color"
+                  class="color-input"
+                  [value]="fgColor()"
+                  (input)="setFgColor($any($event.target).value)"
+                />
+                <span class="mono text-sm text-ink-600">{{ fgColor() }}</span>
+              </div>
+            </div>
+            <div>
+              <label class="field-label" for="qr-bg">Couleur de fond</label>
+              <div class="color-field">
+                <input
+                  id="qr-bg"
+                  type="color"
+                  class="color-input"
+                  [value]="bgColor()"
+                  (input)="setBgColor($any($event.target).value)"
+                />
+                <span class="mono text-sm text-ink-600">{{ bgColor() }}</span>
+                @if (d.qrFgColor || d.qrBgColor) {
+                  <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="resetColors()">
+                    Réinitialiser
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+          @if (!scannable()) {
+            <p class="alert-warning">
+              Ce contraste rendrait le QR code illisible : choisissez des modules nettement plus
+              foncés que le fond. L'enregistrement sera refusé en l'état.
+            </p>
+          }
+
+          <!-- Formes -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <span class="field-label">Modules</span>
+              <div class="choice-row" role="radiogroup" aria-label="Forme des modules">
+                @for (style of moduleStyles; track style.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="choice"
+                    [class.choice-active]="(d.qrModuleStyle ?? 'SQUARE') === style.id"
+                    [attr.aria-checked]="(d.qrModuleStyle ?? 'SQUARE') === style.id"
+                    (click)="setModuleStyle(style.id)"
+                  >
+                    <span
+                      class="choice-glyph"
+                      [class.choice-glyph-rounded]="style.id === 'ROUNDED'"
+                      [class.choice-glyph-dots]="style.id === 'DOTS'"
+                      aria-hidden="true"
+                    ></span>
+                    {{ style.label }}
+                  </button>
+                }
+              </div>
+            </div>
+            <div>
+              <span class="field-label">Yeux</span>
+              <div class="choice-row" role="radiogroup" aria-label="Forme des yeux">
+                @for (style of eyeStyles; track style.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="choice"
+                    [class.choice-active]="(d.qrEyeStyle ?? 'SQUARE') === style.id"
+                    [attr.aria-checked]="(d.qrEyeStyle ?? 'SQUARE') === style.id"
+                    (click)="setEyeStyle(style.id)"
+                  >
+                    <span
+                      class="choice-glyph choice-glyph-eye"
+                      [class.choice-glyph-eye-rounded]="style.id === 'ROUNDED'"
+                      [class.choice-glyph-eye-circle]="style.id === 'CIRCLE'"
+                      aria-hidden="true"
+                    ></span>
+                    {{ style.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo -->
+          <div>
+            <span class="field-label">Logo au centre</span>
+            <div class="media-slot">
+              @if (d.qrLogoUrl) {
+                <img [src]="d.qrLogoUrl" alt="Logo du QR" class="media-thumb media-thumb-contain" />
+              } @else {
+                <span class="media-placeholder">Aucun</span>
+              }
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="btn btn-outline btn-sm"
+                  [disabled]="uploading()"
+                  (click)="logoInput.click()"
+                >
+                  {{ d.qrLogoUrl ? 'Remplacer' : 'Ajouter' }}
+                </button>
+                @if (d.qrLogoUrl) {
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="clearLogo()">Retirer</button>
+                }
+              </div>
+            </div>
+            @if (uploading()) {
+              <p class="mt-2 flex items-center gap-2 text-sm text-ink-500">
+                <span class="spinner"></span> Envoi de l'image…
+              </p>
+            }
+            @if (uploadError()) {
+              <p class="alert-error mt-2">{{ uploadError() }}</p>
+            }
+            <p class="field-hint">
+              JPEG ou PNG, 5 Mo maximum. Un logo simple et contrasté se lit mieux à petite taille.
+            </p>
+          </div>
+
+          <!-- Branding : le même réglage que sur l'écran Apparence. -->
+          <label class="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              class="mt-0.5"
+              [ngModel]="d.hideBranding"
+              (ngModelChange)="setHideBranding($event)"
+            />
+            <span>
+              <span class="block text-sm font-medium text-ink-900">Sans branding Karta</span>
+              <span class="block text-sm text-ink-500">
+                Retire la mention Karta sous le QR — et du pied de votre carte digitale.
+              </span>
+            </span>
+          </label>
+
+          <!-- Enregistrer -->
+          <div class="flex flex-wrap items-center gap-3 border-t pt-4" style="border-color: var(--k-hairline)">
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="dirty()"
+              [class.btn-outline]="!dirty()"
+              [disabled]="!dirty() || saving() || !scannable()"
+              (click)="save()"
+            >
+              @if (saving()) {
+                <span class="spinner"></span>
+              }
+              Enregistrer
+            </button>
+            @if (dirty()) {
+              <span class="text-sm text-ink-500">Modifications non enregistrées</span>
+            } @else if (justSaved()) {
+              <span class="save-hint">Modifications enregistrées</span>
+            }
+          </div>
+          @if (saveError()) {
+            <p class="alert-error">{{ saveError() }}</p>
+          }
+        </div>
+      } @else if (saveError()) {
+        <p class="alert-error">{{ saveError() }}</p>
+      } @else {
+        <div class="skeleton h-24 w-full"></div>
+      }
       }
     </section>
 

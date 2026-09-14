@@ -79,7 +79,20 @@ describe('StatsComponent', () => {
     expect(fixture.componentInstance.formatCount(1248).replace(/\s/g, '')).toBe('1248');
   });
 
-  it('compare les 7 derniers jours aux 7 précédents, sur la même série', () => {
+  it('choisit la semaine par défaut quand elle a du scan', () => {
+    create();
+    http.expectOne(URL).flush(stats({ last7Days: 21 }));
+    expect(fixture.componentInstance.period()).toBe('week');
+  });
+
+  it('bascule sur le mois par défaut quand la semaine est retombée à zéro mais pas le mois', () => {
+    create();
+    const daily = series([...Array(10).fill(0), 4, ...Array(19).fill(0)]);
+    http.expectOne(URL).flush(stats({ last7Days: 0, last30Days: 4, daily }));
+    expect(fixture.componentInstance.period()).toBe('month');
+  });
+
+  it('compare les 7 derniers jours aux 7 précédents, sur la même série, seulement en vue 7 jours', () => {
     create();
     // 7 jours à 0 … puis 7 jours à 1 (semaine précédente), puis 7 jours à 2.
     const daily = series([...Array(16).fill(0), ...Array(7).fill(1), ...Array(7).fill(2)]);
@@ -88,9 +101,16 @@ describe('StatsComponent', () => {
     // 14 → 7 : +100 %.
     expect(fixture.componentInstance.weekTrend()).toBe(100);
     expect(fixture.componentInstance.formatTrend(100)).toBe('+100,0 %');
+    fixture.detectChanges();
+    expect(text()).toContain('+100,0 %');
+
+    fixture.componentInstance.setPeriod('month');
+    fixture.detectChanges();
+    // En vue 30 jours, il n'y a pas de « 30 jours précédents » pour comparer.
+    expect(text()).not.toContain('+100,0 %');
   });
 
-  it('n’annonce aucune évolution quand la semaine précédente est vide', () => {
+  it('n’affiche aucune évolution quand la semaine précédente est vide, plutôt que d’en inventer une', () => {
     create();
     const daily = series([...Array(23).fill(0), ...Array(7).fill(5)]);
     http.expectOne(URL).flush(stats({ daily }));
@@ -98,21 +118,47 @@ describe('StatsComponent', () => {
     // « +100 % » à partir de zéro serait flatteur, pas informatif.
     expect(fixture.componentInstance.weekTrend()).toBeNull();
     fixture.detectChanges();
-    expect(text()).toContain('face à une semaine sans scan');
+    expect(text()).not.toContain('%');
   });
 
-  it('normalise les barres sur le maximum réel, sans barre fantôme', () => {
+  it('normalise les barres sur le maximum de la fenêtre affichée, sans barre fantôme', () => {
     create();
     http.expectOne(URL).flush(stats({ daily: series([...Array(29).fill(0), 4]) }));
+    fixture.componentInstance.setPeriod('month');
 
     const bars = fixture.componentInstance.bars();
-    expect(fixture.componentInstance.chartMax()).toBe(4);
+    expect(bars.length).toBe(30);
     expect(bars[29].ratio).toBe(1);
     // Un jour sans scan garde une hauteur nulle : aucune barre ne doit suggérer un scan.
     expect(bars[0].ratio).toBe(0);
   });
 
-  it('explique l’absence de données au lieu de la constater', () => {
+  it('désigne le jour le plus actif de la fenêtre affichée, pas de tout l’historique', () => {
+    create();
+    // Le pic (9) tombe hors des 7 derniers jours ; dans cette fenêtre, le maximum est 3.
+    const daily = series([...Array(22).fill(0), 9, 0, 0, 1, 2, 3, 1, 1]);
+    http.expectOne(URL).flush(stats({ last7Days: 8, daily }));
+
+    expect(fixture.componentInstance.period()).toBe('week');
+    expect(fixture.componentInstance.peakDay()?.scans).toBe(3);
+
+    fixture.componentInstance.setPeriod('month');
+    expect(fixture.componentInstance.peakDay()?.scans).toBe(9);
+  });
+
+  it('signale une activité ancienne plutôt qu’un graphique à plat quand rien n’est arrivé en 30 jours', () => {
+    create();
+    http.expectOne(URL).flush(
+      stats({ today: 0, last7Days: 0, last30Days: 0, total: 12, daily: series(Array(30).fill(0)) }),
+    );
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.isDormant()).toBeTrue();
+    expect(text()).toContain('Aucun scan sur les 30 derniers jours');
+    expect(text()).toContain('12 fois');
+  });
+
+  it('explique l’absence totale de scan au lieu de la constater', () => {
     create();
     http.expectOne(URL).flush(stats({ today: 0, last7Days: 0, last30Days: 0, total: 0 }));
     fixture.detectChanges();

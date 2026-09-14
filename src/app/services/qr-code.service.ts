@@ -65,14 +65,21 @@ export class QrCodeService {
    *
    * Règle produit V1 : 1 restaurant = 1 QR, il n'y a donc rien à choisir.
    */
-  restaurantImagePng(restaurantId: string): Observable<Blob> {
+  /**
+   * `params` : surcharges d'aperçu du QR (couleurs, formes, logo, branding) appliquées
+   * par-dessus le design enregistré, sans rien écrire — même mécanisme que l'aperçu du
+   * menu. Ignorées par le serveur hors PREMIUM.
+   */
+  restaurantImagePng(restaurantId: string, params: Record<string, string> = {}): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/restaurants/${restaurantId}/qr-code/image.png`, {
+      params,
       responseType: 'blob',
     });
   }
 
-  restaurantImageSvg(restaurantId: string): Observable<Blob> {
+  restaurantImageSvg(restaurantId: string, params: Record<string, string> = {}): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/restaurants/${restaurantId}/qr-code/image.svg`, {
+      params,
       responseType: 'blob',
     });
   }

@@ -21,6 +21,11 @@ export const LANDING_CAPABILITIES = [
   'Menu structuré (éditeur + 5 styles)',
   'KartaIA — import PDF assisté',
   'Personnalisation visuelle complète',
+  'QR code personnalisable',
+  'Sans branding Karta',
+  'Photos des plats',
+  'Carte multilingue — FR / EN / ES / 中文',
+  'Typographies personnalisées',
 ] as const;
 
 export interface LandingOfferPricing {
@@ -63,7 +68,7 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
       'Branding Karta visible',
     ],
     cta: 'Commencer',
-    included: [true, true, false, false, false],
+    included: [true, true, false, false, false, false, false, false, false, false],
     highlighted: false,
     pricing: {
       monthly: 29.99,
@@ -86,7 +91,7 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
       'Branding Karta visible',
     ],
     cta: 'Passer à Pro',
-    included: [true, true, true, true, false],
+    included: [true, true, true, true, false, false, false, false, false, false],
     highlighted: true,
     pricing: {
       monthly: 59.99,
@@ -100,16 +105,16 @@ export const LANDING_OFFERS: readonly LandingOffer[] = [
     quote: 'Votre menu devient votre identité.',
     featuresLead: 'Tout de Pro, plus :',
     features: [
-      'Nom du restaurant',
-      'Logo',
-      'Couleur principale',
-      'Couleur secondaire',
-      'Image',
-      'White-label',
+      'Nom, logo, couleurs et image d’en-tête',
+      'QR code personnalisable',
+      'Sans branding Karta',
+      'Photos des plats',
+      'Carte multilingue — FR / EN / ES / 中文',
+      'Typographies personnalisées',
     ],
     footnote: 'Idéal pour les restaurants avec une véritable identité de marque.',
     cta: 'Créer mon menu',
-    included: [true, true, true, true, true],
+    included: [true, true, true, true, true, true, true, true, true, true],
     highlighted: false,
     pricing: {
       monthly: 99.99,

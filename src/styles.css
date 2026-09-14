@@ -534,8 +534,26 @@ body {
     border: 1px solid var(--k-hairline);
     background-color: var(--k-white);
   }
+  /* Ancre l'infobulle du survol : positionnée en `%` de cette largeur, pas de la page,
+     pour rester alignée sur sa colonne aussi bien en vue 7 jours qu'en vue 30 jours. */
+  .chart-bars-wrap {
+    @apply relative;
+  }
   .chart-bars {
     @apply flex h-40 items-end gap-[2px] sm:h-48 sm:gap-1;
+  }
+  /* Valeur exacte du jour survolé — l'infobulle native du navigateur (`title`, gardée
+     en repli) est lente et sans style ; celle-ci répond tout de suite. Purement
+     décorative : la même information est déjà portée par `title` et par le graphique
+     lui-même, donc masquée aux lecteurs d'écran. */
+  .chart-tooltip {
+    @apply pointer-events-none absolute z-10 -translate-x-1/2 whitespace-nowrap rounded-md
+           px-2 py-1 text-xs font-semibold;
+    bottom: calc(100% + 0.5rem);
+    background-color: var(--k-ink-900);
+    color: var(--k-white);
+    font-family: var(--k-font-mono);
+    animation: k-fade var(--k-t-fast) var(--k-ease);
   }
   .chart-col {
     /* Colonne pleine hauteur : toute la bande est survolable, même un jour à 0. */
@@ -565,10 +583,42 @@ body {
   .chart-col:hover .chart-bar-empty {
     background-color: var(--k-ink-200);
   }
+  /* Le jour le plus actif de la fenêtre : un repère discret, pas une autre couleur —
+     l'accent reste réservé aux vrais scans, sinon la barre elle-même perdrait son sens. */
+  .chart-bar-peak {
+    box-shadow: inset 0 0 0 1.5px var(--k-ink-900);
+  }
+  /* Vue 7 jours : moins de colonnes, plus d'air entre elles — l'écart normal (pensé
+     pour 30 barres fines) laisserait 7 barres larges se toucher presque. */
+  .chart-bars-sparse {
+    @apply gap-2 sm:gap-3;
+  }
   .chart-axis {
     @apply mt-2 flex items-center justify-between;
     border-top: 1px solid var(--k-hairline);
     padding-top: 0.5rem;
+  }
+
+  /* --- En-tête du graphique : le chiffre de la page ----------------------
+     Le graphique porte sa propre légende (total de la période, évolution, jour le
+     plus actif) au lieu que ces faits vivent dans des tuiles séparées : une seule
+     pièce éditoriale plutôt que trois qui se répéteraient. */
+  .chart-head {
+    @apply flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1;
+  }
+  .chart-figure {
+    @apply text-[2.25rem] font-semibold leading-none tracking-[-0.02em] text-ink-900 sm:text-[2.75rem];
+    font-family: var(--k-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .chart-figure-unit {
+    @apply ml-2.5 text-sm text-ink-500;
+  }
+  .chart-trend {
+    @apply text-sm text-ink-500;
+  }
+  .chart-peak {
+    @apply mt-2 flex items-center gap-2 text-sm text-ink-600;
   }
 
   /* --- Chargement / vide --------------------------------------------- */
@@ -779,6 +829,92 @@ body {
   .media-placeholder {
     @apply grid h-12 w-16 shrink-0 place-items-center rounded-sm text-[0.6875rem] text-ink-400;
     background-color: var(--k-ivory);
+  }
+
+  /* --- Fonctionnalité verrouillée (Premium) ------------------------------ */
+  /* Un filet pointillé, pas une carte : c'est une place réservée, pas un bloc de
+     vente. Même gabarit que .media-slot pour se fondre dans les formulaires. */
+  .premium-lock {
+    @apply flex flex-wrap items-center justify-between gap-3 rounded-md px-3.5 py-3;
+    border: 1px dashed var(--k-ink-300);
+  }
+  .premium-lock-title {
+    @apply text-sm font-semibold text-ink-900;
+  }
+  .premium-lock-text {
+    @apply mt-0.5 text-sm text-ink-500;
+  }
+
+  /* --- Choix à cases (formes du QR, langues) ----------------------------- */
+  /* Même dessin que .preset-card, en plus compact : une rangée de petites options
+     dont une seule est active (ou plusieurs pour les langues). */
+  .choice-row {
+    @apply flex flex-wrap gap-2;
+  }
+  .choice {
+    @apply inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium
+           text-ink-700 transition-colors duration-150 ease-karta;
+    border: 1px solid var(--k-hairline);
+    background-color: var(--k-white);
+  }
+  .choice:hover {
+    border-color: var(--k-ink-300);
+  }
+  .choice:focus-visible {
+    outline: none;
+    border-color: var(--k-persimmon);
+    box-shadow: 0 0 0 3px var(--k-persimmon-ring);
+  }
+  .choice-active {
+    border-color: var(--k-ink-900);
+    color: var(--k-ink-900);
+  }
+  /* Variante compacte : un sélecteur de période (deux mots, pas de glyphe) n'a pas
+     besoin du gabarit pensé pour les formes de module/œil du QR. */
+  .choice-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .choice-active::before {
+    content: "";
+    @apply h-1.5 w-1.5 shrink-0 rounded-full;
+    background-color: var(--k-persimmon);
+  }
+  /* Miniature de forme (module / œil) dessinée en CSS : jamais une image à charger. */
+  .choice-glyph {
+    @apply inline-block h-3 w-3 shrink-0;
+    background-color: currentColor;
+  }
+  .choice-glyph-rounded {
+    border-radius: 3px;
+  }
+  .choice-glyph-dots {
+    border-radius: 9999px;
+  }
+  .choice-glyph-eye {
+    background: transparent;
+    border: 2px solid currentColor;
+  }
+  .choice-glyph-eye-rounded {
+    border-radius: 4px;
+  }
+  .choice-glyph-eye-circle {
+    border-radius: 9999px;
+  }
+
+  /* Vignette de plat dans l'éditeur : carrée, discrète, jamais plus haute que la ligne.
+     La ligne gagne une colonne devant le nom uniquement quand une photo existe. */
+  .mx-item.mx-item-with-thumb {
+    @apply grid-cols-[auto_minmax(0,1fr)_auto] sm:grid-cols-[auto_minmax(0,1fr)_auto_auto];
+  }
+  .mx-item-thumb {
+    @apply h-9 w-9 shrink-0 self-center rounded-sm object-cover;
+    background-color: var(--k-ivory);
+  }
+
+  /* Bloc langues en tête de l'éditeur : un filet dessous, comme une catégorie. */
+  .mx-langs {
+    @apply mb-8 pb-6;
+    border-bottom: 1px solid var(--k-hairline);
   }
 
   /* --- Châssis de téléphone ---------------------------------------------- */
@@ -1191,6 +1327,29 @@ body {
      Deux éléments seulement : la carte « papier » (chapitre 01), la liste de
      presets (chapitre 04). Aucun nouveau token. */
 
+  /* Bascule avant/après (section « Problème ») : le filet persimmon se dessine
+     du haut vers le bas au premier passage dans l'écran — `scaleY` depuis
+     `transform-origin: top`, donc aucune mesure de hauteur nécessaire — sur la
+     bordure hairline déjà en place (`revealOnScroll` pose `.is-visible` sur ce
+     même élément, voir variant-editorial.component.html). Purement décoratif
+     (`aria-hidden`) : la bordure grise reste la vraie séparation structurelle,
+     y compris sans JS ou animation coupée (`.is-visible` posé immédiatement
+     dans ce cas — voir RevealOnScrollDirective). Réduit à zéro comme le reste
+     sous `prefers-reduced-motion` (règle globale, pas de media query ici). */
+  .problem-wipe-col {
+    @apply relative;
+  }
+  .problem-wipe-rule {
+    @apply pointer-events-none absolute -left-px top-0 hidden h-full w-[1.5px] lg:block;
+    background-color: var(--k-persimmon);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform var(--k-t-reveal-lg) var(--k-ease);
+  }
+  .problem-wipe-col.is-visible .problem-wipe-rule {
+    transform: scaleY(1);
+  }
+
   /* Sélecteur de style (chapitre 02) : les 5 noms en liste typographique.
      L'actif passe en ink-900 et son filet persimmon s'étend. Le téléphone à côté
      reflète déjà le choix : pas de swatch, pas de carte. */
@@ -1589,6 +1748,15 @@ body {
     @apply flex flex-wrap items-center justify-between gap-4 rounded-md px-3 py-2.5
            transition-colors duration-150 ease-karta;
     background-color: var(--k-ink-100);
+  }
+
+  /* --- Fait de clôture ------------------------------------------------------
+     Le cumul depuis toujours : un registre différent du pouls du jour et du
+     graphique (qui parlent du présent et du récent), donc une ligne discrète en
+     pied de page plutôt qu'une tuile de même poids que les autres. */
+  .app-history {
+    @apply mt-10 border-t pt-5 text-sm leading-relaxed text-ink-500 sm:mt-12;
+    border-color: var(--k-hairline);
   }
 
   /* --- État vide ---------------------------------------------------------- */
@@ -2049,16 +2217,16 @@ body {
      .imp-drop-active. z-index au-dessus de `.imp-drop` : reste visible même une
      fois « entré » dans la boîte. */
   .imp-drop-demo {
-    @apply pointer-events-none absolute left-1/2 z-10 flex flex-col items-center gap-1.5;
-    top: -60px;
+    @apply pointer-events-none absolute left-1/2 z-10 flex flex-col items-center gap-2;
+    top: -64px;
     opacity: 0;
-    color: var(--k-ink-300);
+    color: var(--k-ink-500);
   }
   .imp-drop-demo-icon {
-    @apply h-7 w-7;
+    @apply h-8 w-8;
   }
   .imp-drop-demo-label {
-    @apply text-[11px] font-medium text-ink-400;
+    @apply text-xs font-semibold text-ink-600;
     font-family: var(--k-font-mono);
   }
 
@@ -2083,19 +2251,19 @@ body {
   }
 
   /* Trajectoire : part au-dessus-gauche du bord de la zone (hors de `.imp-drop`),
-     glisse en courbe vers l'intérieur, s'arrête un instant sur la bordure (snap),
-     puis s'efface. */
+     glisse en courbe vers l'intérieur, s'arrête un instant sur la bordure (snap,
+     tenu plus longtemps qu'un simple flash pour rester lisible), puis s'efface. */
   @keyframes imp-demo-slide {
     0%, 6% { opacity: 0; transform: translate(calc(-50% - 4rem), 0) scale(0.9); }
     16%, 46% { opacity: 1; transform: translate(calc(-50% - 4rem), 0) scale(1); }
-    68% { opacity: 1; transform: translate(-50%, 108px) scale(0.88); }
-    78%, 100% { opacity: 0; transform: translate(-50%, 116px) scale(0.8); }
+    62%, 80% { opacity: 1; transform: translate(-50%, 108px) scale(0.92); }
+    90%, 100% { opacity: 0; transform: translate(-50%, 116px) scale(0.8); }
   }
 
   @keyframes imp-demo-border {
-    0%, 55% { border-color: var(--k-ink-200); }
-    68% { border-color: var(--k-persimmon); }
-    82%, 100% { border-color: var(--k-ink-200); }
+    0%, 50% { border-color: var(--k-ink-200); }
+    62%, 80% { border-color: var(--k-persimmon); }
+    90%, 100% { border-color: var(--k-ink-200); }
   }
 
   /* ── Parcours de création Karta ───────────────────────────────────────────────

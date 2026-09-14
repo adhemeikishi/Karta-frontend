@@ -1,10 +1,12 @@
 import { MenuCategory } from '../menu.model';
 import {
+  editorKey,
   newCategory,
   newItem,
   reconcileWithSaved,
   toEditable,
   toSaveRequest,
+  translationFor,
 } from './menu-editor.model';
 
 function category(overrides: Partial<MenuCategory> = {}): MenuCategory {
@@ -109,6 +111,54 @@ describe('toEditable / toSaveRequest — round-trip', () => {
 
     expect(request.categories[0].description).toBe('Pour commencer');
     expect(request.categories[0].visible).toBe(false);
+  });
+});
+
+describe('traductions et langues (Premium)', () => {
+  it("envoie les traductions renseignées, jamais les vides, et les langues activées", () => {
+    const editable = toEditable([
+      category({
+        id: 'cat-1',
+        translations: { en: { name: 'Starters', description: null } },
+        items: [
+          {
+            id: 'i1',
+            name: 'Velouté',
+            description: null,
+            price: 890,
+            currency: 'EUR',
+            imageAssetId: null,
+            imageUrl: null,
+            sortOrder: 0,
+            available: true,
+          },
+        ],
+      }),
+    ]);
+    // Saisie comme le ferait l'éditeur en mode « EN » : le champ est créé à la demande.
+    translationFor(editable[0].items[0], 'en').name = 'Soup';
+    translationFor(editable[0].items[0], 'es').name = '   ';
+
+    const request = toSaveRequest(editable, ['en', 'es']);
+
+    expect(request.languages).toEqual(['en', 'es']);
+    expect(request.categories[0].translations).toEqual({ en: { name: 'Starters', description: null } });
+    expect(request.categories[0].items[0].translations).toEqual({ en: { name: 'Soup', description: null } });
+  });
+
+  it("n'envoie pas de langues quand l'éditeur ne les gère pas (Review KartaIA, offres non Premium)", () => {
+    const request = toSaveRequest(toEditable([category()]));
+    expect('languages' in request).toBeFalse();
+    expect(request.categories[0].translations).toBeUndefined();
+  });
+
+  it("modifier une traduction ou une langue rend l'état « non enregistré »", () => {
+    const editable = toEditable([category({ id: 'cat-1' })]);
+    const before = editorKey(editable, ['en']);
+
+    translationFor(editable[0], 'en').name = 'Starters';
+    expect(editorKey(editable, ['en'])).not.toBe(before);
+    expect(editorKey(toEditable([category({ id: 'cat-1' })]), ['en', 'zh'])).not.toBe(before);
   });
 });
 

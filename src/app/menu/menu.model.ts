@@ -14,6 +14,19 @@ export interface MenuPdf {
   uploadedAt: string;
 }
 
+/** Traduction d'un nom et d'une description. Champ absent = repli sur le français. */
+export interface Translation {
+  name: string | null;
+  description: string | null;
+}
+
+/**
+ * Par code langue (`en`, `es`, `zh`). Vide = français seul. Rendu pour PREMIUM seulement.
+ * Optionnel côté TypeScript : absent = aucune traduction, ce qui garde les fixtures et
+ * les réponses antérieures valides.
+ */
+export type Translations = Record<string, Translation>;
+
 /**
  * Produit d'une catégorie.
  * `price` est toujours en **centimes entiers** (1290 = 12,90 €) — jamais de flottant.
@@ -28,6 +41,7 @@ export interface MenuItem {
   imageUrl: string | null;
   sortOrder: number;
   available: boolean;
+  translations?: Translations;
 }
 
 export interface MenuCategory {
@@ -36,6 +50,7 @@ export interface MenuCategory {
   description: string | null;
   sortOrder: number;
   visible: boolean;
+  translations?: Translations;
   items: MenuItem[];
 }
 
@@ -43,6 +58,8 @@ export interface MenuCategory {
 export interface MenuStructure {
   restaurantName: string;
   currency: string;
+  /** Langues activées en plus du français (codes ISO). Absent = aucune. */
+  languages?: string[];
   categories: MenuCategory[];
 }
 
@@ -64,6 +81,8 @@ export interface Menu {
 /** Corps de `PUT .../menu` : document complet, ce qui n'est pas envoyé est supprimé. */
 export interface SaveMenuRequest {
   categories: SaveCategoryRequest[];
+  /** Langues activées. Omis = inchangées. */
+  languages?: string[];
 }
 
 export interface SaveCategoryRequest {
@@ -73,6 +92,7 @@ export interface SaveCategoryRequest {
   description?: string | null;
   sortOrder?: number;
   visible?: boolean;
+  translations?: Translations;
   items: SaveItemRequest[];
 }
 
@@ -86,6 +106,7 @@ export interface SaveItemRequest {
   imageAssetId?: string | null;
   sortOrder?: number;
   available?: boolean;
+  translations?: Translations;
 }
 
 /** 10 Mo — doit rester aligné avec MediaService.MAX_PDF_BYTES côté backend. */

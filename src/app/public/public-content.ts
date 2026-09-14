@@ -12,7 +12,8 @@ import { RestaurantOffer } from '../models/restaurant.model';
  *   - BASIC   = QR permanent → menu PDF. Pas de studio de design.
  *   - PRO     = QR permanent → menu HTML mobile structuré + 5 presets + éditeur + KartaIA.
  *   - PREMIUM = tout PRO + personnalisation visuelle (nom, logo, image d'en-tête,
- *               couleur principale, couleur secondaire).
+ *               couleur principale, couleur secondaire), QR personnalisable, sans
+ *               branding Karta, photos des plats, carte multilingue, typographies.
  *   - Le paiement et le changement d'offre sont hors périmètre V1 → CTA « choisir une
  *     offre » = /contact, pas un paiement en ligne.
  */
@@ -123,6 +124,41 @@ export const FEATURE_GROUPS: readonly PublicFeatureGroup[] = [
         benefit: 'Le menu ressemble à votre restaurant.',
         tiers: PREMIUM_ONLY,
       },
+      {
+        name: 'QR code personnalisable',
+        description:
+          "Couleurs, forme des modules et des yeux, logo au centre. Le QR reste lisible : Karta vérifie le contraste avant d'enregistrer.",
+        benefit: "Adaptez votre QR code aux couleurs et à l'identité de votre restaurant.",
+        tiers: PREMIUM_ONLY,
+      },
+      {
+        name: 'Sans branding Karta',
+        description:
+          "La mention Karta disparaît du pied de votre carte et de votre QR code. Il ne reste que votre restaurant.",
+        benefit: 'Retirez la présence de Karta de votre QR code et de votre carte digitale.',
+        tiers: PREMIUM_ONLY,
+      },
+      {
+        name: 'Photos des plats',
+        description:
+          "Une photo par plat, affichée dans la carte digitale. Sans photo, la carte reste aussi élégante.",
+        benefit: 'Ajoutez des photos à vos plats pour rendre votre carte plus visuelle.',
+        tiers: PREMIUM_ONLY,
+      },
+      {
+        name: 'Carte multilingue — FR / EN / ES / 中文',
+        description:
+          "Activez les langues de votre choix, renseignez vos traductions plat par plat. Vos clients choisissent leur langue d'un geste.",
+        benefit: 'Votre carte se lit dans la langue de vos clients.',
+        tiers: PREMIUM_ONLY,
+      },
+      {
+        name: 'Typographies personnalisées',
+        description:
+          "Une sélection de typographies soignées, appliquée à toute la carte. Aperçu avant application.",
+        benefit: "Choisissez les typographies qui correspondent à l'identité de votre restaurant.",
+        tiers: PREMIUM_ONLY,
+      },
     ],
   },
   {
@@ -220,6 +256,10 @@ export const FAQ_GROUPS: readonly FaqGroup[] = [
       {
         q: 'Puis-je mettre mes couleurs et mon logo ?',
         a: "Avec PREMIUM : nom affiché, logo, image d'en-tête, couleur principale et couleur secondaire. Le texte s'adapte pour rester lisible sur n'importe quel fond.",
+      },
+      {
+        q: 'Que comprend PREMIUM en plus ?',
+        a: "Un QR code personnalisable, la carte sans branding Karta, les photos des plats, la carte multilingue (FR / EN / ES / 中文) et des typographies personnalisées.",
       },
     ],
   },

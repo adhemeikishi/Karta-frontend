@@ -19,21 +19,104 @@
     </button>
   </div>
 } @else {
+  <!-- ---------- Langues (Premium) ---------- -->
+  <!-- La carte se traduit dans le même éditeur : une « langue d'édition » bascule les
+       champs nom / description sur la traduction, le français reste visible en repère. -->
+  <div class="mx-langs">
+    @if (!canTranslate()) {
+      <app-premium-lock
+        label="Carte multilingue — FR / EN / ES / 中文"
+        description="Proposez votre carte en anglais, en espagnol et en chinois, avec vos propres traductions."
+        [space]="space()"
+      />
+    } @else {
+      <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div>
+          <span class="field-label">Langues proposées à vos clients</span>
+          <div class="choice-row" role="group" aria-label="Langues de la carte">
+            <span class="choice choice-active" aria-disabled="true">Français</span>
+            @for (lang of allLanguages; track lang.code) {
+              <button
+                type="button"
+                class="choice"
+                [class.choice-active]="isLanguageOn(lang.code)"
+                [attr.aria-pressed]="isLanguageOn(lang.code)"
+                [disabled]="saving()"
+                (click)="toggleLanguage(lang.code)"
+              >
+                {{ lang.label }}
+              </button>
+            }
+          </div>
+        </div>
+        @if (languages().length > 0) {
+          <div>
+            <span class="field-label">Vous rédigez en</span>
+            <div class="choice-row" role="radiogroup" aria-label="Langue d'édition">
+              <button
+                type="button"
+                role="radio"
+                class="choice"
+                [class.choice-active]="editLang() === 'fr'"
+                [attr.aria-checked]="editLang() === 'fr'"
+                (click)="setEditLang('fr')"
+              >
+                FR
+              </button>
+              @for (lang of allLanguages; track lang.code) {
+                @if (isLanguageOn(lang.code)) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="choice"
+                    [class.choice-active]="editLang() === lang.code"
+                    [attr.aria-checked]="editLang() === lang.code"
+                    (click)="setEditLang(lang.code)"
+                  >
+                    {{ lang.code === 'zh' ? '中文' : lang.code.toUpperCase() }}
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+      @if (translating()) {
+        <p class="field-hint">
+          Vous traduisez en {{ editLangLabel() }}. Un champ laissé vide affichera le français.
+          Prix, photos et ordre sont communs à toutes les langues.
+        </p>
+      }
+    }
+  </div>
+
   @for (category of categories(); track category.uid; let ci = $index) {
     <section class="mx-category">
       <!-- ---------- Catégorie ---------- -->
       <div class="mx-cat-head">
         <span class="mx-cat-num" aria-hidden="true">{{ ci + 1 | number: '2.0-0' }}</span>
 
-        <input
-          type="text"
-          class="mx-cat-name"
-          maxlength="120"
-          placeholder="Nom de la catégorie"
-          [(ngModel)]="category.name"
-          (ngModelChange)="onFieldChange()"
-          [attr.aria-label]="'Nom de la catégorie ' + (ci + 1)"
-        />
+        @if (translating()) {
+          <input
+            type="text"
+            class="mx-cat-name"
+            maxlength="120"
+            [placeholder]="category.name || 'Nom de la catégorie'"
+            [ngModel]="tr(category).name"
+            (ngModelChange)="setTranslated(category, 'name', $event)"
+            [attr.aria-label]="'Traduction du nom de la catégorie ' + (category.name || ci + 1)"
+          />
+        } @else {
+          <input
+            type="text"
+            class="mx-cat-name"
+            maxlength="120"
+            placeholder="Nom de la catégorie"
+            [(ngModel)]="category.name"
+            (ngModelChange)="onFieldChange()"
+            [attr.aria-label]="'Nom de la catégorie ' + (ci + 1)"
+          />
+        }
 
         <div class="mx-cat-actions">
           <button
@@ -88,51 +171,138 @@
           @if (isEditing(item)) {
             <!-- Surface d'édition : le seul cadre de l'éditeur, le temps d'un plat. -->
             <div class="mx-edit my-2">
-              <div class="mx-edit-grid">
+              @if (translating()) {
+                <!-- Traduction : le français reste sous les yeux, le prix ne bouge pas. -->
                 <div>
-                  <label class="field-label" [attr.for]="'name-' + item.uid">Nom du plat</label>
+                  <label class="field-label" [attr.for]="'name-' + item.uid">
+                    Nom du plat — {{ editLangLabel() }}
+                  </label>
                   <input
                     [id]="'name-' + item.uid"
                     type="text"
                     class="input"
                     maxlength="160"
-                    placeholder="Velouté de potiron"
-                    [(ngModel)]="item.name"
+                    [placeholder]="item.name || 'Nom du plat'"
+                    [ngModel]="tr(item).name"
+                    (ngModelChange)="setTranslated(item, 'name', $event)"
+                  />
+                  <p class="field-hint">Français : {{ item.name || '—' }}</p>
+                </div>
+                <div class="mt-4">
+                  <label class="field-label" [attr.for]="'desc-' + item.uid">
+                    Description — {{ editLangLabel() }}
+                  </label>
+                  <textarea
+                    [id]="'desc-' + item.uid"
+                    class="input resize-y"
+                    rows="2"
+                    maxlength="2000"
+                    [placeholder]="item.description || 'Facultative'"
+                    [ngModel]="tr(item).description"
+                    (ngModelChange)="setTranslated(item, 'description', $event)"
+                  ></textarea>
+                  @if (item.description.trim()) {
+                    <p class="field-hint">Français : {{ item.description }}</p>
+                  }
+                </div>
+              } @else {
+                <div class="mx-edit-grid">
+                  <div>
+                    <label class="field-label" [attr.for]="'name-' + item.uid">Nom du plat</label>
+                    <input
+                      [id]="'name-' + item.uid"
+                      type="text"
+                      class="input"
+                      maxlength="160"
+                      placeholder="Velouté de potiron"
+                      [(ngModel)]="item.name"
+                      (ngModelChange)="onFieldChange()"
+                    />
+                  </div>
+                  <div>
+                    <label class="field-label" [attr.for]="'price-' + item.uid">Prix (€)</label>
+                    <input
+                      [id]="'price-' + item.uid"
+                      type="text"
+                      inputmode="decimal"
+                      class="input mono tnum"
+                      placeholder="0,00"
+                      [ngModel]="priceInputValue(item)"
+                      (ngModelChange)="onPriceInput(item, $event)"
+                      (blur)="onPriceBlur(item)"
+                    />
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <label class="field-label" [attr.for]="'desc-' + item.uid">Description</label>
+                  <textarea
+                    [id]="'desc-' + item.uid"
+                    class="input resize-y"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="Facultative — ce que le client lit sous le nom du plat."
+                    [(ngModel)]="item.description"
                     (ngModelChange)="onFieldChange()"
-                  />
+                  ></textarea>
                 </div>
-                <div>
-                  <label class="field-label" [attr.for]="'price-' + item.uid">Prix (€)</label>
-                  <input
-                    [id]="'price-' + item.uid"
-                    type="text"
-                    inputmode="decimal"
-                    class="input mono tnum"
-                    placeholder="0,00"
-                    [ngModel]="priceInputValue(item)"
-                    (ngModelChange)="onPriceInput(item, $event)"
-                    (blur)="onPriceBlur(item)"
-                  />
+
+                @if (item.priceEuros === null || item.priceEuros < 0) {
+                  <p class="field-hint" style="color: var(--k-warning)">
+                    Saisissez un prix valide pour pouvoir enregistrer.
+                  </p>
+                }
+
+                <!-- Photo (Premium). Même route d'envoi que le logo : un média du restaurant. -->
+                <div class="mt-4">
+                  @if (canPhotos()) {
+                    <span class="field-label">Photo</span>
+                    <input
+                      #photoInput
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      class="hidden"
+                      (change)="onPhotoSelected($event, item)"
+                    />
+                    <div class="media-slot">
+                      @if (item.imageUrl) {
+                        <img [src]="item.imageUrl" [alt]="'Photo de ' + (item.name || 'ce plat')" class="media-thumb" />
+                      } @else {
+                        <span class="media-placeholder">Aucune</span>
+                      }
+                      <div class="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-outline btn-sm"
+                          [disabled]="uploadingUid() !== null"
+                          (click)="photoInput.click()"
+                        >
+                          {{ item.imageUrl ? 'Remplacer' : 'Ajouter' }}
+                        </button>
+                        @if (item.imageUrl) {
+                          <button type="button" class="btn btn-ghost btn-sm" (click)="clearPhoto(item)">
+                            Retirer
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    @if (uploadingUid() === item.uid) {
+                      <p class="mt-2 flex items-center gap-2 text-sm text-ink-500">
+                        <span class="spinner"></span> Envoi de la photo…
+                      </p>
+                    }
+                    @if (uploadError()) {
+                      <p class="alert-error mt-2">{{ uploadError() }}</p>
+                    }
+                    <p class="field-hint">JPEG, PNG ou WebP — 5 Mo maximum. Cadrage carré conseillé.</p>
+                  } @else {
+                    <app-premium-lock
+                      label="Photos des plats"
+                      description="Ajoutez des photos à vos plats pour rendre votre carte plus visuelle."
+                      [space]="space()"
+                    />
+                  }
                 </div>
-              </div>
-
-              <div class="mt-4">
-                <label class="field-label" [attr.for]="'desc-' + item.uid">Description</label>
-                <textarea
-                  [id]="'desc-' + item.uid"
-                  class="input resize-y"
-                  rows="2"
-                  maxlength="2000"
-                  placeholder="Facultative — ce que le client lit sous le nom du plat."
-                  [(ngModel)]="item.description"
-                  (ngModelChange)="onFieldChange()"
-                ></textarea>
-              </div>
-
-              @if (item.priceEuros === null || item.priceEuros < 0) {
-                <p class="field-hint" style="color: var(--k-warning)">
-                  Saisissez un prix valide pour pouvoir enregistrer.
-                </p>
               }
 
               <div class="mx-edit-foot">
@@ -212,20 +382,26 @@
             </div>
           } @else {
             <!-- Ligne de plat : ce que le client lira, tel qu'il le lira. -->
-            <div class="mx-item" [class.mx-item-off]="!item.available">
+            <div class="mx-item" [class.mx-item-off]="!item.available" [class.mx-item-with-thumb]="item.imageUrl && canPhotos()">
+              @if (item.imageUrl && canPhotos()) {
+                <img [src]="item.imageUrl" alt="" class="mx-item-thumb" loading="lazy" />
+              }
               <button type="button" class="mx-item-open" (click)="startEdit(item)">
                 <span class="mx-item-name">
-                  @if (item.name.trim()) {
-                    {{ item.name }}
+                  @if (displayName(item).trim()) {
+                    {{ displayName(item) }}
                   } @else {
                     <span class="mx-item-untitled">Plat sans nom</span>
+                  }
+                  @if (isUntranslated(item)) {
+                    <span class="k-coord ml-2">à traduire</span>
                   }
                   @if (!item.available) {
                     <span class="k-coord ml-2">indisponible</span>
                   }
                 </span>
-                @if (item.description.trim()) {
-                  <span class="mx-item-desc">{{ item.description }}</span>
+                @if (displayDescription(item).trim()) {
+                  <span class="mx-item-desc">{{ displayDescription(item) }}</span>
                 }
               </button>
 

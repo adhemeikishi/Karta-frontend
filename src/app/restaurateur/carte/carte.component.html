@@ -244,9 +244,11 @@
           </div>
 
           <app-menu-editor
+            space="restaurateur"
             [restaurantId]="restaurantId"
             [menu]="m"
             (menuChange)="onEditorSaved($event)"
+            (languageChange)="onEditorLanguage($event)"
           />
         </section>
       } @else if (!pdf()) {

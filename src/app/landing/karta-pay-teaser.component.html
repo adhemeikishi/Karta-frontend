@@ -1,0 +1,32 @@
+<!-- ── KARTA PAY — TEASER ── Purement visuel : aucune commande, aucun paiement,
+     aucun appel réseau. Karta Pay n'existe pas encore, ce chapitre annonce une
+     direction, jamais une fonctionnalité livrée — badge toujours visible. ──── -->
+<section class="section bg-white">
+  <div class="container section-y">
+    <div revealOnScroll class="max-w-xl">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <p class="eyebrow">Karta Pay</p>
+        <span
+          class="mono rounded-full px-2.5 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.12em]"
+          style="background-color: var(--k-ink-100); color: var(--k-ink-500)"
+        >
+          Bientôt disponible
+        </span>
+      </div>
+      <h2 class="h2-marketing mt-3">Karta ne s'arrête pas au menu digital.</h2>
+      <p class="lead mt-5 max-w-md">
+        La même carte portera demain la commande et le paiement à table. Rien de
+        tout cela n'est actif aujourd'hui — ce sont les prochaines étapes.
+      </p>
+    </div>
+
+    <ol revealOnScroll="80" class="mt-12 grid gap-6 sm:mt-16 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
+      @for (step of steps; track step.order) {
+        <li class="border-t pt-4" style="border-color: var(--k-hairline)">
+          <span class="mono text-xs text-ink-300">{{ step.order }}</span>
+          <p class="mt-2 text-sm font-medium text-ink-900">{{ step.label }}</p>
+        </li>
+      }
+    </ol>
+  </div>
+</section>

@@ -1,21 +1,22 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      Landing Karta — le funnel EST la page.
 
-     HERO → PROBLÈME → 01 votre menu (expérience d'import : dépôt → analyse →
-     carte → verrou → /pricing) → 02 le style (+ option PREMIUM) → 03 publication
-     → abonnement → FAQ → CTA final.
+     HERO → explication rapide → 01 votre menu (expérience d'import : dépôt →
+     analyse → carte → verrou → /pricing) → Karta Pay (teaser, à venir) →
+     Voilà ce qu'il fait (capacités) → FAQ → abonnement → CTA final.
 
-     Le chapitre 01 est interactif : il *montre* la transformation au lieu de la
-     décrire. Les anciens chapitres statiques (« Karta le transforme », « Vous
-     vérifiez », « Votre carte est prête ») y sont absorbés — les garder aurait
-     fait dire deux fois la même chose, une fois en images fixes, une fois en vrai.
+     Le chapitre « votre menu » est interactif : il *montre* la transformation
+     au lieu de la décrire. Les anciens chapitres statiques (« Karta le
+     transforme », « Vous vérifiez », « Votre carte est prête ») y sont
+     absorbés — les garder aurait fait dire deux fois la même chose, une fois
+     en images fixes, une fois en vrai.
 
      Les repères de chapitre sont des `.eyebrow` (« 01 · Votre menu »), la même
      numérotation que l'onboarding réel : le parcours se lit sans lire.
      Une composition par chapitre, jamais un gabarit répété. Signature graphique
      rationnée : .k-crosshair = zone de dépôt + section QR. Geist Mono = données.
-     Presets / prix / contenu de menu / compteurs / FAQ = sources de vérité
-     existantes, jamais inventés.
+     Capacités / prix / contenu de menu / FAQ = sources de vérité existantes,
+     jamais inventés.
      Layout : primitives .section / .container / .section-y / .h2-marketing / .lead
      (styles.css, DESIGN.md §20).
 
@@ -28,7 +29,8 @@
      Fond sombre → navbar inversée via LandingChromeService. ─────────────────── -->
 <landing-hero />
 
-<!-- ── PROBLÈME ── Ce que coûte une carte imprimée. 4 étapes grises vs 3 nettes. ─ -->
+<!-- ── EXPLICATION RAPIDE ── Ce qu'est Karta et ce que ça coûte de ne pas
+     l'avoir. 4 étapes grises vs 3 nettes. ─────────────────────────────────── -->
 <section id="probleme" class="section bg-white">
   <div class="container section-y">
     <h2 revealOnScroll class="h2-marketing max-w-xl">
@@ -49,7 +51,8 @@
         </ol>
       </div>
 
-      <div revealOnScroll="140" class="lg:border-l lg:pl-16" style="border-color: var(--k-hairline)">
+      <div revealOnScroll="140" class="problem-wipe-col lg:border-l lg:pl-16" style="border-color: var(--k-hairline)">
+        <span class="problem-wipe-rule" aria-hidden="true"></span>
         <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">Avec Karta</p>
         <ol class="mt-6 space-y-3.5">
           <li class="flex items-baseline gap-3 text-lg text-ink-900"><span class="mono text-xs text-ink-400">1</span> Modifier</li>
@@ -87,126 +90,121 @@
   </div>
 </section>
 
-<!-- ── 02 · VOUS CHOISISSEZ LE STYLE ── Le téléphone est le héros, les presets sont
-     des contrôles. Le choix fait ici se retrouve au chapitre 05. ────────────── -->
-<section id="produit" class="section bg-white">
+<!-- ── KARTA PAY ── Teaser à venir, voir karta-pay-teaser.component. ──────────── -->
+<landing-karta-pay-teaser />
+
+<!-- ── VOILÀ CE QU'IL FAIT ── Grille de capacités, non interactive — le produit
+     réel se découvre dans le chapitre 01, ici on l'énumère. Source unique :
+     LANDING_CAPABILITIES (landing-offers.ts). ─────────────────────────────── -->
+<section id="produit" class="section bg-canvas">
   <div class="container section-y">
-    <div class="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
-      <div revealOnScroll class="lg:pt-4">
-        <p class="eyebrow">02 · Vous choisissez le style</p>
-        <h2 class="h2-marketing mt-3">Un menu. Cinq identités.</h2>
-        <p class="lead mt-5 max-w-sm">
-          Votre carte doit ressembler à votre restaurant, pas à un gabarit générique.
-          Le contenu ne bouge pas — mêmes plats, mêmes prix — seul le style change.
-        </p>
-        <ul class="mt-8 divide-y" style="border-color: var(--k-hairline)" role="radiogroup" aria-label="Style du menu">
-          @for (preset of presets; track preset.id) {
-            <li>
-              <button
-                type="button"
-                role="radio"
-                class="v2-preset-row"
-                [class.v2-preset-row-active]="activePresetId() === preset.id"
-                [attr.aria-checked]="activePresetId() === preset.id"
-                (click)="selectPreset(preset.id)"
-              >
-                <span class="v2-preset-name">{{ preset.label }}</span>
-                <span class="v2-preset-mark" aria-hidden="true"></span>
-              </button>
-            </li>
-          }
-        </ul>
-      </div>
-
-      <div revealOnScroll="120" [revealScale]="true" class="phone-hover-lift mx-auto">
-        <app-phone-frame [screenColor]="activePresetTheme().background">
-          <menu-render [theme]="activePresetTheme()" [menu]="content" />
-        </app-phone-frame>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── PREMIUM ── Prolongement du chapitre 02, pas un chapitre de plus : l'option
-     pour qui veut son identité. Dense — l'outil est la section. ─────────────── -->
-<section id="premium" class="section bg-canvas">
-  <div class="container pt-20 sm:pt-28">
     <div revealOnScroll class="max-w-xl">
-      <p class="eyebrow">02 · Option Premium</p>
-      <h2 class="h2-marketing mt-3">Et si le menu ressemblait à votre restaurant ?</h2>
+      <p class="eyebrow">Voilà ce qu'il fait</p>
+      <h2 class="h2-marketing mt-3">Un menu digital, complet.</h2>
       <p class="lead mt-5 max-w-md">
-        Nom, logo, couleurs, image d'en-tête : votre carte devient votre identité, pas
-        seulement un style parmi cinq. Chaque changement s'affiche dans le téléphone
-        pendant que vous le faites.
+        Tout ce qu'il faut pour publier votre carte et la garder à jour — le reste
+        est une option, jamais un prérequis.
       </p>
     </div>
-  </div>
-  <landing-premium-configurator />
-  <div revealOnScroll class="container pb-20 sm:pb-28">
-    <a routerLink="/login" class="btn btn-primary">Créer ma carte</a>
+
+    <ul revealOnScroll="80" class="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
+      @for (card of capabilityCards; track card.label) {
+        <li class="border-t pt-5" style="border-color: var(--k-hairline)">
+          <span class="text-ink-400" aria-hidden="true">
+            @switch (card.icon) {
+              @case ('qr') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="3.5" y="3.5" width="6" height="6" rx="0.5" />
+                  <rect x="14.5" y="3.5" width="6" height="6" rx="0.5" />
+                  <rect x="3.5" y="14.5" width="6" height="6" rx="0.5" />
+                  <rect x="15.5" y="15.5" width="3" height="3" fill="currentColor" stroke="none" />
+                </svg>
+              }
+              @case ('stats') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                  <line x1="5" y1="19" x2="5" y2="13" />
+                  <line x1="12" y1="19" x2="12" y2="8" />
+                  <line x1="19" y1="19" x2="19" y2="4" />
+                </svg>
+              }
+              @case ('menu') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="4" y1="12" x2="16" y2="12" />
+                  <line x1="4" y1="18" x2="18" y2="18" />
+                </svg>
+              }
+              @case ('ai') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+                  <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" />
+                </svg>
+              }
+              @case ('sliders') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                  <line x1="4" y1="7" x2="20" y2="7" />
+                  <circle cx="9" cy="7" r="1.6" fill="currentColor" stroke="none" />
+                  <line x1="4" y1="14" x2="20" y2="14" />
+                  <circle cx="15" cy="14" r="1.6" fill="currentColor" stroke="none" />
+                  <line x1="4" y1="21" x2="20" y2="21" />
+                  <circle cx="11" cy="21" r="1.6" fill="currentColor" stroke="none" />
+                </svg>
+              }
+              @case ('qr-custom') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="3.5" y="3.5" width="6" height="6" rx="2" />
+                  <circle cx="17.5" cy="6.5" r="3" />
+                  <rect x="3.5" y="14.5" width="6" height="6" rx="2" />
+                  <rect x="14.5" y="14.5" width="6" height="6" rx="2" />
+                </svg>
+              }
+              @case ('no-tag') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12.5 4.5H6a1.5 1.5 0 00-1.5 1.5v6.5L13 21l6.5-6.5-8.5-8.5z" />
+                  <circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none" />
+                  <line x1="3" y1="3" x2="21" y2="21" />
+                </svg>
+              }
+              @case ('photo') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+                  <rect x="3.5" y="5.5" width="17" height="13" rx="1.2" />
+                  <circle cx="9" cy="10" r="1.5" />
+                  <path d="M3.5 16l4.5-4 3.5 3.5 3-3 5.5 5" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('globe') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <circle cx="12" cy="12" r="8.5" />
+                  <ellipse cx="12" cy="12" rx="3.6" ry="8.5" />
+                  <line x1="3.5" y1="12" x2="20.5" y2="12" />
+                </svg>
+              }
+              @case ('type') {
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 18l4.5-12h1l4.5 12" />
+                  <line x1="7.6" y1="13.5" x2="15.4" y2="13.5" />
+                </svg>
+              }
+            }
+          </span>
+          <p class="mt-3 text-sm font-semibold text-ink-900">{{ card.label }}</p>
+          <p class="mt-1 text-sm text-ink-500">{{ card.description }}</p>
+        </li>
+      }
+    </ul>
   </div>
 </section>
 
-<!-- ── 03 · PUBLICATION ── Le fichier devient une page. Le QR est la conséquence de
-     la publication, pas le produit. Démo physique, fond sombre. ─────────────── -->
-<section id="qr" class="section relative overflow-hidden bg-charcoal">
-  <div class="k-crosshair pointer-events-none absolute inset-0 opacity-[0.06]" aria-hidden="true"></div>
-  <div class="container section-y relative">
-    <p revealOnScroll class="eyebrow on-dark-muted">03 · Publication</p>
-    <h2 revealOnScroll="40" class="h2-marketing mt-3 max-w-2xl text-white">
-      Votre carte n'est plus un fichier à envoyer.
-    </h2>
-    <p revealOnScroll="80" class="lead on-dark-muted mt-5 max-w-md">
-      Elle devient une page, accessible à chaque table par le QR. Vous la modifiez quand
-      vous voulez : le QR, lui, ne change jamais.
-    </p>
-
-    <!-- Les trois conséquences de la publication, rien de plus. -->
-    <ul revealOnScroll="120" class="mt-12 grid gap-6 sm:grid-cols-3 sm:gap-8">
-      <li class="border-t pt-4" style="border-color: var(--k-charcoal-line)">
-        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">Carte publiée</p>
-        <p class="on-dark-muted mt-2 text-sm">Votre menu est en ligne, à jour.</p>
-      </li>
-      <li class="border-t pt-4" style="border-color: var(--k-charcoal-line)">
-        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">QR permanent</p>
-        <p class="on-dark-muted mt-2 text-sm">Collé une seule fois sur vos tables.</p>
-      </li>
-      <li class="border-t pt-4" style="border-color: var(--k-charcoal-line)">
-        <p class="mono text-xs uppercase tracking-[0.14em]" style="color: var(--k-persimmon)">Sur mobile</p>
-        <p class="on-dark-muted mt-2 text-sm">Le client la consulte à table, ou avant d'arriver au comptoir.</p>
-      </li>
-    </ul>
-
-    <div class="mt-14 grid gap-10 sm:mt-16 lg:grid-cols-[auto_1fr] lg:items-center lg:gap-16">
-      <figure revealOnScroll="160" class="mx-auto w-full max-w-[15rem] lg:mx-0">
-        <img
-          src="/qr-demo.png"
-          alt="QR code Karta pointant vers kartaqr.fr, généré par le système Karta"
-          width="1200"
-          height="1308"
-          loading="lazy"
-          decoding="async"
-          class="w-full rounded-lg"
-          style="background-color: #fff"
-        />
-      </figure>
-
-      <div revealOnScroll="220" class="max-w-xs">
-        <div class="flex items-baseline gap-3">
-          <span class="text-lg text-white">Burger</span>
-          <span class="mono text-lg text-white/50 line-through">12,50 €</span>
-        </div>
-        <div class="my-3 flex items-center gap-2">
-          <svg class="on-dark-muted h-4 w-4 rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16m0 0l-6-6m6 6l-6 6" />
-          </svg>
-          <span class="on-dark-muted text-xs uppercase tracking-[0.12em]">Vous modifiez</span>
-        </div>
-        <div class="flex items-baseline gap-3">
-          <span class="text-lg text-white">Burger</span>
-          <span class="mono text-lg" style="color: var(--k-persimmon)">13,50 €</span>
-        </div>
-        <p class="mono mt-9 text-sm font-semibold uppercase tracking-[0.14em] text-white">Le QR ne bouge pas.</p>
+<!-- ── FAQ ── Extraite de /faq (FAQ_GROUPS), resserrée sur le parcours. ─────── -->
+<section id="faq" class="section bg-white">
+  <div class="container section-y">
+    <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+      <div revealOnScroll>
+        <h2 class="h2-marketing">Les questions qui reviennent.</h2>
+        <a routerLink="/faq" class="btn btn-ghost mt-6 hidden lg:inline-flex">Toutes les questions</a>
+      </div>
+      <div revealOnScroll="80" class="min-w-0">
+        <app-faq-accordion [items]="faq" />
+        <a routerLink="/faq" class="btn btn-ghost mt-6 lg:hidden">Toutes les questions</a>
       </div>
     </div>
   </div>
@@ -223,22 +221,6 @@
     </p>
     <div class="mt-12 sm:mt-16">
       <landing-pricing />
-    </div>
-  </div>
-</section>
-
-<!-- ── FAQ ── Extraite de /faq (FAQ_GROUPS), resserrée sur le parcours. ─────── -->
-<section id="faq" class="section bg-white">
-  <div class="container section-y">
-    <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-      <div revealOnScroll>
-        <h2 class="h2-marketing">Les questions qui reviennent.</h2>
-        <a routerLink="/faq" class="btn btn-ghost mt-6 hidden lg:inline-flex">Toutes les questions</a>
-      </div>
-      <div revealOnScroll="80" class="min-w-0">
-        <app-faq-accordion [items]="faq" />
-        <a routerLink="/faq" class="btn btn-ghost mt-6 lg:hidden">Toutes les questions</a>
-      </div>
     </div>
   </div>
 </section>

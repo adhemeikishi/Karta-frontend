@@ -21,10 +21,22 @@ describe('can — capacités par offre', () => {
     expect(can('PRO', 'branding')).toBeFalse();
   });
 
-  it('PREMIUM ajoute l’identité de marque', () => {
+  it('PREMIUM ajoute l’identité de marque et la personnalisation avancée', () => {
     expect(can('PREMIUM', 'structuredMenu')).toBeTrue();
     expect(can('PREMIUM', 'presets')).toBeTrue();
     expect(can('PREMIUM', 'branding')).toBeTrue();
+    expect(can('PREMIUM', 'noBranding')).toBeTrue();
+    expect(can('PREMIUM', 'fonts')).toBeTrue();
+    expect(can('PREMIUM', 'qrDesign')).toBeTrue();
+    expect(can('PREMIUM', 'itemPhotos')).toBeTrue();
+    expect(can('PREMIUM', 'translations')).toBeTrue();
+  });
+
+  it('la personnalisation avancée est fermée à BASIC et PRO', () => {
+    for (const feature of ['noBranding', 'fonts', 'qrDesign', 'itemPhotos', 'translations'] as const) {
+      expect(can('PRO', feature)).withContext(feature).toBeFalse();
+      expect(can('BASIC', feature)).withContext(feature).toBeFalse();
+    }
   });
 
   it('n’ouvre rien sans offre connue', () => {
@@ -36,6 +48,8 @@ describe('can — capacités par offre', () => {
 describe('requiredOfferFor — ce qu’il faut pour débloquer', () => {
   it('annonce l’offre exacte, jamais une promesse vague', () => {
     expect(requiredOfferFor('branding')).toBe('PREMIUM');
+    expect(requiredOfferFor('itemPhotos')).toBe('PREMIUM');
+    expect(requiredOfferFor('translations')).toBe('PREMIUM');
     expect(requiredOfferFor('presets')).toBe('PRO');
     expect(requiredOfferFor('structuredMenu')).toBe('PRO');
     expect(requiredOfferFor('pdfMenu')).toBe('BASIC');

@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Menu } from '../menu.model';
+import { MENU_LANGUAGES, can } from '../../restaurateur/plan';
+import { PremiumLockComponent } from '../../shared/premium-lock.component';
+import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES } from '../design/menu-design.model';
+import { MenuDesignService } from '../design/menu-design.service';
+import { Menu, Translation } from '../menu.model';
 import { MenuService } from '../menu.service';
 import {
   EditableCategory,
@@ -14,6 +18,7 @@ import {
   reconcileWithSaved,
   toEditable,
   toSaveRequest,
+  translationFor,
 } from './menu-editor.model';
 
 /**
@@ -33,10 +38,15 @@ import {
  * transformait la page en formulaire de soixante lignes où plus rien ne ressortait.
  * Chaque plat est donc une ligne ; l'édition ouvre une surface à sa place, et
  * {@link cancelEdit} restaure réellement la valeur d'avant.
+ *
+ * <strong>Premium.</strong> Photos et traductions passent par ce même éditeur, jamais par
+ * un second. Une « langue d'édition » bascule les champs nom / description sur la
+ * traduction correspondante — mêmes lignes, mêmes surfaces, le français en repère. Hors
+ * Premium, les deux sont annoncés verrouillés, pas cachés.
  */
 @Component({
     selector: 'app-menu-editor',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PremiumLockComponent],
     // Sans display explicite l'hôte reste `inline` : la barre d'enregistrement collante
     // n'aurait pas de bloc de référence, et les marges des sections seraient ignorées.
     styles: [':host{display:block}'],
@@ -44,14 +54,131 @@ import {
 })
 export class MenuEditorComponent {
   private readonly menuService = inject(MenuService);
+  private readonly designService = inject(MenuDesignService);
 
   readonly restaurantId = input.required<string>();
   readonly menu = input.required<Menu>();
 
+  /** Espace hôte — ne change que le vocabulaire des verrous Premium (voir le studio). */
+  readonly space = input<'admin' | 'restaurateur'>('admin');
+
   /** Remonte le menu au parent après enregistrement : statut et version restent justes. */
   readonly menuChange = output<Menu>();
 
+  /** Langue d'édition courante (`fr` = texte de base) : le parent peut y caler son aperçu. */
+  readonly languageChange = output<string>();
+
   readonly categories = signal<EditableCategory[]>([]);
+
+  // ------------------------------------------------------------------ Premium
+
+  readonly canPhotos = computed(() => can(this.menu().offer, 'itemPhotos'));
+  readonly canTranslate = computed(() => can(this.menu().offer, 'translations'));
+
+  readonly allLanguages = MENU_LANGUAGES;
+
+  /** Langues proposées aux clients, en plus du français. Enregistrées avec la carte. */
+  readonly languages = signal<string[]>([]);
+
+  /** `fr` = les champs éditent le texte de base ; sinon la traduction de cette langue. */
+  readonly editLang = signal('fr');
+  readonly translating = computed(() => this.editLang() !== 'fr');
+
+  readonly editLangLabel = computed(
+    () => this.allLanguages.find((l) => l.code === this.editLang())?.label ?? 'Français',
+  );
+
+  isLanguageOn(code: string): boolean {
+    return this.languages().includes(code);
+  }
+
+  toggleLanguage(code: string): void {
+    const on = this.isLanguageOn(code);
+    this.languages.update((list) => (on ? list.filter((c) => c !== code) : [...list, code]));
+    if (on && this.editLang() === code) {
+      this.editLang.set('fr');
+      this.languageChange.emit('fr');
+    }
+    this.justSaved.set(false);
+  }
+
+  setEditLang(code: string): void {
+    this.closeEdit();
+    this.editLang.set(code);
+    this.languageChange.emit(code);
+  }
+
+  /** Traduction éditée pour la langue courante — créée à la demande. */
+  tr(target: EditableItem | EditableCategory): Translation {
+    return translationFor(target, this.editLang());
+  }
+
+  setTranslated(target: EditableItem | EditableCategory, field: 'name' | 'description', value: string): void {
+    this.tr(target)[field] = value;
+    this.onFieldChange();
+  }
+
+  /** Nom tel qu'il se lit sur la ligne : la traduction si elle existe, sinon le français. */
+  displayName(target: EditableItem | EditableCategory): string {
+    if (!this.translating()) {
+      return target.name;
+    }
+    return target.translations[this.editLang()]?.name?.trim() || target.name;
+  }
+
+  displayDescription(item: EditableItem): string {
+    if (!this.translating()) {
+      return item.description;
+    }
+    return item.translations[this.editLang()]?.description?.trim() || item.description;
+  }
+
+  isUntranslated(target: EditableItem | EditableCategory): boolean {
+    return this.translating() && !target.translations[this.editLang()]?.name?.trim();
+  }
+
+  // ------------------------------------------------------------------ photos
+
+  readonly uploadingUid = signal<string | null>(null);
+  readonly uploadError = signal<string | null>(null);
+
+  onPhotoSelected(event: Event, item: EditableItem): void {
+    const el = event.target as HTMLInputElement;
+    const file = el.files?.[0] ?? null;
+    el.value = ''; // permet de re-sélectionner le même fichier
+    if (!file) {
+      return;
+    }
+    this.uploadError.set(null);
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      this.uploadError.set('Formats acceptés : JPEG, PNG ou WebP.');
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      this.uploadError.set("L'image dépasse la taille maximale de 5 Mo.");
+      return;
+    }
+    this.uploadingUid.set(item.uid);
+    // Même route que le logo et l'image d'en-tête : un média du restaurant, validé côté serveur.
+    this.designService.uploadImage(this.restaurantId(), file).subscribe({
+      next: (image) => {
+        this.uploadingUid.set(null);
+        item.imageAssetId = image.assetId;
+        item.imageUrl = image.url;
+        this.onFieldChange();
+      },
+      error: (err) => {
+        this.uploadingUid.set(null);
+        this.uploadError.set(err?.error?.message ?? "L'image n'a pas pu être envoyée.");
+      },
+    });
+  }
+
+  clearPhoto(item: EditableItem): void {
+    item.imageAssetId = null;
+    item.imageUrl = null;
+    this.onFieldChange();
+  }
 
   /** `uid` du plat ouvert en édition. Un seul à la fois : la carte reste lisible. */
   readonly editingUid = signal<string | null>(null);
@@ -62,7 +189,11 @@ export class MenuEditorComponent {
    * « Annuler » doit vraiment annuler : les champs sont liés à l'objet par `ngModel`,
    * donc la saisie l'a déjà modifié. Sans cette copie, le bouton mentirait.
    */
-  private editSnapshot: Pick<EditableItem, 'name' | 'description' | 'priceEuros'> | null = null;
+  private editSnapshot:
+    | (Pick<EditableItem, 'name' | 'description' | 'priceEuros' | 'imageAssetId' | 'imageUrl'> & {
+        translation: Translation;
+      })
+    | null = null;
   private savedKey = signal('');
   private initialized = false;
 
@@ -75,7 +206,14 @@ export class MenuEditorComponent {
     this.categories().reduce((total, c) => total + c.items.length, 0),
   );
 
-  readonly dirty = computed(() => editorKey(this.categories()) !== this.savedKey());
+  readonly dirty = computed(
+    () => editorKey(this.categories(), this.savedLanguages()) !== this.savedKey(),
+  );
+
+  /** Langues telles qu'elles seront envoyées : seulement si l'offre les ouvre. */
+  private savedLanguages(): string[] | undefined {
+    return this.canTranslate() ? this.languages() : undefined;
+  }
 
   // ------------------------------------------------------------------ validation
 
@@ -137,7 +275,8 @@ export class MenuEditorComponent {
       this.initialized = true;
       const initial = toEditable(menu.structure?.categories ?? []);
       this.categories.set(initial);
-      this.savedKey.set(editorKey(initial));
+      this.languages.set([...(menu.structure?.languages ?? [])]);
+      this.savedKey.set(editorKey(initial, this.savedLanguages()));
     });
   }
 
@@ -208,6 +347,9 @@ export class MenuEditorComponent {
       name: item.name,
       description: item.description,
       priceEuros: item.priceEuros,
+      imageAssetId: item.imageAssetId,
+      imageUrl: item.imageUrl,
+      translation: { ...this.tr(item) },
     };
     this.editingUid.set(item.uid);
   }
@@ -224,6 +366,9 @@ export class MenuEditorComponent {
       item.name = this.editSnapshot.name;
       item.description = this.editSnapshot.description;
       item.priceEuros = this.editSnapshot.priceEuros;
+      item.imageAssetId = this.editSnapshot.imageAssetId;
+      item.imageUrl = this.editSnapshot.imageUrl;
+      item.translations[this.editLang()] = this.editSnapshot.translation;
       this.priceDisplay.set(item.uid, formatPriceInput(item.priceEuros));
     }
     this.closeEdit();
@@ -368,12 +513,12 @@ export class MenuEditorComponent {
     this.saveError.set(null);
     this.justSaved.set(false);
 
-    const payload = toSaveRequest(this.categories());
-    this.menuService.saveStructure(this.restaurantId(), payload.categories).subscribe({
+    const payload = toSaveRequest(this.categories(), this.savedLanguages());
+    this.menuService.saveStructure(this.restaurantId(), payload.categories, payload.languages).subscribe({
       next: (menu) => {
         const reconciled = reconcileWithSaved(this.categories(), menu.structure?.categories ?? []);
         this.categories.set(reconciled);
-        this.savedKey.set(editorKey(reconciled));
+        this.savedKey.set(editorKey(reconciled, this.savedLanguages()));
         this.saving.set(false);
         this.justSaved.set(true);
         this.menuChange.emit(menu);

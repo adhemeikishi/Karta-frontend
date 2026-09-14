@@ -1,9 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { QrCode } from '../../models/qr-code.model';
+import { RestaurantOffer } from '../../models/restaurant.model';
+import { AuthService } from '../../services/auth.service';
+import { RestaurantContextService } from '../restaurant-context.service';
 import { QrComponent } from './qr.component';
 
 const BASE = `${environment.apiBaseUrl}/api/admin/restaurants/r-1`;
@@ -114,4 +117,158 @@ describe('QrComponent', () => {
     expect(text()).toContain("Le QR code n'a pas pu être chargé.");
     expect(text()).toContain('Réessayer');
   });
+});
+
+/**
+ * Personnalisation du QR : réservée à Premium, éditée dans le même document que
+ * l'apparence de la carte, aperçu sans écriture.
+ */
+describe('QrComponent — personnalisation Premium', () => {
+  let fixture: ComponentFixture<QrComponent>;
+  let http: HttpTestingController;
+
+  function design(offer: RestaurantOffer) {
+    return {
+      offer,
+      customizable: offer === 'PREMIUM',
+      preset: 'MODERN',
+      presets: [],
+      fonts: [],
+      customization: {
+        brandName: null,
+        primaryColor: null,
+        secondaryColor: null,
+        logoAssetId: null,
+        logoUrl: null,
+        heroAssetId: null,
+        heroUrl: null,
+        hideBranding: false,
+        font: null,
+        languages: [],
+        qr: { fgColor: null, bgColor: null, moduleStyle: null, eyeStyle: null, logoAssetId: null, logoUrl: null },
+      },
+    };
+  }
+
+  function mount(offer: RestaurantOffer): void {
+    TestBed.configureTestingModule({
+      imports: [QrComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ restaurantId: 'r-1' }) } },
+        },
+      ],
+    });
+    TestBed.inject(AuthService).setCredentials('resto@karta.local', 'x', {
+      username: 'resto@karta.local',
+      role: 'RESTAURATEUR',
+      restaurantId: 'r-1',
+    });
+    TestBed.inject(RestaurantContextService).restaurant.set({
+      id: 'r-1',
+      name: 'Chez Karta',
+      offer,
+      onboardingCompletedAt: '2026-01-01T10:00:00Z',
+      createdAt: '2026-01-01T10:00:00Z',
+      updatedAt: '2026-01-01T10:00:00Z',
+    });
+    http = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(QrComponent);
+    fixture.detectChanges();
+    http.expectOne(`${BASE}/qr-codes`).flush([QR]);
+    http.expectOne(`${BASE}/qr-code/image.png`).flush(pngBlob());
+  }
+
+  afterEach(() => {
+    fixture.destroy();
+    http.verify();
+    TestBed.inject(RestaurantContextService).clear();
+    sessionStorage.clear();
+  });
+
+  it('en PRO : annonce la fonctionnalité verrouillée, sans charger ni proposer les réglages', () => {
+    mount('PRO');
+    fixture.detectChanges();
+
+    http.expectNone(`${BASE}/menu/design`);
+    expect(fixture.componentInstance.canDesign()).toBeFalse();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('QR code personnalisable');
+    expect(text).toContain('Découvrir Premium');
+    expect(text).not.toContain('Couleur des modules');
+  });
+
+  it("en PREMIUM : chaque réglage rafraîchit l'aperçu par le serveur, sans rien enregistrer", fakeAsync(() => {
+    mount('PREMIUM');
+    http.expectOne(`${BASE}/menu/design`).flush(design('PREMIUM'));
+    fixture.detectChanges();
+    tick(200);
+    // L'état enregistré est déjà affiché : aucun second aperçu au chargement.
+    http.expectNone((r) => r.url === `${BASE}/qr-code/image.png`);
+
+    fixture.componentInstance.setModuleStyle('DOTS');
+    fixture.componentInstance.setHideBranding(true);
+    // `toObservable` s'appuie sur un effect : il court avec la détection de changements.
+    fixture.detectChanges();
+    tick(200);
+
+    const preview = http.expectOne((r) => r.url === `${BASE}/qr-code/image.png`);
+    expect(preview.request.params.get('moduleStyle')).toBe('DOTS');
+    expect(preview.request.params.get('hideBranding')).toBe('true');
+    expect(preview.request.params.get('fgColor')).toBe('#000000');
+    preview.flush(pngBlob());
+    tick();
+
+    expect(fixture.componentInstance.dirty()).toBeTrue();
+    http.expectNone((r) => r.method === 'PUT');
+  }));
+
+  it("en PREMIUM : enregistrer envoie le document complet du design, et le téléchargement suit l'aperçu", fakeAsync(() => {
+    mount('PREMIUM');
+    http.expectOne(`${BASE}/menu/design`).flush(design('PREMIUM'));
+    fixture.detectChanges();
+    tick(200);
+
+    fixture.componentInstance.setFgColor('#012fa4');
+    fixture.detectChanges();
+    tick(200);
+    http.expectOne((r) => r.url === `${BASE}/qr-code/image.png`).flush(pngBlob());
+    tick();
+
+    fixture.componentInstance.download('svg');
+    const svg = http.expectOne((r) => r.url === `${BASE}/qr-code/image.svg`);
+    expect(svg.request.params.get('fgColor')).toBe('#012FA4');
+    svg.flush(new Blob(['<svg/>'], { type: 'image/svg+xml' }));
+
+    fixture.componentInstance.save();
+    const put = http.expectOne(`${BASE}/menu/design`);
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body.qrFgColor).toBe('#012FA4');
+    expect(put.request.body.preset).toBe('MODERN');
+    put.flush({ ...design('PREMIUM'), customization: { ...design('PREMIUM').customization, qr: { ...design('PREMIUM').customization.qr, fgColor: '#012FA4' } } });
+    fixture.detectChanges();
+    tick(200);
+
+    expect(fixture.componentInstance.dirty()).toBeFalse();
+    expect(fixture.componentInstance.justSaved()).toBeTrue();
+  }));
+
+  it('prévient quand les couleurs rendraient le QR illisible', fakeAsync(() => {
+    mount('PREMIUM');
+    http.expectOne(`${BASE}/menu/design`).flush(design('PREMIUM'));
+    fixture.detectChanges();
+    tick(200);
+
+    expect(fixture.componentInstance.scannable()).toBeTrue();
+    fixture.componentInstance.setFgColor('#FFFF00');
+    expect(fixture.componentInstance.scannable()).toBeFalse();
+    fixture.detectChanges();
+    tick(200);
+    http.expectOne((r) => r.url === `${BASE}/qr-code/image.png`).flush(pngBlob());
+    tick();
+  }));
 });

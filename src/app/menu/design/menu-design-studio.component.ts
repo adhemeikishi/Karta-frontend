@@ -7,11 +7,13 @@ import { Observable, catchError, debounceTime, distinctUntilChanged, of, switchM
 import { RestaurantOffer } from '../../models/restaurant.model';
 import { Menu } from '../menu.model';
 import { MenuService } from '../menu.service';
+import { PremiumLockComponent } from '../../shared/premium-lock.component';
 import {
   ACCEPTED_IMAGE_TYPES,
   DesignDraft,
   MAX_IMAGE_BYTES,
   MenuDesign,
+  MenuFontId,
   MenuPresetId,
   draftFrom,
   draftKey,
@@ -41,7 +43,7 @@ import { PhoneFrameComponent } from './phone-frame.component';
  */
 @Component({
     selector: 'app-menu-design-studio',
-    imports: [CommonModule, FormsModule, PhoneFrameComponent],
+    imports: [CommonModule, FormsModule, PhoneFrameComponent, PremiumLockComponent],
     templateUrl: './menu-design-studio.component.html'
 })
 export class MenuDesignStudioComponent implements OnInit, OnDestroy {
@@ -87,6 +89,7 @@ export class MenuDesignStudioComponent implements OnInit, OnDestroy {
   private previewObjectUrl: string | null = null;
 
   readonly presets = computed(() => this.saved()?.presets ?? []);
+  readonly fonts = computed(() => this.saved()?.fonts ?? []);
   readonly customizable = computed(() => this.saved()?.customizable ?? false);
 
   readonly dirty = computed(() => {
@@ -221,6 +224,15 @@ export class MenuDesignStudioComponent implements OnInit, OnDestroy {
 
   clearSecondaryColor(): void {
     this.patch({ secondaryColor: null });
+  }
+
+  setHideBranding(hidden: boolean): void {
+    this.patch({ hideBranding: hidden });
+  }
+
+  /** `''` = la typographie du preset (aucune police distante chargée). */
+  setFont(value: string): void {
+    this.patch({ font: value === '' ? null : (value as MenuFontId) });
   }
 
   clearLogo(): void {

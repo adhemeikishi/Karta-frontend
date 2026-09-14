@@ -86,6 +86,18 @@
                 poser son nom, son logo, ses couleurs et sa photo d'en-tête.
               </p>
             }
+            <div class="mt-4 space-y-2">
+              <app-premium-lock
+                label="Typographies personnalisées"
+                description="Choisissez les typographies qui correspondent à l'identité de votre restaurant."
+                [space]="space()"
+              />
+              <app-premium-lock
+                label="Sans branding Karta"
+                description="Retirez la présence de Karta de votre QR code et de votre carte digitale."
+                [space]="space()"
+              />
+            </div>
           } @else {
             <p class="mt-1 text-sm text-ink-500">
               {{ isRestaurateur() ? 'Votre identité.' : "L'identité du restaurant." }}
@@ -210,6 +222,42 @@
                 <p class="alert-error">{{ uploadError() }}</p>
               }
               <p class="field-hint">JPEG, PNG ou WebP — 5 Mo maximum.</p>
+
+              <!-- Typographie : catalogue fermé venu du serveur. L'aperçu à droite est le
+                   seul juge — les polices ne sont pas chargées dans le back-office. -->
+              <div>
+                <label class="field-label" for="menu-font">Typographie</label>
+                <select
+                  id="menu-font"
+                  class="input"
+                  [ngModel]="d.font ?? ''"
+                  (ngModelChange)="setFont($event)"
+                >
+                  <option value="">Celle du style ({{ d.preset === 'LUXE' ? 'empattements' : 'sans empattements' }})</option>
+                  @for (font of fonts(); track font.id) {
+                    <option [value]="font.id">{{ font.label }}</option>
+                  }
+                </select>
+                <p class="field-hint">
+                  Appliquée à toute la carte. Sans choix, aucune police n'est téléchargée par vos clients.
+                </p>
+              </div>
+
+              <!-- Branding : un seul réglage pour la carte ET le QR, ils ne peuvent pas se contredire. -->
+              <label class="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  class="mt-0.5"
+                  [ngModel]="d.hideBranding"
+                  (ngModelChange)="setHideBranding($event)"
+                />
+                <span>
+                  <span class="block text-sm font-medium text-ink-900">Sans branding Karta</span>
+                  <span class="block text-sm text-ink-500">
+                    Retire la mention Karta du pied de la carte et du QR code.
+                  </span>
+                </span>
+              </label>
             </div>
           }
         </div>

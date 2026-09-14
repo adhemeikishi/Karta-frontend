@@ -31,8 +31,17 @@ export class MenuDesignService {
    * `src` direct : sans en-tête Authorization, le navigateur afficherait une invite
    * Basic Auth dans l'iframe.
    */
-  previewHtml(restaurantId: string, draft: DesignDraft): Observable<string> {
+  previewHtml(restaurantId: string, draft: DesignDraft, lang?: string | null): Observable<string> {
     let params = new HttpParams().set('preset', draft.preset);
+    if (draft.hideBranding) {
+      params = params.set('hideBranding', 'true');
+    }
+    if (draft.font) {
+      params = params.set('font', draft.font);
+    }
+    if (lang) {
+      params = params.set('lang', lang);
+    }
     if (draft.brandName) {
       params = params.set('brandName', draft.brandName);
     }

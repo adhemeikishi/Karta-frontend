@@ -15,14 +15,36 @@ import { RestaurantOffer } from '../models/restaurant.model';
  * - `structuredMenu` / `presets` — carte numérique et cinq styles
  *   (`MenuDesignService.requireStructuredOffer` refuse BASIC) ;
  * - `branding`     — nom affiché, couleurs, logo, image d'en-tête
- *   (`DesignResponse.customizable`, vrai pour PREMIUM seulement).
+ *   (`DesignResponse.customizable`, vrai pour PREMIUM seulement) ;
+ * - `noBranding`, `fonts`, `qrDesign`, `itemPhotos`, `translations` — personnalisation
+ *   avancée : enregistrée par le même `PUT .../menu/design` (ou avec le contenu pour les
+ *   photos et traductions), rendue par `MenuThemeResolver` / `PublicMenuService` pour
+ *   PREMIUM seulement.
  */
-export type PlanFeature = 'pdfMenu' | 'structuredMenu' | 'presets' | 'branding';
+export type PlanFeature =
+  | 'pdfMenu'
+  | 'structuredMenu'
+  | 'presets'
+  | 'branding'
+  | 'noBranding'
+  | 'fonts'
+  | 'qrDesign'
+  | 'itemPhotos'
+  | 'translations';
+
+const PREMIUM_ONLY: readonly PlanFeature[] = [
+  'branding',
+  'noBranding',
+  'fonts',
+  'qrDesign',
+  'itemPhotos',
+  'translations',
+];
 
 const FEATURES: Record<RestaurantOffer, readonly PlanFeature[]> = {
   BASIC: ['pdfMenu'],
   PRO: ['structuredMenu', 'presets'],
-  PREMIUM: ['structuredMenu', 'presets', 'branding'],
+  PREMIUM: ['structuredMenu', 'presets', ...PREMIUM_ONLY],
 };
 
 export function can(offer: RestaurantOffer | null | undefined, feature: PlanFeature): boolean {
@@ -31,8 +53,15 @@ export function can(offer: RestaurantOffer | null | undefined, feature: PlanFeat
 
 /** Offre à partir de laquelle une capacité est ouverte — pour l'annoncer sans mentir. */
 export function requiredOfferFor(feature: PlanFeature): RestaurantOffer {
-  if (feature === 'branding') {
+  if (PREMIUM_ONLY.includes(feature)) {
     return 'PREMIUM';
   }
   return feature === 'pdfMenu' ? 'BASIC' : 'PRO';
 }
+
+/** Langues de la carte proposées en plus du français — miroir de `MenuLanguage` côté backend. */
+export const MENU_LANGUAGES: readonly { code: string; label: string }[] = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+  { code: 'zh', label: '中文' },
+];

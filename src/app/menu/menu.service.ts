@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Menu, SaveCategoryRequest } from './menu.model';
+import { Menu, SaveCategoryRequest, SaveMenuRequest } from './menu.model';
 
 @Injectable({ providedIn: 'root' })
 export class MenuService {
@@ -22,8 +22,14 @@ export class MenuService {
    * Remplace l'intégralité de la structure (offres PRO / PREMIUM).
    * Document complet : ce qui n'est pas envoyé est supprimé côté serveur.
    */
-  saveStructure(restaurantId: string, categories: SaveCategoryRequest[]): Observable<Menu> {
-    return this.http.put<Menu>(`${this.baseUrl}/${restaurantId}/menu`, { categories });
+  /** `languages` : langues activées (Premium). Omis = inchangées côté serveur. */
+  saveStructure(
+    restaurantId: string,
+    categories: SaveCategoryRequest[],
+    languages?: string[],
+  ): Observable<Menu> {
+    const body: SaveMenuRequest = languages ? { categories, languages } : { categories };
+    return this.http.put<Menu>(`${this.baseUrl}/${restaurantId}/menu`, body);
   }
 
   /** Supprime le menu et tout son contenu. */

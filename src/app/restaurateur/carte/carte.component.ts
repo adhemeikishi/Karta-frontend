@@ -217,6 +217,14 @@ export class CarteComponent implements OnInit, OnDestroy {
     this.refreshPreview();
   }
 
+  /** Langue d'édition de l'éditeur (`fr` = base) : l'aperçu suit, avec ce qui est enregistré. */
+  private readonly previewLang = signal<string | null>(null);
+
+  onEditorLanguage(lang: string): void {
+    this.previewLang.set(lang === 'fr' ? null : lang);
+    this.refreshPreview();
+  }
+
   // ------------------------------------------------------------------ aperçu
 
   /**
@@ -236,7 +244,9 @@ export class CarteComponent implements OnInit, OnDestroy {
     this.designService
       .getDesign(this.restaurantId)
       .pipe(
-        switchMap((design) => this.designService.previewHtml(this.restaurantId, draftFrom(design))),
+        switchMap((design) =>
+          this.designService.previewHtml(this.restaurantId, draftFrom(design), this.previewLang()),
+        ),
         catchError(() => {
           this.previewError.set(true);
           return of(null);

@@ -1,4 +1,12 @@
-import { MenuCategory, MenuItem, SaveCategoryRequest, SaveItemRequest } from '../menu.model';
+import {
+  MenuCategory,
+  MenuItem,
+  SaveCategoryRequest,
+  SaveItemRequest,
+  SaveMenuRequest,
+  Translation,
+  Translations,
+} from '../menu.model';
 import { formatPriceInput, parsePriceInput } from '../review/menu-draft.model';
 
 // Les deux fonctions de conversion prix euros <-> centimes sont réutilisées telles
@@ -30,6 +38,8 @@ export interface EditableItem {
   imageAssetId: string | null;
   imageUrl: string | null;
   available: boolean;
+  /** Par code langue. Mutée en place par les champs de traduction (comme `name`). */
+  translations: Translations;
 }
 
 export interface EditableCategory {
@@ -40,7 +50,35 @@ export interface EditableCategory {
   description: string | null;
   /** Idem : pas de bascule dans cet éditeur, la valeur existante n'est pas perdue. */
   visible: boolean;
+  translations: Translations;
   items: EditableItem[];
+}
+
+/** Copie modifiable des traductions : l'éditeur mute en place, jamais l'objet du parent. */
+function copyTranslations(source: Translations | undefined): Translations {
+  const copy: Translations = {};
+  for (const [code, t] of Object.entries(source ?? {})) {
+    copy[code] = { name: t.name ?? null, description: t.description ?? null };
+  }
+  return copy;
+}
+
+/** La traduction d'une langue, créée à la demande pour que les champs aient où écrire. */
+export function translationFor(target: EditableItem | EditableCategory, lang: string): Translation {
+  return (target.translations[lang] ??= { name: null, description: null });
+}
+
+/** Sans champs vides ni langues vides : ce qui n'est pas traduit n'est pas envoyé. */
+function cleanTranslations(source: Translations): Translations | undefined {
+  const clean: Translations = {};
+  for (const [code, t] of Object.entries(source)) {
+    const name = t.name?.trim() || null;
+    const description = t.description?.trim() || null;
+    if (name || description) {
+      clean[code] = { name, description };
+    }
+  }
+  return Object.keys(clean).length === 0 ? undefined : clean;
 }
 
 let uidCounter = 0;
@@ -61,6 +99,7 @@ export function toEditableItem(item: MenuItem): EditableItem {
     imageAssetId: item.imageAssetId,
     imageUrl: item.imageUrl,
     available: item.available,
+    translations: copyTranslations(item.translations),
   };
 }
 
@@ -71,6 +110,7 @@ export function toEditableCategory(category: MenuCategory): EditableCategory {
     name: category.name,
     description: category.description,
     visible: category.visible,
+    translations: copyTranslations(category.translations),
     items: category.items.map(toEditableItem),
   };
 }
@@ -90,11 +130,20 @@ export function newItem(): EditableItem {
     imageAssetId: null,
     imageUrl: null,
     available: true,
+    translations: {},
   };
 }
 
 export function newCategory(): EditableCategory {
-  return { uid: nextUid(), id: null, name: '', description: null, visible: true, items: [] };
+  return {
+    uid: nextUid(),
+    id: null,
+    name: '',
+    description: null,
+    visible: true,
+    translations: {},
+    items: [],
+  };
 }
 
 /**
@@ -103,28 +152,37 @@ export function newCategory(): EditableCategory {
  * `sortOrder` découle de la position dans le tableau — l'ordre local EST l'ordre à
  * enregistrer, pas besoin de le stocker séparément.
  */
-export function toSaveRequest(categories: EditableCategory[]): { categories: SaveCategoryRequest[] } {
+export function toSaveRequest(
+  categories: EditableCategory[],
+  languages?: readonly string[],
+): SaveMenuRequest {
   return {
-    categories: categories.map((category, ci) => ({
-      ...(category.id ? { id: category.id } : {}),
-      name: category.name.trim(),
-      description: category.description,
-      sortOrder: ci,
-      visible: category.visible,
-      items: category.items.map((item, ii): SaveItemRequest => ({
-        ...(item.id ? { id: item.id } : {}),
-        name: item.name.trim(),
-        description: item.description.trim() === '' ? null : item.description.trim(),
-        // Validé en amont par canSave() : jamais appelé avec un prix manquant.
-        // Math.round : 9.55 * 100 vaut 954.9999... en flottant, sans arrondi un prix
-        // sur deux serait faux d'un centime.
-        price: Math.round((item.priceEuros ?? 0) * 100),
-        currency: item.currency || 'EUR',
-        imageAssetId: item.imageAssetId,
-        sortOrder: ii,
-        available: item.available,
-      })),
-    })),
+    categories: categories.map(
+      (category, ci): SaveCategoryRequest => ({
+        ...(category.id ? { id: category.id } : {}),
+        name: category.name.trim(),
+        description: category.description,
+        sortOrder: ci,
+        visible: category.visible,
+        translations: cleanTranslations(category.translations),
+        items: category.items.map((item, ii): SaveItemRequest => ({
+          ...(item.id ? { id: item.id } : {}),
+          name: item.name.trim(),
+          description: item.description.trim() === '' ? null : item.description.trim(),
+          // Validé en amont par canSave() : jamais appelé avec un prix manquant.
+          // Math.round : 9.55 * 100 vaut 954.9999... en flottant, sans arrondi un prix
+          // sur deux serait faux d'un centime.
+          price: Math.round((item.priceEuros ?? 0) * 100),
+          currency: item.currency || 'EUR',
+          imageAssetId: item.imageAssetId,
+          sortOrder: ii,
+          available: item.available,
+          translations: cleanTranslations(item.translations),
+        })),
+      }),
+    ),
+    // Omis = inchangées côté serveur (la Review KartaIA ne les touche pas).
+    ...(languages ? { languages: [...languages] } : {}),
   };
 }
 
@@ -133,8 +191,8 @@ export function toSaveRequest(categories: EditableCategory[]): { categories: Sav
  * (même principe que `draftKey` pour le studio de style) — sans comparaison profonde
  * d'objets à chaque frappe.
  */
-export function editorKey(categories: EditableCategory[]): string {
-  return JSON.stringify(toSaveRequest(categories));
+export function editorKey(categories: EditableCategory[], languages?: readonly string[]): string {
+  return JSON.stringify(toSaveRequest(categories, languages));
 }
 
 /**
