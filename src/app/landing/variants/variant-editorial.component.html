@@ -107,10 +107,10 @@
       </p>
     </div>
 
-    <ul revealOnScroll="80" class="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
-      @for (card of capabilityCards; track card.label) {
-        <li class="border-t pt-5" style="border-color: var(--k-hairline)">
-          <span class="text-ink-400" aria-hidden="true">
+    <ul class="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
+      @for (card of capabilityCards; track card.label; let i = $index) {
+        <li [revealOnScroll]="80 + i * 40" class="capability-card border-t pt-5">
+          <span style="color: var(--k-persimmon)" aria-hidden="true">
             @switch (card.icon) {
               @case ('qr') {
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">

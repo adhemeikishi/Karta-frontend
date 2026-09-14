@@ -187,6 +187,18 @@ body {
     background-color: var(--k-persimmon);
   }
 
+  /* Carte de capacité (landing, chapitre « Voilà ce qu'il fait ») : hairline par
+     défaut, trait persimmon au survol seulement. L'icône de la carte, elle, reste
+     persimmon en permanence — un seul accent plein par carte à la fois, jamais
+     les deux ensemble (le persimmon reste dosé, §16 / pub-head note 3). */
+  .capability-card {
+    border-color: var(--k-hairline);
+    transition: border-color var(--k-t-base) var(--k-ease);
+  }
+  .capability-card:hover {
+    border-color: var(--k-persimmon);
+  }
+
   /* --- Typographie ------------------------------------------------------- */
   .page-title {
     @apply text-[1.35rem] font-bold leading-tight tracking-[-0.01em] text-ink-900 sm:text-2xl;
@@ -1348,6 +1360,24 @@ body {
   }
   .problem-wipe-col.is-visible .problem-wipe-rule {
     transform: scaleY(1);
+  }
+
+  /* Frise Karta Pay (teaser, karta-pay-teaser.component) : même filet persimmon
+     que .problem-wipe-*, adapté en horizontal puisque la frise s'étale en ligne
+     — `scaleX` depuis `transform-origin: left` sur toute la largeur du bloc.
+     Déclenché par le même `revealOnScroll`, posé sur le conteneur. */
+  .kpay-wipe-row {
+    @apply relative;
+  }
+  .kpay-wipe-rule {
+    @apply pointer-events-none absolute left-0 top-0 block h-[1.5px] w-full;
+    background-color: var(--k-persimmon);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--k-t-reveal-lg) var(--k-ease);
+  }
+  .kpay-wipe-row.is-visible .kpay-wipe-rule {
+    transform: scaleX(1);
   }
 
   /* Sélecteur de style (chapitre 02) : les 5 noms en liste typographique.

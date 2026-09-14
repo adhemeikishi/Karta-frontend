@@ -20,13 +20,16 @@
       </p>
     </div>
 
-    <ol revealOnScroll="80" class="mt-12 grid gap-6 sm:mt-16 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
-      @for (step of steps; track step.order) {
-        <li class="border-t pt-4" style="border-color: var(--k-hairline)">
-          <span class="mono text-xs text-ink-300">{{ step.order }}</span>
-          <p class="mt-2 text-sm font-medium text-ink-900">{{ step.label }}</p>
-        </li>
-      }
-    </ol>
+    <div revealOnScroll="80" class="kpay-wipe-row mt-12 sm:mt-16">
+      <span class="kpay-wipe-rule" aria-hidden="true"></span>
+      <ol class="grid gap-6 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
+        @for (step of steps; track step.order; let i = $index) {
+          <li [revealOnScroll]="80 + i * 60" class="border-t pt-4" style="border-color: var(--k-hairline)">
+            <span class="mono text-xs" style="color: var(--k-persimmon)">{{ step.order }}</span>
+            <p class="mt-2 text-sm font-medium text-ink-900">{{ step.label }}</p>
+          </li>
+        }
+      </ol>
+    </div>
   </div>
 </section>
