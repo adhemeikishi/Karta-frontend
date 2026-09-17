@@ -4,11 +4,28 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, Identity } from '../services/auth.service';
 import { KartaLogoComponent } from '../shared/karta-logo.component';
+import { SignupFormComponent } from '../shared/signup-form.component';
 
+export type AuthMode = 'login' | 'signup';
+
+/**
+ * `/login` — page d'authentification générale Karta : Connexion et Inscription sur le
+ * même écran, avec une bascule entre les deux.
+ *
+ * Distincte de `/create/compte` (étape 4 du parcours de création, avec l'aperçu de la
+ * carte à côté) : celle-ci reste l'écran de conversion du funnel, `/login` est le point
+ * d'entrée général — nav, accès direct, retour d'un compte existant. Les deux partagent
+ * le même formulaire d'inscription ({@link SignupFormComponent}) pour n'avoir qu'un seul
+ * endroit qui sait créer un compte.
+ *
+ * `?mode=signup` ouvre directement l'onglet Inscription (ex. lien "Créer un compte"
+ * depuis une autre page). `?next=` reste géré comme avant, uniquement pour la connexion —
+ * l'inscription a sa propre destination (l'espace du compte qui vient d'être créé).
+ */
 @Component({
-    selector: 'app-login',
-    imports: [CommonModule, FormsModule, KartaLogoComponent],
-    templateUrl: './login.component.html'
+  selector: 'app-login',
+  imports: [CommonModule, FormsModule, KartaLogoComponent, SignupFormComponent],
+  templateUrl: './login.component.html',
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
@@ -18,37 +35,50 @@ export class LoginComponent {
   /** Écran demandé avant d'être renvoyé ici par `authGuard` (`?next=`), s'il y en a un. */
   private readonly requestedUrl = this.route.snapshot.queryParamMap.get('next');
 
+  readonly mode = signal<AuthMode>(
+    this.route.snapshot.queryParamMap.get('mode') === 'signup' ? 'signup' : 'login',
+  );
+
+  setMode(mode: AuthMode): void {
+    this.mode.set(mode);
+  }
+
   username = '';
   password = '';
-  readonly loading = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  readonly loginLoading = signal(false);
+  readonly loginError = signal<string | null>(null);
 
-  submit(): void {
+  submitLogin(): void {
     if (!this.username || !this.password) {
-      this.errorMessage.set('Nom d\'utilisateur et mot de passe requis.');
+      this.loginError.set('Nom d\'utilisateur et mot de passe requis.');
       return;
     }
 
-    this.loading.set(true);
-    this.errorMessage.set(null);
+    this.loginLoading.set(true);
+    this.loginError.set(null);
 
     // Vérification des identifiants contre le backend avant de les stocker.
     // (endpoint centralisé dans AuthService — voir AuthService.credentialCheckUrl)
     this.authService.verifyCredentials(this.username, this.password).subscribe({
       next: (identity) => {
         this.authService.setCredentials(this.username, this.password, identity);
-        this.loading.set(false);
+        this.loginLoading.set(false);
         this.router.navigateByUrl(destinationFor(identity, this.requestedUrl));
       },
       error: (err) => {
-        this.loading.set(false);
+        this.loginLoading.set(false);
         if (err?.status === 401) {
-          this.errorMessage.set('Identifiants incorrects.');
+          this.loginError.set('Identifiants incorrects.');
         } else {
-          this.errorMessage.set('Impossible de contacter le serveur QR Menu.');
+          this.loginError.set('Impossible de contacter le serveur QR Menu.');
         }
       },
     });
+  }
+
+  /** Compte fraîchement créé depuis l'onglet Inscription : direction, pas de `next`. */
+  onSignupSuccess(identity: Identity): void {
+    this.router.navigateByUrl(identity.restaurantId ? `/app/${identity.restaurantId}` : '/app');
   }
 }
 

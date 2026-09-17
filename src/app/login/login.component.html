@@ -26,42 +26,97 @@
         <karta-logo variant="dark" [size]="36" />
       </div>
 
-      <h1 class="page-title">Connexion</h1>
-      <p class="page-subtitle">Accédez au back-office Karta.</p>
-
-      <form (ngSubmit)="submit()" class="mt-6 space-y-4">
-        <div>
-          <label class="field-label" for="username">Nom d'utilisateur</label>
-          <input
-            id="username"
-            type="text"
-            name="username"
-            [(ngModel)]="username"
-            autocomplete="username"
-            class="input"
-          />
-        </div>
-
-        <div>
-          <label class="field-label" for="password">Mot de passe</label>
-          <input
-            id="password"
-            type="password"
-            name="password"
-            [(ngModel)]="password"
-            autocomplete="current-password"
-            class="input"
-          />
-        </div>
-
-        @if (errorMessage()) {
-          <p class="alert-error">{{ errorMessage() }}</p>
-        }
-
-        <button type="submit" [disabled]="loading()" class="btn btn-primary w-full">
-          {{ loading() ? 'Connexion…' : 'Se connecter' }}
+      <!-- Bascule Connexion / Inscription -->
+      <div class="tablist" role="tablist" aria-label="Authentification">
+        <button
+          type="button"
+          role="tab"
+          id="tab-login"
+          [attr.aria-selected]="mode() === 'login'"
+          aria-controls="panel-login"
+          class="tab"
+          [class.tab-active]="mode() === 'login'"
+          (click)="setMode('login')"
+        >
+          Connexion
         </button>
-      </form>
+        <button
+          type="button"
+          role="tab"
+          id="tab-signup"
+          [attr.aria-selected]="mode() === 'signup'"
+          aria-controls="panel-signup"
+          class="tab"
+          [class.tab-active]="mode() === 'signup'"
+          (click)="setMode('signup')"
+        >
+          Inscription
+        </button>
+      </div>
+
+      @if (mode() === 'login') {
+        <div id="panel-login" class="auth-panel" role="tabpanel" aria-labelledby="tab-login">
+          <h1 class="page-title mt-6">Connexion</h1>
+          <p class="page-subtitle">Accédez au back-office Karta.</p>
+
+          <form (ngSubmit)="submitLogin()" class="mt-6 space-y-4">
+            <div>
+              <label class="field-label" for="username">Nom d'utilisateur</label>
+              <input
+                id="username"
+                type="text"
+                name="username"
+                [(ngModel)]="username"
+                autocomplete="username"
+                class="input"
+              />
+            </div>
+
+            <div>
+              <label class="field-label" for="password">Mot de passe</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                [(ngModel)]="password"
+                autocomplete="current-password"
+                class="input"
+              />
+            </div>
+
+            @if (loginError()) {
+              <p class="alert-error">{{ loginError() }}</p>
+            }
+
+            <button type="submit" [disabled]="loginLoading()" class="btn btn-primary w-full">
+              {{ loginLoading() ? 'Connexion…' : 'Se connecter' }}
+            </button>
+          </form>
+
+          <p class="mt-6 text-center text-sm text-ink-500">
+            Pas encore de compte ?
+            <button type="button" class="font-medium text-ink-900 hover:underline" (click)="setMode('signup')">
+              Créer un compte
+            </button>
+          </p>
+        </div>
+      } @else {
+        <div id="panel-signup" class="auth-panel" role="tabpanel" aria-labelledby="tab-signup">
+          <h1 class="page-title mt-6">Créer mon compte</h1>
+          <p class="page-subtitle">Enregistrez votre carte et obtenez votre QR code.</p>
+
+          <div class="mt-6">
+            <app-signup-form (success)="onSignupSuccess($event)" />
+          </div>
+
+          <p class="mt-6 text-center text-sm text-ink-500">
+            Déjà un compte ?
+            <button type="button" class="font-medium text-ink-900 hover:underline" (click)="setMode('login')">
+              Se connecter
+            </button>
+          </p>
+        </div>
+      }
     </div>
   </main>
 </div>

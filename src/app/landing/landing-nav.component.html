@@ -31,7 +31,7 @@
     <div class="flex shrink-0 items-center gap-2 justify-self-end">
       <div class="hidden items-center gap-2 lg:flex">
         <a routerLink="/login" class="btn btn-ghost btn-sm">Se connecter</a>
-        <a routerLink="/login" class="btn btn-primary btn-sm">Créer mon menu</a>
+        <a routerLink="/" fragment="menu" class="btn btn-primary btn-sm">Créer mon menu</a>
       </div>
 
       <!-- Bouton mobile : hamburger / croix, même motif que le menu mobile du back-office. -->
@@ -78,7 +78,7 @@
       }
       <div class="mt-2 flex flex-col gap-2 border-t pt-3" style="border-color: var(--k-hairline)">
         <a routerLink="/login" (click)="closeMobileMenu()" class="btn btn-ghost w-full">Se connecter</a>
-        <a routerLink="/login" (click)="closeMobileMenu()" class="btn btn-primary w-full">Créer mon menu</a>
+        <a routerLink="/" fragment="menu" (click)="closeMobileMenu()" class="btn btn-primary w-full">Créer mon menu</a>
       </div>
     </nav>
   </div>

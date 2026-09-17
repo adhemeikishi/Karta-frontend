@@ -462,7 +462,7 @@ body {
 
   /* --- Onglets --------------------------------------------------------- */
   .tablist {
-    @apply flex gap-1 overflow-x-auto border-b;
+    @apply flex gap-1 overflow-x-auto overflow-y-hidden border-b;
     border-color: var(--k-hairline);
   }
   .tab {
@@ -478,6 +478,62 @@ body {
     content: "";
     @apply absolute inset-x-2 -bottom-px h-0.5 rounded-t-sm;
     background-color: var(--k-persimmon);
+  }
+
+  /* --- Robustesse du mot de passe (inscription) ------------------------- */
+  .pw-strength-bars {
+    @apply flex gap-1;
+  }
+  .pw-strength-bar {
+    @apply h-1 flex-1 rounded-full transition-colors duration-200 ease-karta;
+    background-color: var(--k-ink-100);
+  }
+  .pw-strength-bar-filled.pw-strength-bar-weak {
+    background-color: var(--k-danger);
+  }
+  .pw-strength-bar-filled.pw-strength-bar-fair {
+    background-color: var(--k-warning);
+  }
+  .pw-strength-bar-filled.pw-strength-bar-good {
+    background-color: var(--k-persimmon);
+  }
+  .pw-strength-bar-filled.pw-strength-bar-strong {
+    background-color: var(--k-success);
+  }
+  .pw-strength-label {
+    @apply mt-1.5 text-xs font-semibold;
+  }
+  .pw-strength-label-weak {
+    color: var(--k-danger);
+  }
+  .pw-strength-label-fair {
+    color: var(--k-warning);
+  }
+  .pw-strength-label-good {
+    color: var(--k-persimmon);
+  }
+  .pw-strength-label-strong {
+    color: var(--k-success);
+  }
+  .pw-strength-checks {
+    @apply mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2;
+  }
+  .pw-strength-check {
+    @apply flex items-center gap-1.5 text-xs text-ink-400 transition-colors duration-150 ease-karta;
+  }
+  .pw-strength-check-met {
+    color: var(--k-success);
+  }
+  .pw-strength-check-icon {
+    @apply inline-grid h-3.5 w-3.5 shrink-0 place-items-center;
+  }
+  .pw-strength-check-icon svg {
+    @apply h-full w-full;
+  }
+
+  /* --- Panneau d'authentification (Connexion/Inscription) --------------- */
+  .auth-panel {
+    animation: k-pop var(--k-t-fast) var(--k-ease) both;
   }
 
   /* --- Données --------------------------------------------------------- */

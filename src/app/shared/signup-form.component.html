@@ -1,0 +1,58 @@
+<form (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label class="field-label" for="signup-restaurant-name">Nom du restaurant</label>
+    <input
+      id="signup-restaurant-name"
+      type="text"
+      name="restaurantName"
+      [(ngModel)]="restaurantName"
+      autocomplete="organization"
+      class="input"
+    />
+  </div>
+
+  <div>
+    <label class="field-label" for="signup-email">Email</label>
+    <input
+      id="signup-email"
+      type="email"
+      name="email"
+      [(ngModel)]="email"
+      autocomplete="email"
+      class="input"
+    />
+  </div>
+
+  <div>
+    <label class="field-label" for="signup-password">Mot de passe</label>
+    <input
+      id="signup-password"
+      type="password"
+      name="password"
+      [(ngModel)]="password"
+      autocomplete="new-password"
+      class="input"
+    />
+    <app-password-strength [value]="password" />
+  </div>
+
+  <div>
+    <label class="field-label" for="signup-password-confirm">Confirmer le mot de passe</label>
+    <input
+      id="signup-password-confirm"
+      type="password"
+      name="passwordConfirm"
+      [(ngModel)]="passwordConfirm"
+      autocomplete="new-password"
+      class="input"
+    />
+  </div>
+
+  @if (errorMessage()) {
+    <p class="alert-error">{{ errorMessage() }}</p>
+  }
+
+  <button type="submit" [disabled]="loading()" class="btn btn-primary w-full">
+    {{ loading() ? 'Création…' : 'Créer mon compte' }}
+  </button>
+</form>
