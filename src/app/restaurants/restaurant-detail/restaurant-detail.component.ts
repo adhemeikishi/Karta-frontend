@@ -14,8 +14,22 @@ import { QrCodeService } from '../../services/qr-code.service';
 import { ShellService } from '../../layout/shell.service';
 import { offerBadgeClass } from '../offer-badge';
 import { MenuSectionComponent } from '../../menu/menu-section.component';
+import { formatPrice } from '../../menu/menu.model';
+import { OrderService } from '../../kartapay/order.service';
+import {
+  FULFILLMENT_LABELS,
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_TRANSITIONS,
+  ORDER_STATUSES,
+  OrderDetail,
+  OrderLine,
+  OrderStatus,
+  OrderSummary,
+  orderStatusBadgeClass,
+  parseModifiersSnapshot,
+} from '../../kartapay/order.model';
 
-export type DetailTab = 'overview' | 'qr' | 'menu' | 'stats';
+export type DetailTab = 'overview' | 'qr' | 'menu' | 'stats' | 'orders';
 
 interface TabDef {
   id: DetailTab;
@@ -39,6 +53,7 @@ export class RestaurantDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly restaurantService = inject(RestaurantService);
   private readonly qrCodeService = inject(QrCodeService);
+  private readonly orderService = inject(OrderService);
   private readonly shell = inject(ShellService);
 
   readonly restaurantId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -46,16 +61,30 @@ export class RestaurantDetailComponent implements OnInit {
   readonly offerBadgeClass = offerBadgeClass;
   readonly offers = RESTAURANT_OFFERS;
 
-  readonly tabs: readonly TabDef[] = [
-    { id: 'overview', label: "Vue d'ensemble" },
-    { id: 'qr', label: 'QR' },
-    { id: 'menu', label: 'Menu' },
-    { id: 'stats', label: 'Statistiques' },
-  ];
+  /**
+   * L'onglet Commandes n'a de sens que si Karta Pay est activé : il est simplement absent
+   * sinon, plutôt qu'affiché avec un message — la carte, le QR, les stats ne dépendent
+   * d'aucune condition, ça reste la même logique la plus simple pour celui-ci.
+   */
+  readonly tabs = computed<readonly TabDef[]>(() => {
+    const base: TabDef[] = [
+      { id: 'overview', label: "Vue d'ensemble" },
+      { id: 'qr', label: 'QR' },
+      { id: 'menu', label: 'Menu' },
+      { id: 'stats', label: 'Statistiques' },
+    ];
+    if (this.restaurant()?.kartaPayEnabled) {
+      base.push({ id: 'orders', label: 'Commandes' });
+    }
+    return base;
+  });
   readonly tab = signal<DetailTab>('overview');
 
   setTab(tab: DetailTab): void {
     this.tab.set(tab);
+    if (tab === 'orders') {
+      this.loadOrders();
+    }
   }
 
   readonly restaurant = signal<Restaurant | null>(null);
@@ -127,6 +156,31 @@ export class RestaurantDetailComponent implements OnInit {
   // Activation / désactivation du QR
   readonly togglingActive = signal(false);
   readonly toggleError = signal<string | null>(null);
+
+  // Activation / désactivation de Karta Pay
+  readonly togglingKartaPay = signal(false);
+  readonly kartaPayToggleError = signal<string | null>(null);
+
+  // Commandes Karta Pay (onglet 'orders')
+  readonly orders = signal<OrderSummary[]>([]);
+  readonly ordersLoading = signal(false);
+  readonly ordersError = signal<string | null>(null);
+  readonly orderStatusFilter = signal<OrderStatus | null>(null);
+  /** Vue par défaut = commandes du jour ; l'historique complet reste accessible via ce toggle. */
+  readonly orderShowAllHistory = signal(false);
+  readonly orderStatuses = ORDER_STATUSES;
+  readonly orderStatusLabels = ORDER_STATUS_LABELS;
+  readonly fulfillmentLabels = FULFILLMENT_LABELS;
+  readonly orderStatusBadgeClass = orderStatusBadgeClass;
+  readonly formatPrice = formatPrice;
+
+  // Détail d'une commande (modale)
+  readonly viewingOrder = signal(false);
+  readonly selectedOrder = signal<OrderDetail | null>(null);
+  readonly orderDetailLoading = signal(false);
+  readonly orderDetailError = signal<string | null>(null);
+  readonly orderStatusActionLoading = signal(false);
+  readonly orderStatusActionError = signal<string | null>(null);
 
   ngOnInit(): void {
     this.shell.setBreadcrumbs([
@@ -361,6 +415,117 @@ export class RestaurantDetailComponent implements OnInit {
       error: () => {
         this.togglingActive.set(false);
         this.toggleError.set("Le changement d'état a échoué.");
+      },
+    });
+  }
+
+  // --- Karta Pay ---
+
+  /** Action réversible et immédiate, comme le toggle QR : pas de confirmation nécessaire. */
+  toggleKartaPay(): void {
+    const current = this.restaurant();
+    if (!current || this.togglingKartaPay()) {
+      return;
+    }
+    this.togglingKartaPay.set(true);
+    this.kartaPayToggleError.set(null);
+    this.restaurantService.toggleKartaPay(this.restaurantId, !current.kartaPayEnabled).subscribe({
+      next: (restaurant) => {
+        this.restaurant.set(restaurant);
+        this.togglingKartaPay.set(false);
+        if (!restaurant.kartaPayEnabled && this.tab() === 'orders') {
+          this.setTab('overview');
+        }
+      },
+      error: () => {
+        this.togglingKartaPay.set(false);
+        this.kartaPayToggleError.set("Le changement d'état de Karta Pay a échoué.");
+      },
+    });
+  }
+
+  // --- Commandes ---
+
+  loadOrders(): void {
+    this.ordersLoading.set(true);
+    this.ordersError.set(null);
+    this.orderService
+      .listByRestaurant(this.restaurantId, this.orderStatusFilter() ?? undefined, this.orderShowAllHistory())
+      .subscribe({
+        next: (orders) => {
+          this.orders.set(orders);
+          this.ordersLoading.set(false);
+        },
+        error: () => {
+          this.ordersError.set('Impossible de charger les commandes.');
+          this.ordersLoading.set(false);
+        },
+      });
+  }
+
+  setOrderStatusFilter(status: OrderStatus | null): void {
+    this.orderStatusFilter.set(status);
+    this.loadOrders();
+  }
+
+  setOrderShowAllHistory(showAll: boolean): void {
+    this.orderShowAllHistory.set(showAll);
+    this.loadOrders();
+  }
+
+  openOrder(orderId: string): void {
+    this.viewingOrder.set(true);
+    this.selectedOrder.set(null);
+    this.orderDetailError.set(null);
+    this.orderStatusActionError.set(null);
+    this.orderDetailLoading.set(true);
+    this.orderService.getById(this.restaurantId, orderId).subscribe({
+      next: (order) => {
+        this.selectedOrder.set(order);
+        this.orderDetailLoading.set(false);
+      },
+      error: () => {
+        this.orderDetailError.set('Impossible de charger la commande.');
+        this.orderDetailLoading.set(false);
+      },
+    });
+  }
+
+  closeOrder(): void {
+    if (this.orderDetailLoading()) {
+      return;
+    }
+    this.viewingOrder.set(false);
+    this.selectedOrder.set(null);
+  }
+
+  orderLineModifiers(line: OrderLine) {
+    return parseModifiersSnapshot(line.modifiersSnapshot);
+  }
+
+  /** Miroir de la machine à états backend : ne propose que des boutons qui fonctionneront. */
+  availableTransitions(status: OrderStatus): readonly OrderStatus[] {
+    return ORDER_STATUS_TRANSITIONS[status];
+  }
+
+  changeOrderStatus(newStatus: OrderStatus): void {
+    const order = this.selectedOrder();
+    if (!order || this.orderStatusActionLoading()) {
+      return;
+    }
+    this.orderStatusActionLoading.set(true);
+    this.orderStatusActionError.set(null);
+    this.orderService.updateStatus(this.restaurantId, order.id, newStatus).subscribe({
+      next: (updated) => {
+        this.selectedOrder.set(updated);
+        this.orderStatusActionLoading.set(false);
+        this.orders.update((list) =>
+          list.map((o) => (o.id === updated.id ? { ...o, status: updated.status } : o)),
+        );
+      },
+      error: (err) => {
+        this.orderStatusActionLoading.set(false);
+        this.orderStatusActionError.set(err?.error?.message ?? 'Le changement de statut a échoué.');
       },
     });
   }

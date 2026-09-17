@@ -16,10 +16,15 @@
 export type LandingMenuPresetId = 'modern' | 'dark' | 'street_food' | 'minimal' | 'luxe';
 export type MenuDensity = 'editorial' | 'compact' | 'airy' | 'elegant';
 
-/* Piles typographiques — copiées telles quelles de `MenuPreset.Typeface` (backend). */
-const FONT_SANS =
+/**
+ * Piles typographiques système — copiées telles quelles de `MenuPreset.Typeface`
+ * (backend). Exportées : {@link PREMIUM_DEMO_FONTS} (`create/premium-fonts.ts`) les
+ * réutilise comme repli pour chaque police Premium, exactement comme `MenuFont.stack()`
+ * côté serveur.
+ */
+export const FONT_SANS =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif';
-const FONT_SERIF =
+export const FONT_SERIF =
   '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif';
 
 /** Un des 5 presets Karta. `background`/`accent`/`text` copiés de `MenuPreset.java`. */

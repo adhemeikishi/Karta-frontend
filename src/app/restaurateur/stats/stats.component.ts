@@ -2,6 +2,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DailyScans, RestaurantScanStats } from '../../models/restaurant.model';
 import { RestaurantService } from '../../services/restaurant.service';
+import { RestaurantContextService } from '../restaurant-context.service';
+import { PremiumLockComponent } from '../../shared/premium-lock.component';
 
 /** Fenêtre affichée dans le graphique — un simple découpage de `daily`, jamais un appel réseau. */
 type Period = 'week' | 'month';
@@ -27,14 +29,23 @@ interface PeakDay {
  */
 @Component({
   selector: 'app-stats',
-  imports: [RouterLink],
+  imports: [RouterLink, PremiumLockComponent],
   templateUrl: './stats.component.html',
 })
 export class StatsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly restaurantService = inject(RestaurantService);
+  private readonly context = inject(RestaurantContextService);
 
   readonly restaurantId = this.route.snapshot.paramMap.get('restaurantId') ?? '';
+
+  /**
+   * Analyser sa fréquentation est une fonctionnalité de suivi, pas de préparation de la
+   * carte : contrairement au contenu, au style ou au QR, elle n'a pas besoin d'être
+   * disponible avant un premier abonnement payé (voir le funnel dans le rapport de
+   * l'inscription libre-service).
+   */
+  readonly subscriptionActive = computed(() => this.context.restaurant()?.subscriptionActive ?? true);
 
   readonly stats = signal<RestaurantScanStats | null>(null);
   readonly loading = signal(true);
@@ -151,7 +162,11 @@ export class StatsComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.load();
+    if (this.subscriptionActive()) {
+      this.load();
+    } else {
+      this.loading.set(false);
+    }
   }
 
   load(): void {

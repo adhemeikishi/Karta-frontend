@@ -6,25 +6,36 @@ Le frontend couvre aujourd'hui, en production de code (vérifié par lecture
 directe, audit du 2026-09-14) :
 
 - landing page publique + parcours de démonstration KartaAI (`/create/*`,
-  `/karta-ai`) — **c'est une démo marketing assumée** : aucun PDF n'est
-  réellement envoyé, contenu d'exemple statique, animation chronométrée.
-  Le rattachement du brouillon à un compte réel n'est PAS implémenté
-  (`creation-draft.service.ts:attachToAccount` est un stub documenté).
+  `/karta-ai`) — **c'est une démo marketing assumée** : le parcours initial
+  (`/karta-ai`) reste une animation chronométrée sans réseau, contenu d'exemple
+  statique par défaut. Depuis `/create/design`, un bloc dédié
+  (`MenuDemoImportComponent`) permet en plus de déposer son propre PDF et de le
+  faire réellement analyser par KartaAI (`MenuDemoService`, backend
+  `/api/public/menu-demo/extract`, sans compte ni restaurant, rien n'est
+  persisté côté serveur) : le menu de démo est alors remplacé par le résultat
+  réel (`CreationDraft.sourceKind`). Le rattachement du brouillon à un compte
+  réel n'est PAS implémenté (`creation-draft.service.ts:attachToAccount` est un
+  stub documenté).
 - login (Basic Auth, identifiants en sessionStorage)
 - onboarding restaurateur réel et connecté (`/onboarding/*`) : import PDF,
   extraction KartaAI, review, style, publication, QR — entièrement branché
   au backend, état recalculé serveur (aucune progression stockée client)
 - Espace Restaurateur (`/app/:restaurantId/*`) : menu, design, QR, statistiques
   — fonctionnel, branché sur de vrais endpoints
+- Karta Pay (`kartapay/` : `order.service.ts`, `modifier-group.service.ts`,
+  modèles associés) : commande sur place/à emporter depuis le menu public
+  quand `Restaurant.kartaPayEnabled=true`. Gestion des options de plats
+  (ModifierGroup/Option) dans l'éditeur de menu, onglet "Commandes" dans
+  `restaurant-detail` (liste, détail, changement de statut) côté back-office
+  admin. Aucun paiement réel : `NoPaymentProvider` côté backend.
 - back-office admin privé (`/admin/**`)
 - affichage des offres/tarifs (contenu marketing statique, pas de facturation)
 
 **Toujours hors périmètre, sans demande explicite** :
 
-- paiement réel / Stripe / Karta Pay (aucune intégration aujourd'hui ; tous
-  les CTA d'offre pointent vers `/contact`, jamais vers un checkout)
-- inscription en libre-service (pas de tunnel `/create` → compte automatique)
-- commandes, panier, KDS, imprimantes, fidélité, système d'avis
+- paiement réel / Stripe / facturation (Karta Pay crée des commandes mais
+  n'encaisse rien ; l'inscription crée un compte mais pas d'abonnement actif)
+- KDS, imprimantes, fidélité, système d'avis
 
 Ne pas ajouter sans demande explicite : les éléments ci-dessus.
 

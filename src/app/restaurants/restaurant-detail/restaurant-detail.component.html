@@ -51,7 +51,7 @@
   <!-- Onglets -->
   <div class="mt-5">
     <div class="tablist" role="tablist" aria-label="Sections du client">
-      @for (t of tabs; track t.id) {
+      @for (t of tabs(); track t.id) {
         <button
           type="button"
           role="tab"
@@ -105,12 +105,51 @@
           </dl>
         </section>
 
+        <!-- Karta Pay : interrupteur commercial, action immédiate, pas de confirmation. -->
+        <section class="card">
+          <div class="card-head">
+            <h2 class="section-title">Karta Pay</h2>
+          </div>
+          <div class="card-pad flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <span [class]="r.kartaPayEnabled ? 'badge badge-active badge-dot' : 'badge badge-inactive badge-dot'">
+                {{ r.kartaPayEnabled ? 'Activé' : 'Désactivé' }}
+              </span>
+              <p class="text-sm text-ink-500">
+                @if (r.kartaPayEnabled) {
+                  Les clients peuvent commander en ligne pour ce client.
+                } @else {
+                  La commande en ligne n'est pas ouverte pour ce client.
+                }
+              </p>
+            </div>
+            <button
+              type="button"
+              (click)="toggleKartaPay()"
+              [disabled]="togglingKartaPay()"
+              class="btn btn-outline btn-sm"
+            >
+              {{ togglingKartaPay() ? '…' : r.kartaPayEnabled ? 'Désactiver Karta Pay' : 'Activer Karta Pay' }}
+            </button>
+          </div>
+          @if (kartaPayToggleError()) {
+            <div class="px-4 pb-4 sm:px-5">
+              <p class="alert-error">{{ kartaPayToggleError() }}</p>
+            </div>
+          }
+        </section>
+
         <div class="flex flex-wrap gap-2">
           <button type="button" (click)="setTab('qr')" class="btn btn-outline btn-sm">Gérer le QR</button>
           <button type="button" (click)="setTab('menu')" class="btn btn-outline btn-sm">Gérer le menu</button>
           <button type="button" (click)="setTab('stats')" class="btn btn-outline btn-sm">
             Voir les statistiques
           </button>
+          @if (r.kartaPayEnabled) {
+            <button type="button" (click)="setTab('orders')" class="btn btn-outline btn-sm">
+              Voir les commandes
+            </button>
+          }
         </div>
 
         <!-- Zone de danger -->
@@ -329,6 +368,100 @@
         </div>
       </section>
     }
+
+    <!-- ============================ COMMANDES ============================ -->
+    @if (tab() === 'orders') {
+      <section class="card" role="tabpanel">
+        <div class="card-head">
+          <h2 class="section-title">Commandes</h2>
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1" role="group" aria-label="Période affichée">
+              <button
+                type="button"
+                (click)="setOrderShowAllHistory(false)"
+                [class]="orderShowAllHistory() ? 'btn btn-outline btn-sm' : 'btn btn-secondary btn-sm'"
+              >
+                Aujourd'hui
+              </button>
+              <button
+                type="button"
+                (click)="setOrderShowAllHistory(true)"
+                [class]="orderShowAllHistory() ? 'btn btn-secondary btn-sm' : 'btn btn-outline btn-sm'"
+              >
+                Tout l'historique
+              </button>
+            </div>
+            <select
+              class="select"
+              [ngModel]="orderStatusFilter()"
+              (ngModelChange)="setOrderStatusFilter($event)"
+              aria-label="Filtrer par statut"
+            >
+              <option [ngValue]="null">Tous les statuts</option>
+              @for (s of orderStatuses; track s) {
+                <option [ngValue]="s">{{ orderStatusLabels[s] }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="card-pad">
+          @if (ordersLoading()) {
+            <div class="space-y-2">
+              @for (k of [0, 1, 2]; track k) {
+                <div class="skeleton h-10 w-full"></div>
+              }
+            </div>
+          } @else if (ordersError()) {
+            <p class="alert-error">{{ ordersError() }}</p>
+            <button type="button" (click)="loadOrders()" class="btn btn-outline btn-sm mt-3">Réessayer</button>
+          } @else if (orders().length === 0) {
+            <div class="empty-state rounded-md" style="border: 1px dashed var(--k-ink-300)">
+              <p class="text-sm font-medium text-ink-900">
+                {{ orderShowAllHistory() ? 'Aucune commande' : "Aucune commande aujourd'hui" }}
+              </p>
+              <p class="mt-1 text-sm text-ink-500">
+                @if (orderShowAllHistory()) {
+                  Les commandes passées par vos clients depuis le menu en ligne apparaîtront ici.
+                } @else {
+                  Consultez « Tout l'historique » pour voir les commandes des jours précédents.
+                }
+              </p>
+            </div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Commande</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th>Type</th>
+                    <th>Table / Client</th>
+                    <th class="text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (o of orders(); track o.id) {
+                    <tr class="row-link" (click)="openOrder(o.id)">
+                      <td class="mono font-medium text-ink-900">#{{ o.orderNumber }}</td>
+                      <td class="mono text-ink-500">{{ o.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                      <td>
+                        <span [class]="orderStatusBadgeClass(o.status)">{{ orderStatusLabels[o.status] }}</span>
+                      </td>
+                      <td>{{ fulfillmentLabels[o.fulfillmentType] }}</td>
+                      <td>{{ o.tableNumber || o.customerName || '—' }}</td>
+                      <td class="mono text-right font-semibold text-ink-900">
+                        {{ formatPrice(o.totalCents, o.currency) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </section>
+    }
   </div>
 
   <!-- ============================ MODALES ============================ -->
@@ -451,6 +584,97 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  }
+
+  <!-- Détail d'une commande Karta Pay -->
+  @if (viewingOrder()) {
+    <div class="modal-backdrop" (click)="closeOrder()">
+      <div class="modal-panel modal-pad" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="order-title">
+        <button type="button" (click)="closeOrder()" class="modal-close" aria-label="Fermer">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+
+        @if (orderDetailLoading()) {
+          <div class="space-y-3">
+            <div class="skeleton h-6 w-40"></div>
+            <div class="skeleton h-24 w-full"></div>
+          </div>
+        } @else if (orderDetailError()) {
+          <p class="alert-error">{{ orderDetailError() }}</p>
+        } @else if (selectedOrder()) {
+          @let order = selectedOrder()!;
+          <h3 id="order-title" class="modal-title mono">#{{ order.orderNumber }}</h3>
+          <p class="modal-desc">
+            {{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }} · {{ fulfillmentLabels[order.fulfillmentType] }}
+            @if (order.tableNumber) {
+              · Table {{ order.tableNumber }}
+            }
+            @if (order.customerName) {
+              · {{ order.customerName }}
+            }
+          </p>
+
+          <div class="mt-4 space-y-3">
+            @for (line of order.lines; track line.id) {
+              <div class="flex items-start justify-between gap-3 pb-3" style="border-bottom: 1px solid var(--k-hairline)">
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-ink-900">
+                    {{ line.quantity }} × {{ line.itemNameSnapshot }}
+                  </p>
+                  @for (modifier of orderLineModifiers(line); track modifier.name) {
+                    <p class="text-xs text-ink-500">
+                      + {{ modifier.name }}
+                      @if (modifier.priceDeltaCents > 0) {
+                        ({{ formatPrice(modifier.priceDeltaCents, order.currency) }})
+                      }
+                    </p>
+                  }
+                  <p class="mono text-xs text-ink-400">
+                    {{ formatPrice(line.unitPriceCentsSnapshot, order.currency) }} / unité
+                  </p>
+                </div>
+                <p class="mono shrink-0 text-sm font-semibold text-ink-900">
+                  {{ formatPrice(line.lineTotalCents, order.currency) }}
+                </p>
+              </div>
+            }
+          </div>
+
+          <div class="mt-3 flex items-center justify-between">
+            <p class="text-sm font-semibold text-ink-900">Total</p>
+            <p class="mono text-base font-bold text-ink-900">{{ formatPrice(order.totalCents, order.currency) }}</p>
+          </div>
+
+          <p class="field-hint mt-3">Paiement : en attente (aucun moyen de paiement en ligne pour ce MVP).</p>
+
+          <div class="mt-5">
+            <div class="flex items-center gap-2">
+              <span class="field-label">Statut</span>
+              <span [class]="orderStatusBadgeClass(order.status)">{{ orderStatusLabels[order.status] }}</span>
+            </div>
+            @if (availableTransitions(order.status).length > 0) {
+              <div class="mt-3 flex flex-wrap gap-2">
+                @for (next of availableTransitions(order.status); track next) {
+                  <button
+                    type="button"
+                    class="btn btn-outline btn-sm"
+                    [disabled]="orderStatusActionLoading()"
+                    (click)="changeOrderStatus(next)"
+                  >
+                    {{ next === 'CANCELLED' ? 'Annuler la commande' : orderStatusLabels[next] }}
+                  </button>
+                }
+              </div>
+            }
+            @if (orderStatusActionError()) {
+              <p class="alert-error mt-3">{{ orderStatusActionError() }}</p>
+            }
+          </div>
+        }
       </div>
     </div>
   }

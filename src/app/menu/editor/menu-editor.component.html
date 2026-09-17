@@ -303,6 +303,164 @@
                     />
                   }
                 </div>
+
+                <!-- Personnalisation (Karta Pay) : groupes d'options, seulement pour un plat déjà enregistré. -->
+                <div class="mt-4">
+                  <span class="field-label">Personnalisation</span>
+                  @if (!item.id) {
+                    <p class="field-hint">Enregistrez d'abord ce plat pour lui ajouter des options.</p>
+                  } @else {
+                    <div>
+                      <button type="button" class="btn btn-outline btn-sm" (click)="toggleModifiers(item)">
+                        {{ modifiersOpen() ? 'Masquer la personnalisation' : 'Gérer la personnalisation' }}
+                      </button>
+                    </div>
+
+                    @if (modifiersOpen()) {
+                      <div class="mt-3 rounded-md p-3" style="border: 1px solid var(--k-hairline)">
+                        @if (modifiersLoading()) {
+                          <p class="flex items-center gap-2 text-sm text-ink-500">
+                            <span class="spinner"></span> Chargement…
+                          </p>
+                        } @else if (modifiersError()) {
+                          <p class="alert-error">{{ modifiersError() }}</p>
+                        } @else {
+                          @if (modifierGroups().length === 0) {
+                            <p class="text-sm text-ink-400">Aucun groupe d'options pour ce plat.</p>
+                          }
+
+                          @for (group of modifierGroups(); track group.uid) {
+                            <div class="mt-3 rounded-md p-3" style="border: 1px solid var(--k-hairline)">
+                              <div class="flex flex-wrap items-center gap-2">
+                                <input
+                                  type="text"
+                                  class="input min-w-[10rem] flex-1"
+                                  placeholder="Nom du groupe (ex. Sauce, Taille)"
+                                  [(ngModel)]="group.name"
+                                  (ngModelChange)="onModifiersChange()"
+                                />
+                                <select
+                                  class="select w-auto"
+                                  [ngModel]="group.selectionType"
+                                  (ngModelChange)="setGroupSelectionType(group, $event)"
+                                >
+                                  <option value="SINGLE">Un seul choix</option>
+                                  <option value="MULTIPLE">Plusieurs choix</option>
+                                </select>
+                                <button
+                                  type="button"
+                                  class="mx-icon-btn mx-icon-btn-danger"
+                                  (click)="removeModifierGroup(group.uid)"
+                                  aria-label="Supprimer ce groupe"
+                                >
+                                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+
+                              <div class="mt-2 flex flex-wrap items-center gap-4">
+                                <label class="flex items-center gap-1.5 text-xs text-ink-500">
+                                  Min.
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    class="input mono w-16"
+                                    [(ngModel)]="group.minSelect"
+                                    (ngModelChange)="onModifiersChange()"
+                                  />
+                                </label>
+                                @if (group.selectionType === 'MULTIPLE') {
+                                  <label class="flex items-center gap-1.5 text-xs text-ink-500">
+                                    Max.
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      class="input mono w-16"
+                                      [ngModel]="group.maxSelect"
+                                      (ngModelChange)="group.maxSelect = $event; onModifiersChange()"
+                                    />
+                                  </label>
+                                }
+                              </div>
+
+                              <div class="mt-3 space-y-2">
+                                @for (option of group.options; track option.uid) {
+                                  <div class="flex flex-wrap items-center gap-2">
+                                    <input
+                                      type="text"
+                                      class="input min-w-[8rem] flex-1"
+                                      placeholder="Nom de l'option"
+                                      [(ngModel)]="option.name"
+                                      (ngModelChange)="onModifiersChange()"
+                                    />
+                                    <label class="flex items-center gap-1 text-xs text-ink-500">
+                                      Supplément
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="0.10"
+                                        class="input mono w-24"
+                                        [(ngModel)]="option.priceEuros"
+                                        (ngModelChange)="onModifiersChange()"
+                                      />
+                                      €
+                                    </label>
+                                    <label class="flex items-center gap-1.5 text-xs text-ink-500">
+                                      <input
+                                        type="checkbox"
+                                        [(ngModel)]="option.available"
+                                        (ngModelChange)="onModifiersChange()"
+                                      />
+                                      Disponible
+                                    </label>
+                                    <button
+                                      type="button"
+                                      class="mx-icon-btn mx-icon-btn-danger"
+                                      (click)="removeModifierOption(group, option.uid)"
+                                      aria-label="Supprimer cette option"
+                                    >
+                                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                }
+                                <button type="button" class="btn btn-ghost btn-sm" (click)="addModifierOption(group)">
+                                  + Ajouter une option
+                                </button>
+                              </div>
+                            </div>
+                          }
+
+                          <button type="button" class="btn btn-outline btn-sm mt-3" (click)="addModifierGroup()">
+                            + Ajouter un groupe
+                          </button>
+
+                          <div class="mt-3 flex items-center gap-3">
+                            <button
+                              type="button"
+                              class="btn btn-secondary btn-sm"
+                              [disabled]="modifiersSaving()"
+                              (click)="saveModifiers(item)"
+                            >
+                              @if (modifiersSaving()) {
+                                <span class="spinner"></span>
+                              }
+                              Enregistrer les options
+                            </button>
+                            @if (modifiersSaved()) {
+                              <span class="save-hint">Options enregistrées</span>
+                            }
+                          </div>
+                          @if (modifiersSaveError()) {
+                            <p class="alert-error mt-2">{{ modifiersSaveError() }}</p>
+                          }
+                        }
+                      </div>
+                    }
+                  }
+                </div>
               }
 
               <div class="mx-edit-foot">

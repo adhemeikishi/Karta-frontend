@@ -40,12 +40,18 @@
         <p class="imp-drop-file">{{ chosen.name }}</p>
         <p class="k-coord mt-1">{{ chosen.size }}</p>
 
-        <button type="button" class="btn btn-primary mt-7" (click)="start()">
-          Créer mon menu digital
+        <button type="button" class="btn btn-primary mt-7" [disabled]="submitting()" (click)="start()">
+          {{ submitting() ? 'Analyse en cours…' : 'Créer mon menu digital' }}
         </button>
-        <button type="button" class="imp-drop-change mt-4" (click)="clear()">
-          Choisir un autre fichier
-        </button>
+        @if (!submitting()) {
+          <button type="button" class="imp-drop-change mt-4" (click)="clear()">
+            Choisir un autre fichier
+          </button>
+        }
+
+        @if (error()) {
+          <p class="alert-error mt-4 text-left" role="alert">{{ error() }}</p>
+        }
       </div>
     } @else {
       <div class="imp-drop-body">

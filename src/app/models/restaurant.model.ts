@@ -16,6 +16,15 @@ export interface Restaurant {
    * rien n'est mémorisé dans le navigateur, donc changer d'appareil ne change rien.
    */
   onboardingCompletedAt: string | null;
+  /** Interrupteur commercial Karta Pay — décidé par Karta, jamais par le restaurateur. */
+  kartaPayEnabled: boolean;
+  /**
+   * Abonnement payé, indépendant de `offer` (voir `Restaurant.subscriptionActive` côté
+   * backend) : `offer` dit quel niveau de fonctionnalités le restaurant utilise,
+   * `subscriptionActive` dit s'il a payé pour l'utiliser. Un compte créé par inscription
+   * libre-service démarre à `false` — jamais recalculé côté frontend, toujours relu ici.
+   */
+  subscriptionActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -47,4 +56,47 @@ export interface RestaurantScanStats {
   last30Days: number;
   total: number;
   daily: DailyScans[];
+}
+
+/** Correspond à KartaPayDashboardDtos.RevenuePeriods. */
+export interface RevenuePeriods {
+  todayCents: number;
+  thisWeekCents: number;
+  thisMonthCents: number;
+}
+
+/** Correspond à KartaPayDashboardDtos.TopItem. */
+export interface TopItem {
+  name: string;
+  quantity: number;
+  revenueCents: number;
+}
+
+/** Correspond à KartaPayDashboardDtos.ItemShare — une part du CA de la fenêtre, un plat ou "Autres". */
+export interface ItemShare {
+  name: string;
+  revenueCents: number;
+  percentage: number;
+}
+
+/** Nombre de scans pour une heure de la journée (0-23), sur la fenêtre de 30 jours du tableau de bord. */
+export interface HourlyScans {
+  hour: number;
+  scans: number;
+}
+
+/**
+ * Correspond à KartaPayDashboardDtos.KartaPayDashboardResponse
+ * (`GET /api/admin/restaurants/{id}/karta-pay/dashboard`).
+ *
+ * Tout calcul (CA, panier moyen, pourcentages) est fait côté backend : ce type ne fait que
+ * refléter la réponse, aucun recalcul métier ne doit avoir lieu côté Angular.
+ */
+export interface KartaPayDashboardStats {
+  qrScans: RestaurantScanStats;
+  revenue: RevenuePeriods;
+  topItems: TopItem[];
+  revenueBreakdown: ItemShare[];
+  avgBasketCents: number;
+  peakHours: HourlyScans[];
 }

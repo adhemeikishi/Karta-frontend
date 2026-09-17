@@ -17,9 +17,56 @@ describe('Brouillon de création', () => {
   it('part d’un fichier et d’une carte à relire', () => {
     const draft = newCreationDraft('menu-restaurant.pdf', 2_400_000);
     expect(draft.stage).toBe('analyzing');
+    expect(draft.sourceKind).toBe('demo');
     expect(draft.categories.length).toBeGreaterThan(0);
     // Une lecture de PDF laisse des trous : sans eux, la vérification n'aurait pas d'objet.
     expect(countDraft(draft).needsReview).toBeGreaterThan(0);
+  });
+
+  it('démarre un parcours à partir d’une vraie extraction KartaAI (dépôt PDF de la landing)', () => {
+    const service = TestBed.inject(CreationDraftService);
+    service.startFromExtraction('ma-carte.pdf', 2000, [
+      {
+        name: 'Entrées',
+        items: [
+          {
+            name: 'Soupe à l’oignon',
+            description: null,
+            price: 890,
+            currency: 'EUR',
+            needsReview: false,
+            note: null,
+          },
+        ],
+      },
+    ]);
+
+    expect(service.draft()?.sourceKind).toBe('uploaded');
+    expect(service.draft()?.stage).toBe('analyzing');
+    expect(service.draft()?.fileName).toBe('ma-carte.pdf');
+    expect(service.draft()?.categories.length).toBe(1);
+    expect(service.draft()?.categories[0].items[0].name).toBe('Soupe à l’oignon');
+    expect(service.draft()?.excluded).toEqual([]);
+  });
+
+  it('n’a pas de personnalisation PREMIUM au démarrage', () => {
+    const draft = newCreationDraft('carte.pdf', 1000);
+    expect(draft.logoUrl).toBeNull();
+    expect(draft.heroUrl).toBeNull();
+    expect(draft.fontId).toBeNull();
+    expect(draft.hideBranding).toBeFalse();
+  });
+
+  it('n’enregistre jamais un objet URL local (blob:) au-delà de la session', () => {
+    const service = TestBed.inject(CreationDraftService);
+    service.start('carte.pdf', 1000);
+    service.setLogo('blob:http://localhost/fake-logo');
+
+    // Un nouveau service = ce que fait un rechargement d'onglet : le blob n'existe plus.
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+    const reloaded = TestBed.inject(CreationDraftService);
+    expect(reloaded.draft()?.logoUrl).toBeNull();
   });
 
   it('compte ce que la carte contient réellement', () => {

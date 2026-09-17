@@ -41,74 +41,170 @@
       </div>
     </section>
 
-    <!-- 02 · Identité — une seule ligne, le nom que le client lit en haut de la carte. -->
+    <!-- 02 · Premium — identité, médias, typographie et branding : tout ce que -->
+    <!-- l'offre Premium permet, dans un seul palier, appliqué en direct à l'aperçu. -->
     <section class="cf-block">
-      <p class="cf-block-title"><span class="cf-block-num">02</span> Nom affiché</p>
-      <label class="sr-only" for="brand-name">Nom affiché en haut de votre carte</label>
-      <input
-        id="brand-name"
-        type="text"
-        class="input mt-4 max-w-sm"
-        maxlength="120"
-        [ngModel]="brandName()"
-        (ngModelChange)="setBrandName($event)"
-      />
-      <p class="field-hint">Ce que vos clients lisent en haut de la carte.</p>
-    </section>
-
-    <!-- 03 · Couleurs — repliées : c'est une option, pas une étape obligatoire. -->
-    <details class="cf-block cf-details">
-      <summary class="cf-details-summary">
-        <span class="cf-block-title"><span class="cf-block-num">03</span> Couleurs</span>
+      <p class="cf-block-title">
+        <span class="cf-block-num">02</span> Premium
         <span class="badge-offer">Premium</span>
-        <svg class="cf-details-chevron h-4 w-4 shrink-0 text-ink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-        </svg>
-      </summary>
+      </p>
+      <p class="lead mt-3 max-w-md">
+        Votre identité. Chaque changement apparaît immédiatement dans l'aperçu.
+      </p>
 
-      <div class="mt-5 grid gap-5 sm:grid-cols-2">
+      <!-- Identité -->
+      <div class="mt-6 space-y-5">
         <div>
-          <label class="field-label" for="color-primary">Couleur principale</label>
-          <div class="color-field">
-            <input
-              id="color-primary"
-              type="color"
-              class="color-input"
-              [value]="colorFor('primary')"
-              (input)="setColor('primary', $any($event.target).value)"
-            />
-            <span class="mono text-sm text-ink-700">{{ colorFor('primary') }}</span>
-            <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="setColor('primary', null)">
-              Réinitialiser
-            </button>
-          </div>
-          <p class="field-hint">Prix, filets et détails.</p>
+          <label class="field-label" for="brand-name">Nom affiché</label>
+          <input
+            id="brand-name"
+            type="text"
+            class="input mt-2 max-w-sm"
+            maxlength="120"
+            placeholder="Le nom de votre restaurant"
+            [ngModel]="brandName()"
+            (ngModelChange)="setBrandName($event)"
+          />
         </div>
 
-        <div>
-          <label class="field-label" for="color-secondary">Couleur secondaire</label>
-          <div class="color-field">
-            <input
-              id="color-secondary"
-              type="color"
-              class="color-input"
-              [value]="colorFor('secondary')"
-              (input)="setColor('secondary', $any($event.target).value)"
-            />
-            <span class="mono text-sm text-ink-700">{{ colorFor('secondary') }}</span>
-            <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="setColor('secondary', null)">
-              Réinitialiser
-            </button>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label class="field-label" for="color-primary">Couleur principale</label>
+            <div class="color-field mt-2">
+              <input
+                id="color-primary"
+                type="color"
+                class="color-input"
+                [value]="colorFor('primary')"
+                (input)="setColor('primary', $any($event.target).value)"
+              />
+              <span class="mono text-sm text-ink-700">{{ colorFor('primary') }}</span>
+              <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="setColor('primary', null)">
+                Réinitialiser
+              </button>
+            </div>
+            <p class="field-hint">Prix, filets et détails.</p>
           </div>
-          <p class="field-hint">Fond de la page. Le texte s'adapte pour rester lisible.</p>
+
+          <div>
+            <label class="field-label" for="color-secondary">Couleur secondaire</label>
+            <div class="color-field mt-2">
+              <input
+                id="color-secondary"
+                type="color"
+                class="color-input"
+                [value]="colorFor('secondary')"
+                (input)="setColor('secondary', $any($event.target).value)"
+              />
+              <span class="mono text-sm text-ink-700">{{ colorFor('secondary') }}</span>
+              <button type="button" class="btn btn-ghost btn-sm ml-auto" (click)="setColor('secondary', null)">
+                Réinitialiser
+              </button>
+            </div>
+            <p class="field-hint">Fond de la page. Le texte s'adapte pour rester lisible.</p>
+          </div>
         </div>
       </div>
 
-      <p class="field-hint mt-5">
-        Logo et image d'en-tête se déposent depuis votre espace, une fois votre compte
-        ouvert : ils demandent un envoi de fichier.
-      </p>
-    </details>
+      <!-- Médias -->
+      <div class="mt-8">
+        <p class="field-label">Médias</p>
+        <div class="mt-2 grid gap-4 sm:grid-cols-2">
+          <div>
+            <span class="field-label">Logo</span>
+            <div class="media-slot mt-2">
+              @if (logoUrl(); as url) {
+                <img [src]="url" alt="Logo" class="media-thumb media-thumb-contain" />
+              } @else {
+                <span class="media-placeholder">Aucun</span>
+              }
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline btn-sm" (click)="logoInput.click()">
+                  {{ logoUrl() ? 'Remplacer' : 'Ajouter' }}
+                </button>
+                @if (logoUrl()) {
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="clearLogo()">Retirer</button>
+                }
+              </div>
+            </div>
+            <input
+              #logoInput
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="sr-only"
+              aria-label="Choisir un logo"
+              (change)="onImageSelected($event, 'logo')"
+            />
+          </div>
+
+          <div>
+            <span class="field-label">Image d'en-tête</span>
+            <div class="media-slot mt-2">
+              @if (heroUrl(); as url) {
+                <img [src]="url" alt="Image d'en-tête" class="media-thumb" />
+              } @else {
+                <span class="media-placeholder">Aucune</span>
+              }
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline btn-sm" (click)="heroInput.click()">
+                  {{ heroUrl() ? 'Remplacer' : 'Ajouter' }}
+                </button>
+                @if (heroUrl()) {
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="clearHero()">Retirer</button>
+                }
+              </div>
+            </div>
+            <input
+              #heroInput
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="sr-only"
+              aria-label="Choisir une image d'en-tête"
+              (change)="onImageSelected($event, 'hero')"
+            />
+          </div>
+        </div>
+        @if (mediaError()) {
+          <p class="alert-error mt-3" role="alert">{{ mediaError() }}</p>
+        }
+        <p class="field-hint mt-3">JPEG, PNG ou WebP — 5 Mo maximum.</p>
+      </div>
+
+      <!-- Typographie -->
+      <div class="mt-8">
+        <label class="field-label" for="menu-font">Typographie</label>
+        <select
+          id="menu-font"
+          class="input mt-2 max-w-sm"
+          [ngModel]="fontId() ?? ''"
+          (ngModelChange)="setFont($event)"
+        >
+          <option value="">
+            Celle du style ({{ presetTypeface() === 'serif' ? 'empattements' : 'sans empattements' }})
+          </option>
+          @for (font of fonts; track font.id) {
+            <option [value]="font.id">{{ font.label }}</option>
+          }
+        </select>
+        <p class="field-hint mt-2">
+          Appliquée à toute la carte. Sans choix, aucune police n'est téléchargée par vos clients.
+        </p>
+      </div>
+
+      <!-- Sans branding Karta -->
+      <label class="mt-8 flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          class="mt-0.5"
+          [ngModel]="hideBranding()"
+          (ngModelChange)="setHideBranding($event)"
+        />
+        <span>
+          <span class="block text-sm font-medium text-ink-900">Sans branding Karta</span>
+          <span class="block text-sm text-ink-500">Retire la mention Karta du pied de la carte.</span>
+        </span>
+      </label>
+    </section>
 
     <!-- Le moment de conversion : le résultat, pas le logiciel. -->
     <div class="cf-block">
@@ -131,12 +227,17 @@
     <div class="imp-phone-wrap phone-hover-lift">
       <app-phone-frame [screenColor]="theme().background">
         @if (menu(); as previewMenu) {
-          <menu-render [theme]="theme()" [menu]="previewMenu" />
+          <menu-render [theme]="theme()" [menu]="previewMenu" [hideBranding]="hideBranding()" />
         }
       </app-phone-frame>
     </div>
     <p class="imp-demo mt-6 max-w-[16rem]">
-      Aperçu réel : c'est le rendu que vos clients verront en scannant le QR.
+      @if (sourceKind() === 'uploaded') {
+        Votre carte, analysée par KartaAI — c'est le rendu que vos clients verront en
+        scannant le QR.
+      } @else {
+        Aperçu réel : c'est le rendu que vos clients verront en scannant le QR.
+      }
     </p>
   </div>
 </div>

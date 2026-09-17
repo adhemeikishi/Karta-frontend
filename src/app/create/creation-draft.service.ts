@@ -1,11 +1,13 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { EditableCategory } from '../menu/review/menu-draft.model';
+import { DraftCategory, EditableCategory } from '../menu/review/menu-draft.model';
 import { LandingMenuPresetId } from '../landing/landing-menu-presets';
+import { MenuFontId } from '../menu/design/menu-design.model';
 import {
   CreationDraft,
   CreationStage,
   countDraft,
   newCreationDraft,
+  newCreationDraftFromExtraction,
   toPreviewMenu,
 } from './creation-draft.model';
 
@@ -46,6 +48,15 @@ export class CreationDraftService {
     this.write(newCreationDraft(fileName, fileSizeBytes));
   }
 
+  /**
+   * Démarre un parcours à partir d'une vraie extraction KartaAI sur le PDF déposé sur la
+   * landing (`MenuImportDropzoneComponent`, `POST /api/public/menu-demo/extract`) : même
+   * point d'entrée que {@link start}, avec le contenu réel à la place de la démo.
+   */
+  startFromExtraction(fileName: string, fileSizeBytes: number, categories: DraftCategory[]): void {
+    this.write(newCreationDraftFromExtraction(fileName, fileSizeBytes, categories));
+  }
+
   setStage(stage: CreationStage): void {
     this.patch((draft) => ({ ...draft, stage }));
   }
@@ -73,6 +84,24 @@ export class CreationDraftService {
 
   setColors(primaryColor: string | null, secondaryColor: string | null): void {
     this.patch((draft) => ({ ...draft, primaryColor, secondaryColor }));
+  }
+
+  /** PREMIUM démo — objet URL local (`URL.createObjectURL`), jamais envoyé à un serveur. */
+  setLogo(logoUrl: string | null): void {
+    this.patch((draft) => ({ ...draft, logoUrl }));
+  }
+
+  setHero(heroUrl: string | null): void {
+    this.patch((draft) => ({ ...draft, heroUrl }));
+  }
+
+  /** `null` = revenir à la typographie du preset. */
+  setFont(fontId: MenuFontId | null): void {
+    this.patch((draft) => ({ ...draft, fontId }));
+  }
+
+  setHideBranding(hideBranding: boolean): void {
+    this.patch((draft) => ({ ...draft, hideBranding }));
   }
 
   clear(): void {
@@ -119,9 +148,16 @@ export class CreationDraftService {
       }
       const parsed = JSON.parse(raw) as CreationDraft;
       // Un brouillon d'une version antérieure du format ne doit pas casser la page.
-      return Array.isArray(parsed?.categories) && typeof parsed?.stage === 'string'
-        ? parsed
-        : null;
+      if (!(Array.isArray(parsed?.categories) && typeof parsed?.stage === 'string')) {
+        return null;
+      }
+      // Un `blob:` (logo/image d'en-tête PREMIUM) ne survit jamais à un rechargement de
+      // page : l'image redevient absente plutôt que cassée.
+      return {
+        ...parsed,
+        logoUrl: parsed.logoUrl?.startsWith('blob:') ? null : (parsed.logoUrl ?? null),
+        heroUrl: parsed.heroUrl?.startsWith('blob:') ? null : (parsed.heroUrl ?? null),
+      };
     } catch {
       return null;
     }

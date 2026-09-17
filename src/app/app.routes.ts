@@ -189,6 +189,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./restaurateur/stats/stats.component').then((m) => m.StatsComponent),
       },
+      {
+        path: 'karta-pay',
+        loadComponent: () =>
+          import('./restaurateur/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      },
       // Même composant que le back-office — jamais un second écran de Review. Seul
       // `data.space` change le lien de retour et le vocabulaire (voir MenuReviewComponent).
       {

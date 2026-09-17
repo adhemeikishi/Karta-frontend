@@ -1,4 +1,5 @@
 import {
+  DraftCategory,
   EditableCategory,
   EditableItem,
   MenuDraft,
@@ -9,6 +10,7 @@ import {
   LandingMenuContent,
   LandingMenuPresetId,
 } from '../landing/landing-menu-presets';
+import { MenuFontId } from '../menu/design/menu-design.model';
 
 /**
  * Où en est le visiteur dans le parcours de création.
@@ -39,6 +41,12 @@ export interface CreationDraft {
   createdAt: string;
   stage: CreationStage;
 
+  /**
+   * `'demo'` : catégories issues de {@link LANDING_MENU_CONTENT}, rien n'a été lu.
+   * `'uploaded'` : catégories issues d'une vraie extraction KartaAI sur le PDF du
+   * prospect (voir `MenuDemoService`, `/api/public/menu-demo/extract`).
+   */
+  sourceKind: 'demo' | 'uploaded';
   categories: EditableCategory[];
   /** `uid` des plats décochés à la vérification. Retirer n'efface pas : on peut revenir. */
   excluded: string[];
@@ -49,6 +57,19 @@ export interface CreationDraft {
   primaryColor: string | null;
   /** Couleur de fond (PREMIUM), `null` = celle du preset. */
   secondaryColor: string | null;
+
+  /**
+   * Personnalisation PREMIUM de la démo (voir `menu-design.model.ts` : mêmes champs que
+   * le studio réel). Purement locale — jamais envoyée à aucun serveur, jamais persistée
+   * au-delà de cet onglet.
+   */
+  /** Objet URL local (`URL.createObjectURL`) : ne survit jamais à un rechargement. */
+  logoUrl: string | null;
+  heroUrl: string | null;
+  /** `null` = la typographie du preset, comme `MenuCustomization.font` côté produit. */
+  fontId: MenuFontId | null;
+  /** Retire la mention Karta du pied de la carte, comme `MenuDesign.hideBranding`. */
+  hideBranding: boolean;
 }
 
 /** « 12,50 € » vers des centimes entiers, comme le reste du produit. */
@@ -96,6 +117,14 @@ function demoMenuAsDraft(fileName: string): MenuDraft {
     }
   }
 
+  return draftFromCategories(categories, fileName);
+}
+
+/**
+ * Enveloppe des catégories (démo ou vraie extraction KartaAI) dans la forme
+ * {@link MenuDraft}, en recalculant les compteurs — jamais écrits en dur.
+ */
+function draftFromCategories(categories: DraftCategory[], fileName: string | null): MenuDraft {
   const items = categories.flatMap((category) => category.items);
   return {
     sourceAssetId: null,
@@ -109,6 +138,17 @@ function demoMenuAsDraft(fileName: string): MenuDraft {
   };
 }
 
+/**
+ * Catégories issues d'une vraie extraction KartaAI (`/api/public/menu-demo/extract`),
+ * converties vers le même état d'édition que la Review réelle.
+ */
+export function editableFromExtractedCategories(
+  categories: DraftCategory[],
+  fileName: string,
+): EditableCategory[] {
+  return toEditable(draftFromCategories(categories, fileName));
+}
+
 /** Brouillon initial, au moment où le fichier est déposé sur la landing. */
 export function newCreationDraft(fileName: string, fileSizeBytes: number): CreationDraft {
   return {
@@ -116,12 +156,49 @@ export function newCreationDraft(fileName: string, fileSizeBytes: number): Creat
     fileSizeBytes,
     createdAt: new Date().toISOString(),
     stage: 'analyzing',
+    sourceKind: 'demo',
     categories: toEditable(demoMenuAsDraft(fileName)),
     excluded: [],
     presetId: 'modern',
     brandName: LANDING_MENU_CONTENT.restaurantName,
     primaryColor: null,
     secondaryColor: null,
+    logoUrl: null,
+    heroUrl: null,
+    fontId: null,
+    hideBranding: false,
+  };
+}
+
+/**
+ * Brouillon initial à partir d'une vraie extraction KartaAI (dépôt PDF de la landing,
+ * `POST /api/public/menu-demo/extract`) : même forme que {@link newCreationDraft}, avec
+ * le contenu réellement lu dans le PDF à la place de la carte d'exemple.
+ *
+ * `stage: 'analyzing'` volontairement, comme la démo : `/karta-ai` rejoue son animation
+ * de construction sur ce contenu réel, exactement comme il le ferait sur la démo.
+ */
+export function newCreationDraftFromExtraction(
+  fileName: string,
+  fileSizeBytes: number,
+  categories: DraftCategory[],
+): CreationDraft {
+  return {
+    fileName,
+    fileSizeBytes,
+    createdAt: new Date().toISOString(),
+    stage: 'analyzing',
+    sourceKind: 'uploaded',
+    categories: editableFromExtractedCategories(categories, fileName),
+    excluded: [],
+    presetId: 'modern',
+    brandName: LANDING_MENU_CONTENT.restaurantName,
+    primaryColor: null,
+    secondaryColor: null,
+    logoUrl: null,
+    heroUrl: null,
+    fontId: null,
+    hideBranding: false,
   };
 }
 

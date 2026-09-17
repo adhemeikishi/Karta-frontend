@@ -40,11 +40,13 @@ function clamp01(value: number): number {
  * lu, vidé de son contenu, restructuré, puis reconstruit dans le téléphone. Quatorze
  * secondes, cinq étapes, un état visuel qui avance en continu.
  *
- * <strong>C'est une démonstration, et elle le dit.</strong> Le fichier déposé n'est ni
- * lu ni envoyé : aucun appel réseau, rien ne quitte l'appareil. L'extraction réelle
- * (Gemini) n'est pas branchée ; le jour où elle le sera, c'est ce même écran qui
- * affichera sa progression. Seuls le nom et la taille du fichier sont réels ; tout le
- * reste vient de la carte d'exemple et **les compteurs sont comptés dessus**.
+ * Le contenu affiché ici vient toujours de {@link CreationDraftService} — jamais recalculé
+ * ni réinventé sur cet écran. Deux origines possibles (`CreationDraft.sourceKind`) :
+ * `'demo'` (carte d'exemple, dépôt depuis la landing sans PDF valide ou parcours
+ * `/create/design`) ou `'uploaded'` (vraie extraction KartaAI sur le PDF du visiteur,
+ * `MenuImportDropzoneComponent` → `POST /api/public/menu-demo/extract`). Dans les deux
+ * cas, l'animation (quatorze secondes, cinq étapes) et **les compteurs comptés dessus**
+ * sont strictement identiques : ce n'est pas cet écran qui décide si le contenu est réel.
  *
  * Un seul intervalle porte l'animation : l'état dérive de `elapsed` par des `computed`.
  * Il est nettoyé à la destruction, y compris si le visiteur quitte en cours de route.

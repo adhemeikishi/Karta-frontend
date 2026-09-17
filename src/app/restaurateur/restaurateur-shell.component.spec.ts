@@ -36,6 +36,8 @@ describe('RestaurateurShellComponent', () => {
       name: 'Chez Karta',
       offer: 'PRO',
       onboardingCompletedAt: '2026-01-01T10:00:00Z',
+      kartaPayEnabled: false,
+      subscriptionActive: true,
       createdAt: '2026-01-01T10:00:00Z',
       updatedAt: '2026-01-01T10:00:00Z',
     });
@@ -141,6 +143,32 @@ describe('RestaurateurShellComponent', () => {
 
     expect(auth.isAuthenticated()).toBeFalse();
     expect(TestBed.inject(Router).url).toBe('/login');
+  });
+
+  it('affiche le bandeau "Aucun abonnement actif" avec un lien vers /pricing', async () => {
+    TestBed.inject(AuthService).setCredentials('resto@karta.local', 'x', {
+      username: 'resto@karta.local',
+      role: 'RESTAURATEUR',
+      restaurantId: 'r-1',
+    });
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/app/r-1/carte');
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/restaurants/r-1`).flush({
+      id: 'r-1',
+      name: 'Chez Karta',
+      offer: 'PRO',
+      onboardingCompletedAt: null,
+      kartaPayEnabled: false,
+      subscriptionActive: false,
+      createdAt: '2026-01-01T10:00:00Z',
+      updatedAt: '2026-01-01T10:00:00Z',
+    });
+    harness.detectChanges();
+
+    const el = harness.routeNativeElement as HTMLElement;
+    expect(el.textContent).toContain('Aucun abonnement actif');
+    const hrefs = Array.from(el.querySelectorAll('a')).map((a) => a.getAttribute('href') ?? '');
+    expect(hrefs).toContain('/pricing');
   });
 
   it('propose de réessayer si le restaurant ne charge pas, sans casser le châssis', async () => {

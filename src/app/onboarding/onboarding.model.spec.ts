@@ -8,6 +8,8 @@ function restaurant(offer: RestaurantOffer, completed = false): Restaurant {
     name: 'Chez Karta',
     offer,
     onboardingCompletedAt: completed ? '2026-02-01T10:00:00Z' : null,
+    kartaPayEnabled: false,
+    subscriptionActive: true,
     createdAt: '2026-01-01T10:00:00Z',
     updatedAt: '2026-01-01T10:00:00Z',
   };

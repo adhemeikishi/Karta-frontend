@@ -133,8 +133,13 @@
         }
 
         <p class="imp-demo mt-8">
-          Démonstration : votre fichier n'est ni envoyé ni analysé, et la carte affichée est
-          un menu d'exemple. L'extraction de votre PDF arrive prochainement.
+          @if (drafts.draft()?.sourceKind === 'uploaded') {
+            Votre document a réellement été envoyé à KartaAI : ce que vous voyez vient de
+            votre propre PDF.
+          } @else {
+            Démonstration : votre fichier n'est ni envoyé ni analysé, et la carte affichée est
+            un menu d'exemple.
+          }
         </p>
       </div>
     </div>

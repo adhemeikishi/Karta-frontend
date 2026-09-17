@@ -54,6 +54,7 @@ describe('routes — Espace Restaurateur', () => {
       'apparence',
       'qr',
       'statistiques',
+      'karta-pay',
       'carte/review',
     ]);
   });

@@ -3,8 +3,21 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { DailyScans, RestaurantScanStats } from '../../models/restaurant.model';
+import { DailyScans, Restaurant, RestaurantScanStats } from '../../models/restaurant.model';
+import { AuthService } from '../../services/auth.service';
+import { RestaurantContextService } from '../restaurant-context.service';
 import { StatsComponent } from './stats.component';
+
+const RESTAURANT: Restaurant = {
+  id: 'r-1',
+  name: 'Chez Karta',
+  offer: 'PRO',
+  onboardingCompletedAt: '2026-01-01T10:00:00Z',
+  kartaPayEnabled: false,
+  subscriptionActive: true,
+  createdAt: '2026-01-01T10:00:00Z',
+  updatedAt: '2026-01-01T10:00:00Z',
+};
 
 const URL = `${environment.apiBaseUrl}/api/admin/restaurants/r-1/stats`;
 
@@ -59,6 +72,7 @@ describe('StatsComponent', () => {
   afterEach(() => {
     fixture?.destroy();
     http.verify();
+    TestBed.inject(RestaurantContextService).clear();
   });
 
   it('lit les scans du restaurant courant par le service existant', () => {
@@ -174,5 +188,23 @@ describe('StatsComponent', () => {
 
     expect(text()).toContain('Impossible de charger vos statistiques.');
     expect(text()).toContain('Réessayer');
+  });
+
+  it('verrouille les statistiques sans abonnement actif, sans appeler le backend', () => {
+    // `RestaurantContextService` efface le restaurant tant que `AuthService` ne se
+    // déclare pas connecté (voir son effet de nettoyage sur logout) : sans ceci, le
+    // restaurant qu'on vient de poser serait effacé avant que le composant le lise.
+    TestBed.inject(AuthService).setCredentials('resto@karta.local', 'x', {
+      username: 'resto@karta.local',
+      role: 'RESTAURATEUR',
+      restaurantId: 'r-1',
+    });
+    TestBed.inject(RestaurantContextService).restaurant.set({ ...RESTAURANT, subscriptionActive: false });
+    create();
+    fixture.detectChanges();
+
+    http.expectNone(URL);
+    expect(text()).toContain('Statistiques de fréquentation');
+    expect(text()).toContain('Abonnement');
   });
 });

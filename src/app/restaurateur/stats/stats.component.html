@@ -7,7 +7,14 @@
   </div>
 </header>
 
-@if (loading()) {
+@if (!subscriptionActive()) {
+  <app-premium-lock
+    label="Statistiques de fréquentation"
+    description="Suivez les scans de votre QR code au jour le jour en choisissant un abonnement."
+    badge="Abonnement"
+    ctaLabel="Choisir mon abonnement"
+  />
+} @else if (loading()) {
   <div class="space-y-8">
     <div class="skeleton h-14 w-40"></div>
     <div class="space-y-4">

@@ -29,7 +29,7 @@
     </div>
 
     <nav class="app-nav-body" aria-label="Espace restaurateur">
-      @for (group of navigation; track group.label) {
+      @for (group of navigation(); track group.label) {
         <p class="app-nav-group">{{ group.label }}</p>
         @for (item of group.items; track item.label) {
           <a
@@ -107,6 +107,20 @@
           </div>
         </div>
       } @else {
+        @if (restaurant(); as r) {
+          @if (!r.subscriptionActive) {
+            <div class="app-panel app-panel-pad mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-ink-900">Aucun abonnement actif</p>
+                <p class="mt-1 text-sm text-ink-500">
+                  Votre carte peut continuer à être préparée librement. Pour la diffuser
+                  sans limite, choisissez un abonnement.
+                </p>
+              </div>
+              <a routerLink="/pricing" class="btn btn-primary btn-sm shrink-0">Choisir mon abonnement</a>
+            </div>
+          }
+        }
         <router-outlet></router-outlet>
       }
     </main>

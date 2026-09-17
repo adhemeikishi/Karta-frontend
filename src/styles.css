@@ -430,6 +430,11 @@ body {
     background-color: var(--k-warning-soft);
     color: var(--k-warning);
   }
+  /* Commande annulée (Karta Pay) — mêmes tokens que .alert-error, aucune nouvelle couleur. */
+  .badge-cancelled {
+    background-color: var(--k-danger-soft);
+    color: var(--k-danger);
+  }
 
   /* --- Feedback --------------------------------------------------------- */
   .alert-error {
@@ -2560,6 +2565,29 @@ body {
   }
   .cf-details[open] .cf-details-chevron {
     transform: rotate(180deg);
+  }
+
+  /* --- Import direct depuis /create/design : remplacer la démo par sa propre carte -- */
+  .cf-import-drop {
+    @apply relative flex min-h-[9rem] flex-col items-center justify-center gap-1 rounded-md px-5 py-6 text-center;
+    border: 1px dashed var(--k-ink-200);
+    background-color: var(--k-white);
+    transition:
+      border-color var(--k-t-base) var(--k-ease),
+      background-color var(--k-t-base) var(--k-ease);
+  }
+  .cf-import-drop-active {
+    border-color: var(--k-persimmon);
+    background-color: var(--k-persimmon-soft);
+  }
+  .cf-import-drop[aria-busy='true'] {
+    opacity: 0.7;
+  }
+  .cf-import-change {
+    @apply cursor-pointer text-xs font-semibold text-ink-500 underline underline-offset-4;
+  }
+  .cf-import-change:hover {
+    color: var(--k-ink-900);
   }
 
   /* La vérification ajoute une colonne à la ligne de plat : la case précède le nom.

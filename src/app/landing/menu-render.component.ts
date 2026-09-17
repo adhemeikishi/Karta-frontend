@@ -76,7 +76,9 @@ import { LandingMenuContent, ResolvedMenuTheme } from './landing-menu-presets';
         }
       </main>
 
-      <footer class="footer"><b>Karta</b></footer>
+      @if (!hideBranding()) {
+        <footer class="footer"><b>Karta</b></footer>
+      }
     </div>
   `,
   // CSS repris VERBATIM de templates/menu/menu.html + menu/base.html::reset.
@@ -138,6 +140,8 @@ import { LandingMenuContent, ResolvedMenuTheme } from './landing-menu-presets';
 export class MenuRenderComponent {
   readonly theme = input.required<ResolvedMenuTheme>();
   readonly menu = input.required<LandingMenuContent>();
+  /** PREMIUM : retire la mention Karta du pied de la carte (`MenuDesign.hideBranding`). */
+  readonly hideBranding = input(false);
 
   private readonly host = inject(ElementRef<HTMLElement>);
 

@@ -15,6 +15,8 @@ function summary(id: string, name: string): RestaurantSummary {
     name,
     offer: 'PRO',
     onboardingCompletedAt: '2026-01-01T10:00:00Z',
+    kartaPayEnabled: false,
+    subscriptionActive: true,
     createdAt: '2026-01-01T10:00:00Z',
     updatedAt: '2026-01-01T10:00:00Z',
     qrCodeCount: 1,

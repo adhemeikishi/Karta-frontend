@@ -58,12 +58,20 @@ export class RestaurateurShellComponent implements OnInit {
   readonly loading = this.context.loading;
   readonly error = this.context.error;
 
+  /** Tableau de bord Karta Pay — n'existe que pour les clients où c'est activé, voir `navigation`. */
+  private static readonly KARTA_PAY_DASHBOARD_ITEM: NavItem = {
+    label: 'Karta Pay',
+    path: 'karta-pay',
+    icon: 'M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z',
+  };
+
   /**
    * Destinations réelles uniquement. « Statistiques » n'apparaît pas tant que la page
    * n'existe pas ; une entrée qui ne mène nulle part est une promesse, pas une
-   * navigation.
+   * navigation. Même principe pour « Karta Pay » : voir `navigation`, qui ne l'ajoute que
+   * lorsque {@link RestaurantContextService.restaurant}`.kartaPayEnabled` est vrai.
    */
-  readonly navigation: readonly NavGroup[] = [
+  private readonly baseNavigation: readonly NavGroup[] = [
     {
       label: 'Ma carte',
       items: [
@@ -95,6 +103,22 @@ export class RestaurateurShellComponent implements OnInit {
       ],
     },
   ];
+
+  /**
+   * `baseNavigation`, avec l'entrée « Karta Pay » ajoutée au groupe « Diffusion »
+   * uniquement quand ce client l'a activé — un lien vers un tableau de bord vide n'a
+   * aucun sens pour un restaurant qui n'encaisse pas de commandes.
+   */
+  readonly navigation = computed<readonly NavGroup[]>(() => {
+    if (!this.restaurant()?.kartaPayEnabled) {
+      return this.baseNavigation;
+    }
+    return this.baseNavigation.map((group) =>
+      group.label === 'Diffusion'
+        ? { ...group, items: [...group.items, RestaurateurShellComponent.KARTA_PAY_DASHBOARD_ITEM] }
+        : group,
+    );
+  });
 
   readonly navOpen = signal(false);
 

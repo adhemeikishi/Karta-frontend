@@ -7,6 +7,16 @@ import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES } from '../design/menu-design.mod
 import { MenuDesignService } from '../design/menu-design.service';
 import { Menu, Translation } from '../menu.model';
 import { MenuService } from '../menu.service';
+import { ModifierGroupService } from '../../kartapay/modifier-group.service';
+import {
+  EditableModifierGroup,
+  SelectionType,
+  applySelectionType,
+  newModifierGroup,
+  newModifierOption,
+  toEditableGroups,
+  toSaveModifierGroupsRequest,
+} from '../../kartapay/modifier.model';
 import {
   EditableCategory,
   EditableItem,
@@ -55,6 +65,7 @@ import {
 export class MenuEditorComponent {
   private readonly menuService = inject(MenuService);
   private readonly designService = inject(MenuDesignService);
+  private readonly modifierGroupService = inject(ModifierGroupService);
 
   readonly restaurantId = input.required<string>();
   readonly menu = input.required<Menu>();
@@ -358,6 +369,7 @@ export class MenuEditorComponent {
   closeEdit(): void {
     this.editSnapshot = null;
     this.editingUid.set(null);
+    this.resetModifiersState();
   }
 
   /** Referme ET restaure les valeurs d'avant l'ouverture. */
@@ -501,6 +513,114 @@ export class MenuEditorComponent {
     // les `@for` de plats voisins ne soient pas recréés inutilement.
     this.categories.set([...this.categories()]);
     this.justSaved.set(false);
+  }
+
+  // ------------------------------------------------------------------ personnalisation (Karta Pay)
+
+  /**
+   * Groupes d'options du plat actuellement ouvert en édition. Un seul plat édité à la
+   * fois (voir `editingUid`) : pas besoin de garder un état par plat, `closeEdit` remet
+   * tout à zéro.
+   *
+   * Ne s'applique qu'à un plat déjà enregistré (`item.id` non null) : le endpoint
+   * modifier-groups est adressé par identifiant de produit, qui n'existe pas encore
+   * pour un plat qui n'a jamais été sauvegardé.
+   */
+  readonly modifiersOpen = signal(false);
+  readonly modifierGroups = signal<EditableModifierGroup[]>([]);
+  readonly modifiersLoading = signal(false);
+  readonly modifiersError = signal<string | null>(null);
+  readonly modifiersSaving = signal(false);
+  readonly modifiersSaveError = signal<string | null>(null);
+  readonly modifiersSaved = signal(false);
+  private modifiersLoadedItemId: string | null = null;
+
+  toggleModifiers(item: EditableItem): void {
+    if (!item.id) {
+      return;
+    }
+    const opening = !this.modifiersOpen();
+    this.modifiersOpen.set(opening);
+    if (opening && this.modifiersLoadedItemId !== item.id) {
+      this.loadModifiers(item.id);
+    }
+  }
+
+  private loadModifiers(itemId: string): void {
+    this.modifiersLoading.set(true);
+    this.modifiersError.set(null);
+    this.modifierGroupService.listByItem(this.restaurantId(), itemId).subscribe({
+      next: (groups) => {
+        this.modifierGroups.set(toEditableGroups(groups));
+        this.modifiersLoadedItemId = itemId;
+        this.modifiersLoading.set(false);
+      },
+      error: () => {
+        this.modifiersError.set('Impossible de charger les options.');
+        this.modifiersLoading.set(false);
+      },
+    });
+  }
+
+  private resetModifiersState(): void {
+    this.modifiersOpen.set(false);
+    this.modifierGroups.set([]);
+    this.modifiersError.set(null);
+    this.modifiersSaveError.set(null);
+    this.modifiersSaved.set(false);
+    this.modifiersLoadedItemId = null;
+  }
+
+  addModifierGroup(): void {
+    this.modifierGroups.update((list) => [...list, newModifierGroup()]);
+    this.modifiersSaved.set(false);
+  }
+
+  removeModifierGroup(groupUid: string): void {
+    this.modifierGroups.update((list) => list.filter((g) => g.uid !== groupUid));
+    this.modifiersSaved.set(false);
+  }
+
+  setGroupSelectionType(group: EditableModifierGroup, type: SelectionType): void {
+    applySelectionType(group, type);
+    this.onModifiersChange();
+  }
+
+  addModifierOption(group: EditableModifierGroup): void {
+    group.options.push(newModifierOption());
+    this.onModifiersChange();
+  }
+
+  removeModifierOption(group: EditableModifierGroup, optionUid: string): void {
+    group.options = group.options.filter((o) => o.uid !== optionUid);
+    this.onModifiersChange();
+  }
+
+  /** `[(ngModel)]` mute les groupes/options en place : republie le signal pour l'affichage. */
+  onModifiersChange(): void {
+    this.modifierGroups.set([...this.modifierGroups()]);
+    this.modifiersSaved.set(false);
+  }
+
+  saveModifiers(item: EditableItem): void {
+    if (!item.id || this.modifiersSaving()) {
+      return;
+    }
+    this.modifiersSaving.set(true);
+    this.modifiersSaveError.set(null);
+    this.modifiersSaved.set(false);
+    const payload = toSaveModifierGroupsRequest(this.modifierGroups());
+    this.modifierGroupService.save(this.restaurantId(), item.id, payload.groups).subscribe({
+      next: (groups) => {
+        this.modifierGroups.set(toEditableGroups(groups));
+        this.modifiersSaving.set(false);
+        this.modifiersSaved.set(true);
+      },
+      error: (err) => {
+        this.modifiersSaving.set(false);
+        this.modifiersSaveError.set(err?.error?.message ?? "Impossible d'enregistrer les options.");
+      },
+    });
   }
 
   // ------------------------------------------------------------------ enregistrement

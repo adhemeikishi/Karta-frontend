@@ -55,6 +55,9 @@ export class AuthService {
    */
   private readonly identityUrl = `${environment.apiBaseUrl}/api/admin/me`;
 
+  /** Inscription libre-service, publique — pas de Basic Auth (voir SecurityConfig backend). */
+  private readonly signupUrl = `${environment.apiBaseUrl}/api/public/signup`;
+
   /** Signal réactif consulté par le guard/layout pour savoir si on est "connecté". */
   readonly isAuthenticated = signal<boolean>(this.readStoredCredentials() !== null);
 
@@ -121,6 +124,17 @@ export class AuthService {
     return this.http.get<Identity>(this.identityUrl, {
       headers: { Authorization: `Basic ${encoded}` },
     });
+  }
+
+  /**
+   * Crée un compte restaurateur + son restaurant (sans abonnement actif, voir
+   * `Restaurant.subscriptionActive` côté backend) et son QR permanent. Ne connecte
+   * personne : l'appelant enchaîne avec {@link verifyCredentials} puis
+   * {@link setCredentials}, exactement comme pour une connexion normale — un seul chemin
+   * qui pose la session, jamais deux à maintenir en parallèle.
+   */
+  signup(email: string, password: string, restaurantName: string): Observable<{ restaurantId: string }> {
+    return this.http.post<{ restaurantId: string }>(this.signupUrl, { email, password, restaurantName });
   }
 
   /**
