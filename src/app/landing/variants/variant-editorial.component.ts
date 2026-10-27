@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LANDING_CAPABILITIES } from '../landing-offers';
 import { HeroComponent } from '../hero/hero.component';
@@ -54,7 +54,22 @@ interface LandingCapabilityCard {
         FaqAccordionComponent,
         RevealOnScrollDirective,
     ],
-    templateUrl: './variant-editorial.component.html'
+    templateUrl: './variant-editorial.component.html',
+    // None : l'habillage `.lp-c` doit atteindre les sections et la clôture ; tout est borné par la classe `.lp-c`.
+    encapsulation: ViewEncapsulation.None,
+    styles: [`
+    /* ── Habillage des sections sous le hero : numéro de chapitre en contour, titres en capitales serrées,
+          clôture sur topographie. Même contenu, mêmes composants ; aucune règle globale touchée. */
+    .lp-c{counter-reset:kvsec}
+    .lp-c .section{position:relative;counter-increment:kvsec;overflow:hidden}
+    .lp-c .section::before{content:counter(kvsec,decimal-leading-zero);position:absolute;right:max(12px,calc(50% - 38rem));top:0;
+      font:800 clamp(96px,15vw,220px)/1 var(--k-font-sans,sans-serif);letter-spacing:-.06em;color:transparent;-webkit-text-stroke:1px var(--k-ink-200,#DBDAD5);
+      pointer-events:none;user-select:none}
+    .lp-c .section>.container{position:relative;z-index:1}
+    .lp-c .h2-marketing{text-transform:uppercase;letter-spacing:-.045em}
+    .lp-c .pub-cta{background-image:url(/hero/topography-dark.svg);background-size:cover;background-position:right center;padding-top:7rem;padding-bottom:7rem}
+    .lp-c .pub-cta-title{font-size:clamp(2.6rem,7vw,6rem);line-height:.92;letter-spacing:-.05em;text-transform:uppercase;max-width:11ch}
+    `]
 })
 export class VariantEditorialComponent {
   /** FAQ de la landing — extraite de `FAQ_GROUPS` (source de `/faq`), pas réécrite. */
